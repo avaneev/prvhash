@@ -14,6 +14,9 @@ the chosen hash length. PRVHASH is based on 64-bit math. Hashes beyond
 256-bits may not pass all the hash tests due to limitations of 64-bit math
 used in this hash function, but, for example, any 32-bit element extracted
 from 512-bit resulting hash is as collision resistant as just a 32-bit hash.
+Extension of the function beyond 512-bit hashes is possible, but has to be
+statistically tested (Zeroes or constant-value messages test may fail which
+is understandable: no entropy in the message).
 
 PRVHASH is solely based on the butterfly effect, strongly inspired by LCG
 pseudo-random number generators. The generated hashes have good avalanche
