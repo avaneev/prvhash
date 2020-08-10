@@ -33,7 +33,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 1.0
+ * @version 1.1
  */
 
 #ifndef PRVHASH4_INCLUDED
@@ -50,14 +50,17 @@
  * @param MessageLen Message length.
  * @param[out] Hash The resulting hash.
  * @param HashLen The required hash length, in bytes, should be >= 1.
- * @param SeedXOR Optional value, to XOR the default seed with.
- * @param InitLCG For development purposes. If != 0, "lcg" value to use.
- * @param InitSeed For development purposes. If != 0, "Seed" value to use.
+ * @param SeedXOR Optional value, to XOR the default seed with. To use the
+ * default seed, set to 0.
+ * @param InitLCG For development purposes, should be set to 0. If != 0, "lcg"
+ * value to use.
+ * @param InitSeed For development purposes, should be set to 0. If != 0,
+ * "Seed" value to use.
  */
 
 inline void prvhash4( const uint8_t* const Message, const int MessageLen,
-	uint8_t* const Hash, const int HashLen, const uint64_t SeedXOR = 0,
-	const uint64_t InitLCG = 0, const uint64_t InitSeed = 0 )
+	uint8_t* const Hash, const int HashLen, const uint64_t SeedXOR,
+	const uint64_t InitLCG, const uint64_t InitSeed )
 {
 	// Initialize hash position remapping table for non-power-of-2 hash
 	// lengths.
