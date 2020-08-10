@@ -1,9 +1,9 @@
 //$ nocpp
 
 /**
- * @file prvhash.h
+ * @file prvhash4.h
  *
- * @brief The inclusion file for the PRVHASH hash function.
+ * @brief The inclusion file for the "prvhash4" hash function.
  *
  * @mainpage
  *
@@ -32,39 +32,46 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
+ *
+ * @version 1.0
  */
 
-#ifndef PRVHASH_INCLUDED
-#define PRVHASH_INCLUDED
+#ifndef PRVHASH4_INCLUDED
+#define PRVHASH4_INCLUDED
 
 #include <stdint.h>
+#include <string.h>
 
 /**
- * PRVHASH hash function. Produces hash of the specified Message.
+ * PRVHASH hash function (64-bit with 32-bit hash word). Produces hash of the
+ * specified Message.
  *
  * @param Message Message to produce hash from.
  * @param MessageLen Message length.
  * @param[out] Hash The resulting hash.
  * @param HashLen The required hash length, in bytes, should be >= 1.
  * @param SeedXOR Optional value, to XOR the default seed with.
+ * @param InitLCG For development purposes. If != 0, "lcg" value to use.
+ * @param InitSeed For development purposes. If != 0, "Seed" value to use.
  */
 
-inline void prvhash( const uint8_t* const Message, const int MessageLen,
-	uint8_t* const Hash, const int HashLen, const uint32_t SeedXOR = 0 )
+inline void prvhash4( const uint8_t* const Message, const int MessageLen,
+	uint8_t* const Hash, const int HashLen, const uint64_t SeedXOR = 0,
+	const uint64_t InitLCG = 0, const uint64_t InitSeed = 0 )
 {
 	// Initialize hash position remapping table for non-power-of-2 hash
 	// lengths.
 
-	size_t PosTable[ 64 ];
+	size_t PosTable[ 16 ];
 	int p = 0;
 	int i;
 
-	for( i = 0; i < 64; i++ )
+	for( i = 0; i < 16; i++ )
 	{
-		PosTable[ i ] = p;
+		PosTable[ i ] = ( p << 2 );
 		p++;
 
-		if( p == HashLen )
+		if( p == ( HashLen >> 2 ))
 		{
 			p = 0;
 		}
@@ -72,41 +79,42 @@ inline void prvhash( const uint8_t* const Message, const int MessageLen,
 
 	// Initialize the hash.
 
-	for( i = 0; i < HashLen; i++ )
-	{
-		Hash[ i ] = 0;
-	}
+	memset( Hash, 0, HashLen );
 
-	uint32_t lcg1 = 2198191546UL; // Multiplier inspired by LCG. This is not a
-		// prime number. It is a random sequence of bits. This value can be
-		// regenerated at will, possibly using various statistical search
-		// methods. The best strategies: 1) Compose both this and seed numbers
-		// of 8-bit values that have 4 random bits set; 2) Compose the 32-bit
-		// value that has 16 random bits set; same for seed.
+	uint64_t lcg = ( InitLCG == 0 ? 15267459991392010589ULL : InitLCG );
+		// Multiplier inspired by LCG. This is not a prime number. It is a
+		// random sequence of bits. This value can be regenerated at will,
+		// possibly using various statistical search methods. The best
+		// strategies: 1) Compose both this and seed numbers of 8-bit values
+		// that have 4 random bits set; 2) Compose the 64-bit value that has
+		// 32 random bits set; same for seed.
 
-	uint32_t Seed = 488279453UL; // Generated similarly to "lcg1".
+	uint64_t Seed = ( InitSeed == 0 ? 7928988912013905173ULL : InitSeed );
+		// Generated similarly to "lcg".
 
 	Seed ^= SeedXOR;
 	int k;
 
 	for( k = 0; k < MessageLen; k++ )
 	{
-		const uint32_t m = (uint8_t) Message[ k ];
+		const uint64_t m = Message[ k ];
 
-		const size_t HashPos = (uint8_t) ( Seed >> 26 ); // Use higher bits.
-		Seed *= lcg1;
-		Seed += m * ( (uint32_t) Hash[ PosTable[ HashPos ]] + 1 );
+		const size_t HashPos = (size_t) ( Seed >> 60 ); // Use higher bits.
+		Seed *= lcg;
+		const uint32_t* const h = (uint32_t*) &Hash[ PosTable[ HashPos ]];
+		Seed += m * ( (uint64_t) *h + 1 );
 
-		for( i = 0; i < HashLen; i++ )
+		for( i = 0; i < HashLen; i += 4 )
 		{
-			Seed *= lcg1;
-			const uint32_t t = (uint32_t) Hash[ i ] ^ m;
-			Hash[ i ] ^= (uint8_t) ( Seed >> 24 );
-			Seed ^= t;
+			Seed *= lcg;
+			uint32_t* const hc = (uint32_t*) &Hash[ i ];
+			const uint64_t ph = (uint64_t) *hc;
+			*hc ^= (uint32_t) ( Seed >> 32 );
+			Seed ^= ph ^ m;
 		}
 
-		lcg1 += Seed;
+		lcg += Seed;
 	}
 }
 
-#endif // PRVHASH_INCLUDED
+#endif // PRVHASH4_INCLUDED
