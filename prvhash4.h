@@ -33,7 +33,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 1.1
+ * @version 1.2
  */
 
 #ifndef PRVHASH4_INCLUDED
@@ -49,7 +49,8 @@
  * @param Message Message to produce hash from.
  * @param MessageLen Message length.
  * @param[out] Hash The resulting hash.
- * @param HashLen The required hash length, in bytes, should be >= 1.
+ * @param HashLen The required hash length, in bytes, should be >= 4, in 4
+ * increments.
  * @param SeedXOR Optional value, to XOR the default seed with. To use the
  * default seed, set to 0.
  * @param InitLCG For development purposes, should be set to 0. If != 0, "lcg"
