@@ -21,11 +21,10 @@ is understandable: no entropy in the message).
 PRVHASH is solely based on the butterfly effect, strongly inspired by LCG
 pseudo-random number generators. The generated hashes have good avalanche
 properties. For best results, when creating HMACs, a random seed should be
-supplied to the hash function, but this is not a requirement. A simple XOR
-checksum of the message can be also supplied, if security considerations
-permit this: this improves hash statistics; this allows the pseudo-random
-number sequence generated internally, to closely follow the uniform
-distribution, yielding more normally-distributed hashes.
+supplied to the hash function, but this is not a requirement. This seed allows
+the pseudo-random number sequence generated internally, to closely follow the
+uniform distribution on a given message set, yielding more
+normally-distributed hashes.
 
 PRVHASH can be easily transformed into a stream hash by creating a simple
 context structure, and moving its initialization to a separate function. It is
@@ -41,6 +40,6 @@ Please see the `prvhash4.h` file for details of the implementation (the
 `prvhash.h` is an outdated initial version).
 
 On big-endian architectures (ARM) each 32-bit element of the resulting hash
-should be endianness-corrected (swapped).
+should be endianness-corrected (byte-swapped).
 
 The 32-bit hash of the string `The strict avalanche criterion` is `5a9cbd77`.
