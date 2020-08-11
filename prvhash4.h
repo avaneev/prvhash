@@ -33,7 +33,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 1.3
+ * @version 1.4
  */
 
 #ifndef PRVHASH4_INCLUDED
@@ -72,10 +72,10 @@ inline void prvhash4( const uint8_t* const Message, const int MessageLen,
 
 	for( i = 0; i < 16; i++ )
 	{
-		PosTable[ i ] = ( p << 2 );
-		p++;
+		PosTable[ i ] = p;
+		p += 4;
 
-		if( p == ( HashLen >> 2 ))
+		if( p == HashLen )
 		{
 			p = 0;
 		}
@@ -105,14 +105,14 @@ inline void prvhash4( const uint8_t* const Message, const int MessageLen,
 
 		const size_t HashPos = (size_t) ( Seed >> 60 ); // Use higher bits.
 		Seed *= lcg;
-		const uint32_t* const h = (uint32_t*) &Hash[ PosTable[ HashPos ]];
-		Seed += m * ( (uint64_t) *h + 1 );
+		const uint64_t h = *(uint32_t*) &Hash[ PosTable[ HashPos ]];
+		Seed += m * ( h + 1 );
 
 		for( i = 0; i < HashLen; i += 4 )
 		{
 			Seed *= lcg;
 			uint32_t* const hc = (uint32_t*) &Hash[ i ];
-			const uint64_t ph = (uint64_t) *hc;
+			const uint64_t ph = *hc;
 			*hc ^= (uint32_t) ( Seed >> 32 );
 			Seed ^= ph ^ m;
 		}
