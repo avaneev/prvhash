@@ -56,9 +56,9 @@ Please see the `prvhash42.h` file for details of the implementation (the
 On big-endian architectures (ARM) each 32-bit element of the resulting hash
 should be endianness-corrected (byte-swapped).
 
-The 32-bit hash of the string `The strict avalanche criterion` is `36948d6f`.
+The 32-bit hash of the string `The strict avalanche criterion` is `32184023`.
 
-The 64-bit hash of the same string is `f9ddaa64b261e3b4`.
+The 64-bit hash of the same string is `7b20846917dc5b06`.
 
 ## Entropy PRNG ##
 
