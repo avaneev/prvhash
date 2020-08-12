@@ -66,3 +66,7 @@ into 4 output bytes each round: this was tested to work well when 8-bit true
 entropy injections are done inbetween 4 to 1024 generated random bytes (delay
 is also obtained via entropy source). An example generator is implemented in
 the `prvrng.h` file: simply call the `prvrng_test()` function.
+
+## Other ##
+
+[Follow me on Twitter](https://twitter.com/AlekseyVaneev)
