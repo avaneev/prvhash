@@ -44,6 +44,8 @@ should be endianness-corrected (byte-swapped).
 
 The 32-bit hash of the string `The strict avalanche criterion` is `36948d6f`.
 
+The 64-bit hash of the same string is `f9ddaa64b261e3b4`.
+
 ## Entropy PRNG ##
 
 32-bit PRVHASH can be also used as a very efficient general-purpose PRNG with
