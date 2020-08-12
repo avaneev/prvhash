@@ -70,3 +70,4 @@ the `prvrng.h` file: simply call the `prvrng_test()` function.
 ## Other ##
 
 [Follow me on Twitter](https://twitter.com/AlekseyVaneev)
+[Become a patron on Patreon](https://patreon.com/aleksey_vaneev)
