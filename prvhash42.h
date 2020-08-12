@@ -1,9 +1,7 @@
-//$ nocpp
-
 /**
- * @file prvhash4.h
+ * @file prvhash42.h
  *
- * @brief The inclusion file for the "prvhash4" hash function.
+ * @brief The inclusion file for the "prvhash42" hash function.
  *
  * @mainpage
  *
@@ -33,11 +31,13 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 1.4
+ * @version 2.0
  */
 
-#ifndef PRVHASH4_INCLUDED
-#define PRVHASH4_INCLUDED
+//$ nocpp
+
+#ifndef PRVHASH42_INCLUDED
+#define PRVHASH42_INCLUDED
 
 #include <stdint.h>
 #include <string.h>
@@ -59,28 +59,10 @@
  * "Seed" value to use.
  */
 
-inline void prvhash4( const uint8_t* const Message, const int MessageLen,
+inline void prvhash42( const uint8_t* const Message, const int MessageLen,
 	uint8_t* const Hash, const int HashLen, const uint64_t SeedXOR,
 	const uint64_t InitLCG, const uint64_t InitSeed )
 {
-	// Initialize hash position remapping table for non-power-of-2 hash
-	// lengths.
-
-	size_t PosTable[ 16 ];
-	int p = 0;
-	int i;
-
-	for( i = 0; i < 16; i++ )
-	{
-		PosTable[ i ] = p;
-		p += 4;
-
-		if( p == HashLen )
-		{
-			p = 0;
-		}
-	}
-
 	// Initialize the hash.
 
 	memset( Hash, 0, HashLen );
@@ -91,7 +73,8 @@ inline void prvhash4( const uint8_t* const Message, const int MessageLen,
 		// possibly using various statistical search methods. The best
 		// strategies: 1) Compose both this and seed numbers of 8-bit values
 		// that have 4 random bits set; 2) Compose the 64-bit value that has
-		// 32 random bits set; same for seed.
+		// 32 random bits set; same for seed. An important consideration here
+		// is to pass the 16-bit Sparse test.
 
 	uint64_t Seed = ( InitSeed == 0 ? 7928988912013905173ULL : InitSeed );
 		// Generated similarly to "lcg".
@@ -103,10 +86,8 @@ inline void prvhash4( const uint8_t* const Message, const int MessageLen,
 	{
 		const uint64_t m = Message[ k ];
 
-		const size_t HashPos = (size_t) ( Seed >> 60 ); // Use higher bits.
-		Seed *= lcg;
-		const uint64_t h = *(uint32_t*) &Hash[ PosTable[ HashPos ]];
-		Seed += m * ( h + 1 );
+		Seed ^= m;
+		int i;
 
 		for( i = 0; i < HashLen; i += 4 )
 		{
@@ -121,4 +102,4 @@ inline void prvhash4( const uint8_t* const Message, const int MessageLen,
 	}
 }
 
-#endif // PRVHASH4_INCLUDED
+#endif // PRVHASH42_INCLUDED
