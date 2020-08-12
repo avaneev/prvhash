@@ -31,7 +31,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.1
+ * @version 2.2
  */
 
 //$ nocpp
@@ -43,23 +43,26 @@
 #include <string.h>
 
 /**
- * PRVHASH hash function (64-bit with 32-bit hash word). Produces hash of the
- * specified Message.
+ * PRVHASH hash function (64-bit variables with 32-bit hash word). Produces
+ * hash of the specified Message.
  *
  * @param Message Message to produce hash from.
  * @param MessageLen Message length, in bytes.
  * @param[out] Hash The resulting hash. If both InitLCG and InitSeed are
  * non-zero, the hash will not be initially reset to 0, otherwise the hash
- * should be pre-initialized with random values.
+ * should be pre-initialized with random bytes.
  * @param HashLen The required hash length, in bytes, should be >= 4, in
  * increments of 4.
  * @param SeedXOR Optional value, to XOR the default seed with. To use the
  * default seed, set to 0. If both InitLCG and InitSeed are non-zero, this
- * SeedXOR is ignored and should be set to 0.
+ * SeedXOR is ignored and should be set to 0. Otherwise, the SeedXOR value
+ * can have any bit length, and is used only as an additional entropy source.
  * @param InitLCG If both InitLCG and InitSeed are non-zero, both values
- * will be used as initial state of the hash function.
+ * will be used as initial state of the hash function. Full 64-bit random
+ * value should be supplied in this case.
  * @param InitSeed If both InitLCG and InitSeed are non-zero, both values
- * will be used as initial state of the hash function.
+ * will be used as initial state of the hash function. Full 64-bit random
+ * value should be supplied in this case.
  */
 
 inline void prvhash42( const uint8_t* const Message, const int MessageLen,
@@ -72,7 +75,7 @@ inline void prvhash42( const uint8_t* const Message, const int MessageLen,
 		// strategies: 1) Compose both this and seed numbers of 8-bit values
 		// that have 4 random bits set; 2) Compose the 64-bit value that has
 		// 32 random bits set; same for seed. An important consideration here
-		// is to pass the 16-bit Sparse test.
+		// is to pass the 16-bit Sparse test by default.
 	uint64_t Seed; // Generated similarly to "lcg".
 
 	if( InitLCG == 0 && InitSeed == 0 )
