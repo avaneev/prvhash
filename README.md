@@ -37,7 +37,10 @@ e.g. 100 constant bytes may be equal to a hash of the same message extended
 with 4000000 constant bytes. This is not related to length-extension attack,
 but just a feature of the hash function, meaning that this function is best
 used on pre-compressed, maximal entropy, data. Fortunately, the required
-number of extension bytes depends on the hash length.
+number of extension bytes depends on the hash length. In practice, if
+pre-compression is not used, it may be useful to end the hashing of the
+message with a `bitwise NOT` version of the last byte, as a pseudo-entropy
+injection.
 
 PRVHASH can be easily transformed into a stream hash by creating a simple
 context structure, and moving its initialization to a separate function. It is
