@@ -31,7 +31,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.0
+ * @version 2.1
  */
 
 //$ nocpp
@@ -48,38 +48,45 @@
  *
  * @param Message Message to produce hash from.
  * @param MessageLen Message length, in bytes.
- * @param[out] Hash The resulting hash.
+ * @param[out] Hash The resulting hash. If both InitLCG and InitSeed are
+ * non-zero, the hash will not be initially reset to 0, otherwise the hash
+ * should be pre-initialized with random values.
  * @param HashLen The required hash length, in bytes, should be >= 4, in
  * increments of 4.
  * @param SeedXOR Optional value, to XOR the default seed with. To use the
- * default seed, set to 0.
- * @param InitLCG For development purposes, should be set to 0. If != 0, "lcg"
- * value to use.
- * @param InitSeed For development purposes, should be set to 0. If != 0,
- * "Seed" value to use.
+ * default seed, set to 0. If both InitLCG and InitSeed are non-zero, this
+ * SeedXOR is ignored and should be set to 0.
+ * @param InitLCG If both InitLCG and InitSeed are non-zero, both values
+ * will be used as initial state of the hash function.
+ * @param InitSeed If both InitLCG and InitSeed are non-zero, both values
+ * will be used as initial state of the hash function.
  */
 
 inline void prvhash42( const uint8_t* const Message, const int MessageLen,
 	uint8_t* const Hash, const int HashLen, const uint64_t SeedXOR,
 	const uint64_t InitLCG, const uint64_t InitSeed )
 {
-	// Initialize the hash.
-
-	memset( Hash, 0, HashLen );
-
-	uint64_t lcg = ( InitLCG == 0 ? 15267459991392010589ULL : InitLCG );
-		// Multiplier inspired by LCG. This is not a prime number. It is a
-		// random sequence of bits. This value can be regenerated at will,
-		// possibly using various statistical search methods. The best
+	uint64_t lcg; // Multiplier inspired by LCG. This is not a prime number.
+		// It is a random sequence of bits. This value can be regenerated at
+		// will, possibly using various statistical search methods. The best
 		// strategies: 1) Compose both this and seed numbers of 8-bit values
 		// that have 4 random bits set; 2) Compose the 64-bit value that has
 		// 32 random bits set; same for seed. An important consideration here
 		// is to pass the 16-bit Sparse test.
+	uint64_t Seed; // Generated similarly to "lcg".
 
-	uint64_t Seed = ( InitSeed == 0 ? 7928988912013905173ULL : InitSeed );
-		// Generated similarly to "lcg".
+	if( InitLCG == 0 && InitSeed == 0 )
+	{
+		lcg = 15267459991392010589ULL;
+		Seed = 7928988912013905173ULL ^ SeedXOR;
+		memset( Hash, 0, HashLen );
+	}
+	else
+	{
+		lcg = InitLCG;
+		Seed = InitSeed;
+	}
 
-	Seed ^= SeedXOR;
 	int k;
 
 	for( k = 0; k < MessageLen; k++ )
