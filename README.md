@@ -72,6 +72,20 @@ the `prvrng.h` file: simply call the `prvrng_test64()` function. The
 `prvrng_test32()` implements the same technique, but with 32-bit hashes, for
 comparison purposes.
 
+## Description ##
+
+Here is author's vision how the algorithm works for 32-bit hashes (in
+actuality, coming up with this solution was accompanied with a lot of trial
+and error, and stress).
+
+    const uint64_t m = MessageByte; // Get 8 bits from the message.
+    Seed ^= m; // Mix message's entropy into the internal entropy.
+    Seed *= lcg; // Multiply random by random. Non-linearity induced randomly due to truncation.
+    uint64_t ph = *(uint32_t*) &Hash[ i ]; // Save current hash.
+    *hc ^= (uint32_t) ( Seed >> 32 ); // Mix internal entropy to the hash.
+    Seed ^= ph ^ m; // Mix internal entropy with previous hash's and message's entropy.
+	lcg += Seed; // Add internal entropy to "lcg" state variable (both random). Truncation is possible.
+
 ## Other ##
 
 [Follow me on Twitter](https://twitter.com/AlekseyVaneev)
