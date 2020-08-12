@@ -30,7 +30,14 @@ having a skewed distribution.
 tests. 256-bit PRVHASH also passes the Avalanche, DiffDist, Window, and Zeroes
 tests (other tests were not performed). Other hash lengths were not
 thoroughly tested, but extrapolations can be made. PRVHASH may possess
-cryptographic properties, but this is yet to be proven.
+cryptographic properties, but this is yet to be proven. One point to note here
+is that PRVHASH may produce identical hashes for a message extended with a
+varying number of constant bytes. So, a 32-bit hash of a message extended with
+e.g. 100 constant bytes may be equal to a hash of the same message extended
+with 4000000 constant bytes. This is not related to length-extension attack,
+but just a feature of the hash function, meaning that this function is best
+used on pre-compressed, maximal entropy, data. Fortunately, the required
+number of extension bytes depends on the hash length.
 
 PRVHASH can be easily transformed into a stream hash by creating a simple
 context structure, and moving its initialization to a separate function. It is
