@@ -24,7 +24,8 @@ supplied to the hash function, but this is not a requirement. When each
 message in a set is randomly seeded, this allows hashes of such set to closely
 follow the normal distribution. Without the seed, the normality is achieved as
 a second-order effect, with the internal random-number generator (the `Seed`)
-having a skewed distribution.
+having a skewed distribution. In practice, the initial hash can be also
+randomly seeded, adding useful initial entropy.
 
 32- and 64-bit PRVHASH pass all [SMHasher](https://github.com/rurban/smhasher)
 tests. 256-bit PRVHASH also passes the Avalanche, DiffDist, Window, and Zeroes
