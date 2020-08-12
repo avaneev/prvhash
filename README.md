@@ -15,7 +15,9 @@ limitations of 64-bit math used in this hash function, but, for example, any
 32-bit element extracted from 512-bit resulting hash is as collision resistant
 as just a 32-bit hash. The use of the function beyond 512-bit hashes is easily
 possible, but has to be statistically tested (Zeroes or constant-value message
-test may fail which is understandable: no entropy in the message).
+test may fail which is understandable: no entropy in the message). Extension
+of the hash function to 128-bit math is possible: this should increase its
+properties exponentially.
 
 PRVHASH is solely based on the butterfly effect, strongly inspired by LCG
 pseudo-random number generators. The generated hashes have good avalanche
@@ -59,13 +61,15 @@ The 64-bit hash of the same string is `f9ddaa64b261e3b4`.
 
 ## Entropy PRNG ##
 
-32-bit PRVHASH can be also used as a very efficient general-purpose PRNG with
+64-bit PRVHASH can be also used as a very efficient general-purpose PRNG with
 an external entropy source injections (like how the `/dev/urandom` works on
-Unix): the 32-bit hash value can be used as a pseudo-random number, spliced
-into 4 output bytes each round: this was tested to work well when 8-bit true
-entropy injections are done inbetween 4 to 1024 generated random bytes (delay
+Unix): the 64-bit hash value can be used as a pseudo-random number, spliced
+into 8 output bytes each round: this was tested to work well when 8-bit true
+entropy injections are done inbetween 8 to 2048 generated random bytes (delay
 is also obtained via entropy source). An example generator is implemented in
-the `prvrng.h` file: simply call the `prvrng_test()` function.
+the `prvrng.h` file: simply call the `prvrng_test64()` function. The
+`prvrng_test32()` implements the same technique, but with 32-bit hashes, for
+comparison purposes.
 
 ## Other ##
 
