@@ -32,7 +32,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.1
+ * @version 2.2
  */
 
 //$ nocpp
@@ -107,7 +107,7 @@ inline void prvrng_prvhash42_32( PRVRNG_CTX* const ctx, const uint64_t msg )
 	ctx -> Seed ^= msg;
 
 	ctx -> Seed *= ctx -> lcg;
-	const uint64_t ph = ctx -> Hash;
+	const uint64_t ph = (uint32_t) ctx -> Hash;
 	ctx -> Hash ^= ctx -> Seed >> 32;
 	ctx -> Seed ^= ph ^ msg;
 
@@ -166,7 +166,7 @@ inline void prvrng_prvhash42_64( PRVRNG_CTX* const ctx, const uint64_t msg )
 	// Lower 32 bits of hash.
 
 	ctx -> Seed *= ctx -> lcg;
-	uint64_t ph = ctx -> Hash & 0xFFFFFFFFULL;
+	uint64_t ph = (uint32_t) ctx -> Hash;
 	ctx -> Hash ^= ctx -> Seed >> 32;
 	ctx -> Seed ^= ph ^ msg;
 
@@ -227,7 +227,7 @@ inline uint8_t prvrng_gen64( PRVRNG_CTX* const ctx )
  * @return 0 if failed.
  */
 
-inline int prvrng_init32( PRVRNG_CTX* const ctx, const bool DoPreInit )
+inline int prvrng_init32( PRVRNG_CTX* const ctx )
 {
 	#if defined( PRVRNG_UNIX )
 
@@ -249,21 +249,23 @@ inline int prvrng_init32( PRVRNG_CTX* const ctx, const bool DoPreInit )
 	#endif // defined( PRVRNG_UNIX )
 
 	ctx -> Hash = 0;
-	ctx -> lcg = 15267459991392010589ULL;
-	ctx -> Seed = 7928988912013905173ULL;
+	ctx -> lcg = 0;
+	ctx -> Seed = 0;
+	int i;
+
+	for( i = 0; i < 8; i++ )
+	{
+		ctx -> Hash <<= 8;
+		ctx -> Hash |= prvrng_gen_entropy( ctx );
+		ctx -> lcg <<= 8;
+		ctx -> lcg |= prvrng_gen_entropy( ctx );
+		ctx -> Seed <<= 8;
+		ctx -> Seed |= prvrng_gen_entropy( ctx );
+	}
+
 	ctx -> EntCtr = 0;
 	ctx -> HashLeft = 0;
 	ctx -> LastHash = 0;
-
-	if( DoPreInit )
-	{
-		int i;
-
-		for( i = 0; i < 32; i++ )
-		{
-			prvrng_prvhash42_32( ctx, prvrng_gen_entropy( ctx ));
-		}
-	}
 
 	return( 1 );
 }
@@ -277,24 +279,9 @@ inline int prvrng_init32( PRVRNG_CTX* const ctx, const bool DoPreInit )
  * @return 0 if failed.
  */
 
-inline int prvrng_init64( PRVRNG_CTX* const ctx, const bool DoPreInit )
+inline int prvrng_init64( PRVRNG_CTX* const ctx )
 {
-	if( prvrng_init32( ctx, false ) == 0 )
-	{
-		return( 0 );
-	}
-
-	if( DoPreInit )
-	{
-		int i;
-
-		for( i = 0; i < 32; i++ )
-		{
-			prvrng_prvhash42_64( ctx, prvrng_gen_entropy( ctx ));
-		}
-	}
-
-	return( 1 );
+	return( prvrng_init32( ctx ));
 }
 
 /**
@@ -335,7 +322,7 @@ inline void prvrng_test32()
 {
 	PRVRNG_CTX ctx;
 
-	if( !prvrng_init32( &ctx, true ))
+	if( !prvrng_init32( &ctx ))
 	{
 		return;
 	}
@@ -358,7 +345,7 @@ inline void prvrng_test64()
 {
 	PRVRNG_CTX ctx;
 
-	if( !prvrng_init64( &ctx, true ))
+	if( !prvrng_init64( &ctx ))
 	{
 		return;
 	}

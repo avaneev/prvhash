@@ -8,7 +8,7 @@ of bit frequency. PRVHASH is conceptually similar to `keccak` scheme, but is a
 completely different implementation of this concept.
 
 PRVHASH is comparably slow, suitable for short messages only. PRVHASH can
-generate 32- to 512-bit hashes, in 32-bit increments, yielding hashes of
+generate 32- to unlimited-bit hashes, in 32-bit increments, yielding hashes of
 roughly equal quality independent of the chosen hash length. PRVHASH is based
 on 64-bit math. Hashes beyond 256-bits may not pass all the hash tests due to
 limitations of 64-bit math used in this hash function, but, for example, any
@@ -26,8 +26,9 @@ supplied to the hash function, but this is not a requirement. When each
 message in a set is randomly seeded, this allows hashes of such set to closely
 follow the normal distribution. Without the seed, the normality is achieved as
 a second-order effect, with the internal random-number generator (the `Seed`)
-having a skewed distribution. In practice, the initial hash can be also
-randomly seeded, adding useful initial entropy.
+having a skewed distribution. In practice, the `InitLCG`, `InitSeed` (instead
+of `SeedXOR`), and initial hash, can all be randomly seeded, adding useful
+initial entropy (64-bit + 64-bit + hash length bits of total entropy).
 
 32- and 64-bit PRVHASH pass all [SMHasher](https://github.com/rurban/smhasher)
 tests. 256-bit PRVHASH also passes the Avalanche, DiffDist, Window, and Zeroes
