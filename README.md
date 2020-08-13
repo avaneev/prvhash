@@ -87,6 +87,19 @@ and error, and stress).
     Seed ^= ph ^ m; // Add previous hash's and message's entropy to the internal entropy.
 	lcg += Seed; // Add the internal entropy to "lcg" variable (both random). Truncation is possible.
 
+## Optimizations ##
+
+Basic optimized versions of 32-, 64- and 128-bit hashes were implemented in
+the `prvhash42opt.h` file.
+
+As for the exponential speed optimizations, it should be possible to run 4
+hash functions in parallel (with independent "lcg" and "Seed" variables),
+passing input bytes to each hash function in succession. At the end of
+hashing, the 4 hashes should be XORed together to produce a final 32-bit hash.
+Unfortunately, this is only possible on AVX2 instruction set, which lacks
+parallel 64-bit multiplication with truncation. As a byproduct, such parallel
+arrangement may increase the quality of randomness exponentially.
+
 ## Other ##
 
 [Follow me on Twitter](https://twitter.com/AlekseyVaneev)
