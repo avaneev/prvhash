@@ -2,7 +2,7 @@
  * @file prvhash42opt.h
  *
  * @brief The inclusion file for the "prvhash42" hash function, optimized for
- * 32- and 64-bit hash lengths.
+ * 32-, 64- and 128-bit hash lengths, without endianness-correction.
  *
  * @mainpage
  *
@@ -32,7 +32,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.1
+ * @version 2.2
  */
 
 //$ nocpp

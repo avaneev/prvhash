@@ -31,7 +31,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.3
+ * @version 2.4
  */
 
 //$ nocpp
@@ -59,7 +59,7 @@
  * can have any bit length, and is used only as an additional entropy source.
  * @param InitLCG If both InitLCG and InitSeed are non-zero, both values
  * will be used as initial state of the hash function. Full 64-bit random
- * value should be supplied in this case.
+ * value should be supplied in this case. See the considerations below.
  * @param InitSeed If both InitLCG and InitSeed are non-zero, both values
  * will be used as initial state of the hash function. Full 64-bit random
  * value should be supplied in this case.
@@ -72,14 +72,13 @@ inline void prvhash42( const uint8_t* const Message, const int MessageLen,
 	uint64_t lcg; // Multiplier inspired by LCG. This is not a prime number.
 		// It is a random sequence of bits. This value can be regenerated at
 		// will, possibly using various statistical search methods. The best
-		// strategies: 1) Compose both this and seed numbers from 16-bit
-		// random values that have 6 to 10 random bits set: this guarantees
-		// that the numbers have no long trials of 0s and 1s; 2) Use a 64-bit
-		// random value that has 30-34 random bits set; same for seed (this is
-		// a less preferred method as it may produce an unoptimal initial
-		// state). An important consideration here is to pass the 16-bit
-		// Sparse test by default.
-	uint64_t Seed; // Generated similarly to "lcg".
+		// strategies: 1) Compose this number from 16-bit random values that
+		// have 6 to 10 random bits set: this guarantees that the initial
+		// "lcg" value has no long trials of 0s and 1s; 2) Use a 64-bit random
+		// value that has 30-34 random bits set (this is a less preferred
+		// method as it may produce an unoptimal initial state). An important
+		// consideration here is to pass the 16-bit Sparse test by default.
+	uint64_t Seed; // Generated purely on random.
 
 	if( InitLCG == 0 && InitSeed == 0 )
 	{

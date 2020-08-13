@@ -12,12 +12,12 @@ generate 32- to unlimited-bit hashes, in 32-bit increments, yielding hashes of
 roughly equal quality independent of the chosen hash length. PRVHASH is based
 on 64-bit math. Hashes beyond 256-bits may not pass all the hash tests due to
 limitations of 64-bit math used in this hash function, but, for example, any
-32-bit element extracted from 512-bit or 2048-bit resulting hash is as
-collision resistant as just a 32-bit hash. The use of the function beyond
-512-bit hashes is easily possible, but has to be statistically tested
-(Zeroes or constant-value message test may fail which is understandable: no
-entropy in the message). Extension of the hash function to 128-bit math is
-possible: this should increase its properties exponentially.
+32-bit element extracted from 512- or 2048-bit resulting hash is as collision
+resistant as just a 32-bit hash. The use of the function beyond 512-bit hashes
+is easily possible, but has to be statistically tested (Zeroes or
+constant-value message test may fail which is understandable: no entropy in
+the message). Extension of the hash function to 128-bit math works fine: this
+increases its properties exponentially.
 
 PRVHASH is solely based on the butterfly effect, strongly inspired by LCG
 pseudo-random number generators. The generated hashes have good avalanche
@@ -28,7 +28,7 @@ follow the normal distribution. Without the seed, the normality is achieved as
 a second-order effect, with the internal random-number generator (the `Seed`)
 having a distribution skewed towards triangular distribution. In practice,
 the `InitLCG`, `InitSeed` (instead of `SeedXOR`), and initial hash, can all be
-randomly seeded (note the bit composition considerations of `lcg` and `Seed`),
+randomly seeded (note the bit composition considerations of the `lcg` value),
 adding useful initial entropy (64 + 64 + hash length bits of total entropy).
 
 32-, 64- and 128-bit PRVHASH pass all [SMHasher](https://github.com/rurban/smhasher)
@@ -46,7 +46,7 @@ number of extension bytes depends on the hash length. In practice, if
 pre-compression is not used, it may be useful to end the hashing of the
 message with a `bitwise NOT` version of the last byte, as a pseudo-entropy
 injection. In author's opinion, this hash function is almost definitely
-non-reversible since fixed prime numbers are not internally used, and due to
+non-reversible since fixed prime numbers are not used, and due to
 non-linearities introduced by bit truncations.
 
 PRVHASH can be easily transformed into a stream hash by creating a simple
@@ -77,22 +77,21 @@ comparison purposes.
 
 ## Description ##
 
-Here is the author's vision on how the function works for 32-bit hashes (in
-actuality, coming up with this solution was accompanied with a lot of trial
-and error).
+Here is the author's vision on how the function works (in actuality, coming up
+with this solution was accompanied with a lot of trial and error).
 
     const uint64_t m = MessageByte; // Get 8 bits from the message.
     Seed ^= m; // Add message's entropy to the internal entropy.
     Seed *= lcg; // Multiply random by random. Non-linearity induced due to truncation.
-    const uint64_t ph = *(uint32_t*) &Hash[ i ]; // Save current hash.
+    const uint64_t ph = *(uint32_t*) &Hash[ i ]; // Save the current hash.
     *hc ^= (uint32_t) ( Seed >> 32 ); // Add the internal entropy to the hash.
-    Seed ^= ph ^ m; // Add previous hash's and message's entropy to the internal entropy.
-	lcg += Seed; // Add the internal entropy to "lcg" variable (both random). Truncation is possible.
+    Seed ^= ph ^ m; // Add saved hash's and message's entropy to the internal entropy.
+	lcg += Seed; // Add the internal entropy to the "lcg" variable (both random). Truncation is possible.
 
 ## Optimizations ##
 
-Basic optimized versions of 32-, 64- and 128-bit hashes were implemented in
-the `prvhash42opt.h` file. On big-endian architectures the resulting hashes
+The basic optimized versions of 32-, 64- and 128-bit hashes were implemented
+in the `prvhash42opt.h` file. On big-endian architectures the resulting hashes
 require byte-swapping.
 
 ## Other ##
