@@ -32,7 +32,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.2
+ * @version 2.3
  */
 
 //$ nocpp
@@ -93,6 +93,65 @@ inline uint8_t prvrng_gen_entropy( PRVRNG_CTX* const ctx )
 	#endif // defined( PRVRNG_UNIX )
 
 	return( val );
+}
+
+/**
+ * This function calculates bit count of a 64-bit number, in a platform
+ * independent way, can be replaced by an intrinsic.
+ *
+ * @param v0 Value.
+ */
+
+inline int prvrng_popcnt_u64( uint64_t v0 )
+{
+	int r = 0;
+	int i;
+
+	for( i = 0; i < 4; i++ )
+	{
+		const uint16_t v = (uint16_t) v0;
+		r += ( v & 1 ) + (( v >> 1 ) & 1 ) + (( v >> 2 ) & 1 ) +
+			(( v >> 3 ) & 1 ) + (( v >> 4 ) & 1 ) + (( v >> 5 ) & 1 ) +
+			(( v >> 6 ) & 1 ) + (( v >> 7 ) & 1 ) + (( v >> 8 ) & 1 ) +
+			(( v >> 9 ) & 1 ) + (( v >> 10 ) & 1 ) + (( v >> 11 ) & 1 ) +
+			(( v >> 12 ) & 1 ) + (( v >> 13 ) & 1 ) + (( v >> 14 ) & 1 ) +
+			( v >> 15 );
+
+		v0 >>= 16;
+	}
+
+	return( r );
+}
+
+/**
+ * Function generates an 64-bit entropy value and assures this value has
+ * between 30 and 34 bits set. This function is required to generate a stable
+ * initial state of the hash function. This constraint is usually fulfilled in
+ * 1-3 iterations, but in rare cases may require even 10 iterations.
+ *
+ * @param ctx Pointer to the context structure.
+ */
+
+inline uint64_t prvrng_gen_entropy64c( PRVRNG_CTX* const ctx )
+{
+	while( true )
+	{
+		uint64_t tv = 0;
+		int i;
+
+		for( i = 0; i < 8; i++ )
+		{
+			tv <<= 8;
+			tv += prvrng_gen_entropy( ctx );
+		}
+
+		const int bcnt = prvrng_popcnt_u64( tv );
+
+		if( bcnt >= 30 && bcnt <= 34 )
+		{
+			return( tv );
+		}
+	}
 }
 
 /**
@@ -251,18 +310,9 @@ inline int prvrng_init32( PRVRNG_CTX* const ctx )
 	ctx -> Hash = 0;
 	ctx -> lcg = 0;
 	ctx -> Seed = 0;
-	int i;
-
-	for( i = 0; i < 8; i++ )
-	{
-		ctx -> Hash <<= 8;
-		ctx -> Hash |= prvrng_gen_entropy( ctx );
-		ctx -> lcg <<= 8;
-		ctx -> lcg |= prvrng_gen_entropy( ctx );
-		ctx -> Seed <<= 8;
-		ctx -> Seed |= prvrng_gen_entropy( ctx );
-	}
-
+	ctx -> Hash = prvrng_gen_entropy64c( ctx );
+	ctx -> lcg = prvrng_gen_entropy64c( ctx );
+	ctx -> Seed = prvrng_gen_entropy64c( ctx );
 	ctx -> EntCtr = 0;
 	ctx -> HashLeft = 0;
 	ctx -> LastHash = 0;

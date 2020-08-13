@@ -27,8 +27,9 @@ message in a set is randomly seeded, this allows hashes of such set to closely
 follow the normal distribution. Without the seed, the normality is achieved as
 a second-order effect, with the internal random-number generator (the `Seed`)
 having a skewed distribution. In practice, the `InitLCG`, `InitSeed` (instead
-of `SeedXOR`), and initial hash, can all be randomly seeded, adding useful
-initial entropy (64-bit + 64-bit + hash length bits of total entropy).
+of `SeedXOR`), and initial hash, can all be randomly seeded (note the
+bit count constraint on `lcg` and `Seed`), adding useful initial entropy
+(64 + 64 + hash length bits of total entropy).
 
 32- and 64-bit PRVHASH pass all [SMHasher](https://github.com/rurban/smhasher)
 tests. 256-bit PRVHASH also passes the Avalanche, DiffDist, Window, and Zeroes
@@ -82,9 +83,9 @@ and error, and stress).
     Seed ^= m; // Add message's entropy to the internal entropy.
     Seed *= lcg; // Multiply random by random. Non-linearity induced due to truncation.
     const uint64_t ph = *(uint32_t*) &Hash[ i ]; // Save current hash.
-    *hc ^= (uint32_t) ( Seed >> 32 ); // Add internal entropy to the hash.
-    Seed ^= ph ^ m; // Mix internal entropy with previous hash's and message's entropy.
-	lcg += Seed; // Add internal entropy to "lcg" state variable (both random). Truncation is possible.
+    *hc ^= (uint32_t) ( Seed >> 32 ); // Add the internal entropy to the hash.
+    Seed ^= ph ^ m; // Add previous hash's and message's entropy to the internal entropy.
+	lcg += Seed; // Add the internal entropy to "lcg" variable (both random). Truncation is possible.
 
 ## Other ##
 

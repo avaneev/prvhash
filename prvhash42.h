@@ -31,7 +31,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.2
+ * @version 2.3
  */
 
 //$ nocpp
@@ -74,8 +74,8 @@ inline void prvhash42( const uint8_t* const Message, const int MessageLen,
 		// will, possibly using various statistical search methods. The best
 		// strategies: 1) Compose both this and seed numbers of 8-bit values
 		// that have 4 random bits set; 2) Compose the 64-bit value that has
-		// 32 random bits set; same for seed. An important consideration here
-		// is to pass the 16-bit Sparse test by default.
+		// 30-34 random bits set; same for seed. An important consideration
+		// here is to pass the 16-bit Sparse test by default.
 	uint64_t Seed; // Generated similarly to "lcg".
 
 	if( InitLCG == 0 && InitSeed == 0 )
