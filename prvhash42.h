@@ -31,7 +31,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.4
+ * @version 2.5
  */
 
 //$ nocpp
@@ -73,12 +73,10 @@ inline void prvhash42( const uint8_t* const Message, const int MessageLen,
 		// It is a random sequence of bits. This value can be regenerated at
 		// will, possibly using various statistical search methods. The best
 		// strategies: 1) Compose this number from 16-bit random values that
-		// have 6 to 10 random bits set: this guarantees that the initial
-		// "lcg" value has no long trials of 0s and 1s; 2) Use a 64-bit random
-		// value that has 30-34 random bits set (this is a less preferred
-		// method as it may produce an unoptimal initial state). An important
-		// consideration here is to pass the 16-bit Sparse test by default.
-	uint64_t Seed; // Generated purely on random.
+		// have 6 to 10 random bits set; 2) Use a 64-bit random value that has
+		// 30-34 random bits set. An important consideration here is to pass
+		// the 16-bit Sparse test by default.
+	uint64_t Seed; // Generated similarly to "lcg".
 
 	if( InitLCG == 0 && InitSeed == 0 )
 	{
@@ -92,25 +90,29 @@ inline void prvhash42( const uint8_t* const Message, const int MessageLen,
 		Seed = InitSeed;
 	}
 
+	const int hl4 = ( HashLen >> 2 );
+	const uint64_t lmsg = ( MessageLen == 0 ? 0 : ~Message[ MessageLen - 1 ]);
+	int c = MessageLen + hl4 + hl4 - MessageLen % hl4;
+	int hpos = 0;
 	int k;
 
-	for( k = 0; k < MessageLen; k++ )
+	for( k = 0; k < c; k++ )
 	{
-		const uint64_t m = Message[ k ];
+		const uint64_t msg = ( k < MessageLen ? Message[ k ] : lmsg );
 
-		Seed ^= m;
-		int i;
-
-		for( i = 0; i < HashLen; i += 4 )
-		{
-			Seed *= lcg;
-			uint32_t* const hc = (uint32_t*) &Hash[ i ];
-			const uint64_t ph = *hc;
-			*hc ^= (uint32_t) ( Seed >> 32 );
-			Seed ^= ph ^ m;
-		}
-
+		Seed *= lcg;
+		uint32_t* const hc = (uint32_t*) &Hash[ hpos ];
+		const uint64_t ph = *hc;
+		*hc ^= (uint32_t) ( Seed >> 32 );
+		Seed ^= ph ^ msg;
 		lcg += Seed;
+
+		hpos += 4;
+
+		if( hpos == HashLen )
+		{
+			hpos = 0;
+		}
 	}
 }
 

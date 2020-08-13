@@ -28,26 +28,19 @@ follow the normal distribution. Without the seed, the normality is achieved as
 a second-order effect, with the internal random-number generator (the `Seed`)
 having a distribution skewed towards triangular distribution. In practice,
 the `InitLCG`, `InitSeed` (instead of `SeedXOR`), and initial hash, can all be
-randomly seeded (note the bit composition considerations of the `lcg` value),
-adding useful initial entropy (64 + 64 + hash length bits of total entropy).
+randomly seeded (see the suggestions in `prvhash42.h`), adding useful initial
+entropy (64 + 64 + hash length bits of total entropy).
 
 32-, 64- and 128-bit PRVHASH pass all [SMHasher](https://github.com/rurban/smhasher)
 tests. 256-bit PRVHASH also passes the Avalanche, DiffDist, Window, and Zeroes
 tests (other tests were not performed). Other hash lengths were not
 thoroughly tested, but extrapolations can be made. PRVHASH may possess
-cryptographic properties, but this is yet to be proven. One point to note here
-is that PRVHASH may produce identical hashes for a message extended with a
-varying number of constant bytes. So, a 32-bit hash of a message extended with
-e.g. 100 constant bytes may be equal to a hash of the same message extended
-with 4000000 constant bytes. This is not related to length-extension attack,
-but just a feature of the hash function, meaning that this function is best
-used on pre-compressed, maximal entropy, data. Fortunately, the required
-number of extension bytes depends on the hash length. In practice, if
-pre-compression is not used, it may be useful to end the hashing of the
-message with a `bitwise NOT` version of the last byte, as a pseudo-entropy
-injection. In author's opinion, this hash function is almost definitely
-non-reversible since fixed prime numbers are not used, and due to
-non-linearities introduced by bit truncations.
+cryptographic properties, but this is yet to be proven. This function is best
+used on pre-compressed, maximal entropy, data. To cope with cases with sparse
+entropy, PRVHASH ends the hashing of the message with a `bitwise NOT` version
+of the last byte, as a pseudo-entropy injection. In author's opinion, this
+hash function is almost definitely non-reversible since fixed prime numbers
+are not used, and due to non-linearities introduced by bit truncations.
 
 PRVHASH can be easily transformed into a stream hash by creating a simple
 context structure, and moving its initialization to a separate function. It is
@@ -59,9 +52,9 @@ Please see the `prvhash42.h` file for details of the implementation (the
 On big-endian architectures (ARM) each 32-bit element of the resulting hash
 should be endianness-corrected (byte-swapped).
 
-The 32-bit hash of the string `The strict avalanche criterion` is `32184023`.
+The 32-bit hash of the string `The strict avalanche criterion` is `1e74d56e`.
 
-The 64-bit hash of the same string is `7b20846917dc5b06`.
+The 64-bit hash of the same string is `86d2aeba09c5586c`.
 
 ## Entropy PRNG ##
 
@@ -81,18 +74,11 @@ Here is the author's vision on how the function works (in actuality, coming up
 with this solution was accompanied with a lot of trial and error).
 
     const uint64_t m = MessageByte; // Get 8 bits from the message.
-    Seed ^= m; // Add message's entropy to the internal entropy.
     Seed *= lcg; // Multiply random by random. Non-linearity induced due to truncation.
     const uint64_t ph = *(uint32_t*) &Hash[ i ]; // Save the current hash.
     *hc ^= (uint32_t) ( Seed >> 32 ); // Add the internal entropy to the hash.
     Seed ^= ph ^ m; // Add saved hash's and message's entropy to the internal entropy.
 	lcg += Seed; // Add the internal entropy to the "lcg" variable (both random). Truncation is possible.
-
-## Optimizations ##
-
-The basic optimized versions of 32-, 64- and 128-bit hashes were implemented
-in the `prvhash42opt.h` file. On big-endian architectures the resulting hashes
-require byte-swapping.
 
 ## Other ##
 

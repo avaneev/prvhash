@@ -32,7 +32,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.4
+ * @version 2.5
  */
 
 //$ nocpp
@@ -209,13 +209,10 @@ inline uint64_t prvrng_gen_entropy64c16( PRVRNG_CTX* const ctx )
 
 inline void prvrng_prvhash42_32( PRVRNG_CTX* const ctx, const uint64_t msg )
 {
-	ctx -> Seed ^= msg;
-
 	ctx -> Seed *= ctx -> lcg;
 	const uint64_t ph = (uint32_t) ctx -> Hash;
 	ctx -> Hash ^= ctx -> Seed >> 32;
 	ctx -> Seed ^= ph ^ msg;
-
 	ctx -> lcg += ctx -> Seed;
 }
 
@@ -259,31 +256,25 @@ inline uint8_t prvrng_gen32( PRVRNG_CTX* const ctx )
  * Internal function, calculates "prvhash42" round, for 64-bit hash.
  *
  * @param ctx Pointer to the context structure.
- * @param msg 8-bit entropy message.
+ * @param msg 8-bit entropy message. Second message byte is assumed to be 0.
  */
 
 inline void prvrng_prvhash42_64( PRVRNG_CTX* const ctx, const uint64_t msg )
 {
-	// Entry.
-
-	ctx -> Seed ^= msg;
-
 	// Lower 32 bits of hash.
 
 	ctx -> Seed *= ctx -> lcg;
 	uint64_t ph = (uint32_t) ctx -> Hash;
 	ctx -> Hash ^= ctx -> Seed >> 32;
 	ctx -> Seed ^= ph ^ msg;
+	ctx -> lcg += ctx -> Seed;
 
 	// Upper 32 bits of hash.
 
 	ctx -> Seed *= ctx -> lcg;
 	ph = ctx -> Hash >> 32;
 	ctx -> Hash ^= ctx -> Seed & 0xFFFFFFFF00000000ULL;
-	ctx -> Seed ^= ph ^ msg;
-
-	// Exit.
-
+	ctx -> Seed ^= ph;
 	ctx -> lcg += ctx -> Seed;
 }
 
