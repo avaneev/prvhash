@@ -32,7 +32,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.3
+ * @version 2.4
  */
 
 //$ nocpp
@@ -96,6 +96,23 @@ inline uint8_t prvrng_gen_entropy( PRVRNG_CTX* const ctx )
 }
 
 /**
+ * This function calculates bit count of a 16-bit number, in a platform
+ * independent way.
+ *
+ * @param v Value.
+ */
+
+inline int prvrng_popcnt_u16( const uint16_t v )
+{
+	return(( v & 1 ) + (( v >> 1 ) & 1 ) + (( v >> 2 ) & 1 ) +
+		(( v >> 3 ) & 1 ) + (( v >> 4 ) & 1 ) + (( v >> 5 ) & 1 ) +
+		(( v >> 6 ) & 1 ) + (( v >> 7 ) & 1 ) + (( v >> 8 ) & 1 ) +
+		(( v >> 9 ) & 1 ) + (( v >> 10 ) & 1 ) + (( v >> 11 ) & 1 ) +
+		(( v >> 12 ) & 1 ) + (( v >> 13 ) & 1 ) + (( v >> 14 ) & 1 ) +
+		( v >> 15 ));
+}
+
+/**
  * This function calculates bit count of a 64-bit number, in a platform
  * independent way, can be replaced by an intrinsic.
  *
@@ -109,14 +126,7 @@ inline int prvrng_popcnt_u64( uint64_t v0 )
 
 	for( i = 0; i < 4; i++ )
 	{
-		const uint16_t v = (uint16_t) v0;
-		r += ( v & 1 ) + (( v >> 1 ) & 1 ) + (( v >> 2 ) & 1 ) +
-			(( v >> 3 ) & 1 ) + (( v >> 4 ) & 1 ) + (( v >> 5 ) & 1 ) +
-			(( v >> 6 ) & 1 ) + (( v >> 7 ) & 1 ) + (( v >> 8 ) & 1 ) +
-			(( v >> 9 ) & 1 ) + (( v >> 10 ) & 1 ) + (( v >> 11 ) & 1 ) +
-			(( v >> 12 ) & 1 ) + (( v >> 13 ) & 1 ) + (( v >> 14 ) & 1 ) +
-			( v >> 15 );
-
+		r += prvrng_popcnt_u16( (uint16_t) v0 );
 		v0 >>= 16;
 	}
 
@@ -152,6 +162,42 @@ inline uint64_t prvrng_gen_entropy64c( PRVRNG_CTX* const ctx )
 			return( tv );
 		}
 	}
+}
+
+/**
+ * Function generates an 64-bit entropy value and assures this value is
+ * composed of four 16-bit values that each have 6 to 10 bits set. This
+ * function is required to generate a stable initial state of the hash
+ * function. This constraint is usually quickly satisfied.
+ *
+ * @param ctx Pointer to the context structure.
+ */
+
+inline uint64_t prvrng_gen_entropy64c16( PRVRNG_CTX* const ctx )
+{
+	uint64_t val = 0;
+	int j;
+
+	for( j = 0; j < 4; j++ )
+	{
+		while( true )
+		{
+			uint16_t tv = prvrng_gen_entropy( ctx );
+			tv <<= 8;
+			tv |= (uint16_t) prvrng_gen_entropy( ctx );
+
+			const int bcnt = prvrng_popcnt_u16( tv );
+
+			if( bcnt >= 6 && bcnt <= 10 )
+			{
+				val <<= 16;
+				val |= tv;
+				break;
+			}
+		}
+	}
+
+	return( val );
 }
 
 /**
@@ -307,11 +353,8 @@ inline int prvrng_init32( PRVRNG_CTX* const ctx )
 
 	#endif // defined( PRVRNG_UNIX )
 
-	ctx -> Hash = 0;
-	ctx -> lcg = 0;
-	ctx -> Seed = 0;
 	ctx -> Hash = prvrng_gen_entropy64c( ctx );
-	ctx -> lcg = prvrng_gen_entropy64c( ctx );
+	ctx -> lcg = prvrng_gen_entropy64c16( ctx );
 	ctx -> Seed = prvrng_gen_entropy64c( ctx );
 	ctx -> EntCtr = 0;
 	ctx -> HashLeft = 0;
@@ -365,7 +408,7 @@ inline void prvrng_final64( PRVRNG_CTX* ctx )
 }
 
 /**
- * A test function for "prvrng". Prints 16 random bytes.
+ * A test function for "prvrng", 32-bit hash-based. Prints 16 random bytes.
  */
 
 inline void prvrng_test32()
@@ -374,6 +417,7 @@ inline void prvrng_test32()
 
 	if( !prvrng_init32( &ctx ))
 	{
+		printf( "Cannot obtain the entropy source!\n" );
 		return;
 	}
 
@@ -388,7 +432,7 @@ inline void prvrng_test32()
 }
 
 /**
- * A test function for "prvrng". Prints 16 random bytes.
+ * A test function for "prvrng", 64-bit hash-based. Prints 16 random bytes.
  */
 
 inline void prvrng_test64()
@@ -397,6 +441,7 @@ inline void prvrng_test64()
 
 	if( !prvrng_init64( &ctx ))
 	{
+		printf( "Cannot obtain the entropy source!\n" );
 		return;
 	}
 
