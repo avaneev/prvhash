@@ -72,10 +72,13 @@ inline void prvhash42( const uint8_t* const Message, const int MessageLen,
 	uint64_t lcg; // Multiplier inspired by LCG. This is not a prime number.
 		// It is a random sequence of bits. This value can be regenerated at
 		// will, possibly using various statistical search methods. The best
-		// strategies: 1) Compose both this and seed numbers of 8-bit values
-		// that have 4 random bits set; 2) Compose the 64-bit value that has
-		// 30-34 random bits set; same for seed. An important consideration
-		// here is to pass the 16-bit Sparse test by default.
+		// strategies: 1) Compose both this and seed numbers from 16-bit
+		// random values that have 6 to 10 random bits set: this guarantees
+		// that the numbers have no long trials of 0s and 1s; 2) Use a 64-bit
+		// random value that has 30-34 random bits set; same for seed (this is
+		// a less preferred method as it may produce an unoptimal initial
+		// state). An important consideration here is to pass the 16-bit
+		// Sparse test by default.
 	uint64_t Seed; // Generated similarly to "lcg".
 
 	if( InitLCG == 0 && InitSeed == 0 )

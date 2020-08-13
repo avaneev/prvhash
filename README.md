@@ -12,12 +12,12 @@ generate 32- to unlimited-bit hashes, in 32-bit increments, yielding hashes of
 roughly equal quality independent of the chosen hash length. PRVHASH is based
 on 64-bit math. Hashes beyond 256-bits may not pass all the hash tests due to
 limitations of 64-bit math used in this hash function, but, for example, any
-32-bit element extracted from 512-bit resulting hash is as collision resistant
-as just a 32-bit hash. The use of the function beyond 512-bit hashes is easily
-possible, but has to be statistically tested (Zeroes or constant-value message
-test may fail which is understandable: no entropy in the message). Extension
-of the hash function to 128-bit math is possible: this should increase its
-properties exponentially.
+32-bit element extracted from 512-bit or 2048-bit resulting hash is as
+collision resistant as just a 32-bit hash. The use of the function beyond
+512-bit hashes is easily possible, but has to be statistically tested
+(Zeroes or constant-value message test may fail which is understandable: no
+entropy in the message). Extension of the hash function to 128-bit math is
+possible: this should increase its properties exponentially.
 
 PRVHASH is solely based on the butterfly effect, strongly inspired by LCG
 pseudo-random number generators. The generated hashes have good avalanche
@@ -28,10 +28,10 @@ follow the normal distribution. Without the seed, the normality is achieved as
 a second-order effect, with the internal random-number generator (the `Seed`)
 having a distribution skewed towards triangular distribution. In practice,
 the `InitLCG`, `InitSeed` (instead of `SeedXOR`), and initial hash, can all be
-randomly seeded (note the bit count constraint on `lcg` and `Seed`), adding
-useful initial entropy (64 + 64 + hash length bits of total entropy).
+randomly seeded (note the bit composition considerations of `lcg` and `Seed`),
+adding useful initial entropy (64 + 64 + hash length bits of total entropy).
 
-32- and 64-bit PRVHASH pass all [SMHasher](https://github.com/rurban/smhasher)
+32-, 64- and 128-bit PRVHASH pass all [SMHasher](https://github.com/rurban/smhasher)
 tests. 256-bit PRVHASH also passes the Avalanche, DiffDist, Window, and Zeroes
 tests (other tests were not performed). Other hash lengths were not
 thoroughly tested, but extrapolations can be made. PRVHASH may possess
@@ -44,11 +44,10 @@ but just a feature of the hash function, meaning that this function is best
 used on pre-compressed, maximal entropy, data. Fortunately, the required
 number of extension bytes depends on the hash length. In practice, if
 pre-compression is not used, it may be useful to end the hashing of the
-message with a `bitwise NOT` version of the last bytes (the same count as
-the hash length), as a pseudo-entropy injection. In author's opinion, this
-hash function is almost definitely non-reversible since fixed prime numbers
-are not internally used, and due to non-linearities introduced by bit
-truncations.
+message with a `bitwise NOT` version of the last byte, as a pseudo-entropy
+injection. In author's opinion, this hash function is almost definitely
+non-reversible since fixed prime numbers are not internally used, and due to
+non-linearities introduced by bit truncations.
 
 PRVHASH can be easily transformed into a stream hash by creating a simple
 context structure, and moving its initialization to a separate function. It is
@@ -93,7 +92,8 @@ and error).
 ## Optimizations ##
 
 Basic optimized versions of 32-, 64- and 128-bit hashes were implemented in
-the `prvhash42opt.h` file.
+the `prvhash42opt.h` file. On big-endian architectures the resulting hashes
+require byte-swapping.
 
 ## Other ##
 
