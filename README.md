@@ -26,10 +26,10 @@ supplied to the hash function, but this is not a requirement. When each
 message in a set is randomly seeded, this allows hashes of such set to closely
 follow the normal distribution. Without the seed, the normality is achieved as
 a second-order effect, with the internal random-number generator (the `Seed`)
-having a skewed distribution. In practice, the `InitLCG`, `InitSeed` (instead
-of `SeedXOR`), and initial hash, can all be randomly seeded (note the
-bit count constraint on `lcg` and `Seed`), adding useful initial entropy
-(64 + 64 + hash length bits of total entropy).
+having a distribution skewed towards triangular distribution. In practice,
+the `InitLCG`, `InitSeed` (instead of `SeedXOR`), and initial hash, can all be
+randomly seeded (note the bit count constraint on `lcg` and `Seed`), adding
+useful initial entropy (64 + 64 + hash length bits of total entropy).
 
 32- and 64-bit PRVHASH pass all [SMHasher](https://github.com/rurban/smhasher)
 tests. 256-bit PRVHASH also passes the Avalanche, DiffDist, Window, and Zeroes
@@ -45,7 +45,10 @@ used on pre-compressed, maximal entropy, data. Fortunately, the required
 number of extension bytes depends on the hash length. In practice, if
 pre-compression is not used, it may be useful to end the hashing of the
 message with a `bitwise NOT` version of the last bytes (the same count as
-the hash length), as a pseudo-entropy injection.
+the hash length), as a pseudo-entropy injection. In author's opinion, this
+hash function is almost definitely non-reversible since fixed prime numbers
+are not internally used, and due to non-linearities introduced by bit
+truncations.
 
 PRVHASH can be easily transformed into a stream hash by creating a simple
 context structure, and moving its initialization to a separate function. It is
@@ -75,9 +78,9 @@ comparison purposes.
 
 ## Description ##
 
-Here is author's vision how the algorithm works for 32-bit hashes (in
+Here is the author's vision on how the function works for 32-bit hashes (in
 actuality, coming up with this solution was accompanied with a lot of trial
-and error, and stress).
+and error).
 
     const uint64_t m = MessageByte; // Get 8 bits from the message.
     Seed ^= m; // Add message's entropy to the internal entropy.
@@ -91,14 +94,6 @@ and error, and stress).
 
 Basic optimized versions of 32-, 64- and 128-bit hashes were implemented in
 the `prvhash42opt.h` file.
-
-As for the exponential speed optimizations, it should be possible to run 4
-hash functions in parallel (with independent "lcg" and "Seed" variables),
-passing input bytes to each hash function in succession. At the end of
-hashing, the 4 hashes should be XORed together to produce a final 32-bit hash.
-Unfortunately, this is only possible on AVX2 instruction set, which lacks
-parallel 64-bit multiplication with truncation. As a byproduct, such parallel
-arrangement may increase the quality of randomness exponentially.
 
 ## Other ##
 
