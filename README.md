@@ -7,17 +7,15 @@ derived from the message. Resulting hashes closely follow normal distribution
 of bit frequency. PRVHASH is conceptually similar to `keccak` scheme, but is a
 completely different implementation of this concept.
 
-PRVHASH is comparably slow, suitable for short messages only. PRVHASH can
-generate 32- to unlimited-bit hashes, in 32-bit increments, yielding hashes of
-roughly equal quality independent of the chosen hash length. PRVHASH is based
-on 64-bit math. Hashes beyond 256-bits may not pass all the hash tests due to
-limitations of 64-bit math used in this hash function, but, for example, any
-32-bit element extracted from 512- or 2048-bit resulting hash is as collision
-resistant as just a 32-bit hash. The use of the function beyond 512-bit hashes
-is easily possible, but has to be statistically tested (Zeroes or
-constant-value message test may fail which is understandable: no entropy in
-the message). Extension of the hash function to 128-bit math works fine: this
-increases its properties exponentially.
+PRVHASH can generate 32- to unlimited-bit hashes, in 32-bit increments,
+yielding hashes of roughly equal quality independent of the chosen hash
+length. PRVHASH is based on 64-bit math. Hashes beyond 256-bits may not pass
+all the hash tests due to limitations of 64-bit math used in this hash
+function, but, for example, any 32-bit element extracted from 512- or
+2048-bit resulting hash is as collision resistant as just a 32-bit hash. The
+use of the function beyond 512-bit hashes is easily possible, but has to be
+statistically tested. Extension of the hash function to 128-bit math proves
+to work well: this increases its properties exponentially.
 
 PRVHASH is solely based on the butterfly effect, strongly inspired by LCG
 pseudo-random number generators. The generated hashes have good avalanche
@@ -39,12 +37,12 @@ cryptographic properties, but this is yet to be proven. This function is best
 used on pre-compressed, maximal entropy, data. To cope with cases with sparse
 entropy, PRVHASH ends the hashing of the message with a `bitwise NOT` version
 of the last byte, as a pseudo-entropy injection. In author's opinion, this
-hash function is almost definitely non-reversible since fixed prime numbers
-are not used, and due to non-linearities introduced by bit truncations.
+hash function is almost definitely non-reversible since it does not use
+fixed prime numbers, and due to non-linearities introduced by bit truncations.
 
 PRVHASH can be easily transformed into a stream hash by creating a simple
 context structure, and moving its initialization to a separate function. It is
-a fixed-time hash function that depends only on message and hash lengths.
+a fixed-time hash function that depends only on message length.
 
 Please see the `prvhash42.h` file for details of the implementation (the
 `prvhash.h` and `prvhash4.h` are outdated versions).
@@ -79,6 +77,13 @@ with this solution was accompanied with a lot of trial and error).
     *hc ^= (uint32_t) ( Seed >> 32 ); // Add the internal entropy to the hash.
     Seed ^= ph ^ m; // Add saved hash's and message's entropy to the internal entropy.
 	lcg += Seed; // Add the internal entropy to the "lcg" variable (both random). Truncation is possible.
+
+Without external (message) entropy injections, the function can run for a
+prolonged time, generating pseudo-entropy without repetitions. When the
+external entropy is introduced, the function "shifts" into unrelated generator
+state. So, it can be said that the function "jumps" between a huge number of
+pseudo-random generators. Hash length affects the size of this "generator
+space" thus the function produces quality hashes for any required hash length.
 
 ## Other ##
 
