@@ -43,8 +43,7 @@ context structure, and moving its initialization to a separate function. It is
 a fixed-time hash function that depends only on message length.
 
 Please see the `prvhash42.h` file for details of the implementation (the
-`prvhash.h` and `prvhash4.h` are outdated versions). The `prvhash82.h` file
-implements the same function, but extended to 128-bit math.
+`prvhash.h` and `prvhash4.h` are outdated versions).
 
 On big-endian architectures (ARM) each hash element of the resulting hash
 should be endianness-corrected (byte-swapped).
@@ -53,8 +52,6 @@ The prvhash42_32 hash of the string `The strict avalanche criterion` is
 `1e74d56e`.
 
 The prvhash42_64 hash of the same string is `86d2aeba09c5586c`.
-
-The prvhash82_64 hash of the same string is `6b28f402e92adbaf`.
 
 ## Entropy PRNG ##
 
