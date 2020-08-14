@@ -14,8 +14,8 @@ all the hash tests due to limitations of 64-bit math used in this hash
 function, but, for example, any 32-bit element extracted from 512- or
 2048-bit resulting hash is as collision resistant as just a 32-bit hash. The
 use of the function beyond 512-bit hashes is easily possible, but has to be
-statistically tested. Extension of the hash function to 128-bit math proves
-to work well: this increases its properties exponentially.
+statistically tested. Extension of the hash function to 128-bit math also
+works well: this increases its properties exponentially.
 
 PRVHASH is solely based on the butterfly effect, strongly inspired by LCG
 pseudo-random number generators. The generated hashes have good avalanche
@@ -24,10 +24,10 @@ supplied to the hash function, but this is not a requirement. When each
 message in a set is randomly seeded, this allows hashes of such set to closely
 follow the normal distribution. Without the seed, the normality is achieved as
 a second-order effect, with the internal random-number generator (the `Seed`)
-having a distribution skewed towards triangular distribution. In practice,
-the `InitLCG`, `InitSeed` (instead of `SeedXOR`), and initial hash, can all be
-randomly seeded (see the suggestions in `prvhash42.h`), adding useful initial
-entropy (64 + 64 + hash length bits of total entropy).
+having a strong distribution skew towards logarithmic distribution. In
+practice, the `InitLCG`, `InitSeed` (instead of `SeedXOR`), and initial hash,
+can all be randomly seeded (see the suggestions in `prvhash42.h`), adding
+useful initial entropy (64 + 64 + hash length bits of total entropy).
 
 32-, 64- and 128-bit PRVHASH pass all [SMHasher](https://github.com/rurban/smhasher)
 tests. 256-bit PRVHASH also passes the Avalanche, DiffDist, Window, and Zeroes
@@ -83,7 +83,8 @@ prolonged time, generating pseudo-entropy without repetitions. When the
 external entropy is introduced, the function "shifts" into unrelated generator
 state. So, it can be said that the function "jumps" between a huge number of
 pseudo-random generators. Hash length affects the size of this "generator
-space" thus the function produces quality hashes for any required hash length.
+space", thus the function produces quality hashes for any required hash
+length.
 
 ## Other ##
 
