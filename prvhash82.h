@@ -100,7 +100,7 @@ inline void prvhash82( const uint8_t* const Message, const int MessageLen,
 	const int hl8 = ( HashLen >> 3 );
 	const uint64_t lmsg = ( MessageLen == 0 ? 0 : ~Message[ MessageLen - 1 ]);
 	const int ml2 = MessageLen + ( MessageLen & 1 ) +
-		( MessageLen < 4 && MessageLen > 0 ? 4 - MessageLen : 0 );
+		( MessageLen < 4 && MessageLen > 0 ? 2 : 0 );
 
 	int c = ml2 + hl8 + hl8 - ml2 % hl8;
 	int hpos = 0;
