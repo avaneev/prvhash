@@ -7,15 +7,14 @@ derived from the message. Resulting hashes closely follow normal distribution
 of bit frequency. PRVHASH is conceptually similar to `keccak` scheme, but is a
 completely different implementation of this concept.
 
-PRVHASH can generate 32- to unlimited-bit hashes, in 32-bit increments,
-yielding hashes of roughly equal quality independent of the chosen hash
-length. PRVHASH is based on 64-bit math. Hashes beyond 256-bits may not pass
-all the hash tests due to limitations of 64-bit math used in this hash
-function, but, for example, any 32-bit element extracted from 512- or
-2048-bit resulting hash is as collision resistant as just a 32-bit hash. The
-use of the function beyond 512-bit hashes is easily possible, but has to be
-statistically tested. Extension of the hash function to 128-bit math also
-works well: this increases its properties exponentially.
+PRVHASH can generate 32- to unlimited-bit hashes, yielding hashes of roughly
+equal quality independent of the chosen hash length. PRVHASH is based on
+64-bit math. Hashes beyond 256-bits still require extensive testing, but, for
+example, any 32-bit element extracted from 512- or 2048-bit resulting hash is
+as collision resistant as just a 32-bit hash. The use of the function beyond
+512-bit hashes is easily possible, but has to be statistically tested. The
+extension of the hash function to 128-bit math also works well: this increases
+its properties exponentially.
 
 PRVHASH is solely based on the butterfly effect, strongly inspired by LCG
 pseudo-random number generators. The generated hashes have good avalanche
@@ -29,35 +28,38 @@ practice, the `InitLCG`, `InitSeed` (instead of `SeedXOR`), and initial hash,
 can all be randomly seeded (see the suggestions in `prvhash42.h`), adding
 useful initial entropy (64 + 64 + hash length bits of total entropy).
 
-32-, 64- and 128-bit PRVHASH pass all [SMHasher](https://github.com/rurban/smhasher)
-tests. 256-bit PRVHASH also passes the Avalanche, DiffDist, Window, and Zeroes
-tests (other tests were not performed). Other hash lengths were not
-thoroughly tested, but extrapolations can be made. PRVHASH may possess
-cryptographic properties, but this is yet to be proven. This function is best
-used on pre-compressed, maximal entropy, data. To cope with cases with sparse
-entropy, PRVHASH ends the hashing of the message with a `bitwise NOT` version
-of the last byte, as a pseudo-entropy injection. In author's opinion, this
-hash function is almost definitely non-reversible since it does not use
-fixed prime numbers, and due to non-linearities introduced by bit truncations.
+32-, 64-, 128-, and 256-bit PRVHASH hashes pass all [SMHasher](https://github.com/rurban/smhasher)
+tests. Other hash lengths were not thoroughly tested, but extrapolations can
+be made. PRVHASH may possess cryptographic properties, but this is yet to be
+proven. This function is best used on pre-compressed, maximal entropy, data.
+To cope with the cases of sparse entropy, PRVHASH ends the hashing of the
+message with a `bitwise NOT` version of the last byte, as a pseudo-entropy
+injection. In author's opinion, this hash function is almost definitely
+non-reversible since it does not use fixed prime numbers, and due to
+non-linearities introduced by bit truncations.
 
 PRVHASH can be easily transformed into a stream hash by creating a simple
 context structure, and moving its initialization to a separate function. It is
 a fixed-time hash function that depends only on message length.
 
 Please see the `prvhash42.h` file for details of the implementation (the
-`prvhash.h` and `prvhash4.h` are outdated versions).
+`prvhash.h` and `prvhash4.h` are outdated versions). The `prvhash82.h` file
+implements the same function, but extended to 128-bit math.
 
-On big-endian architectures (ARM) each 32-bit element of the resulting hash
+On big-endian architectures (ARM) each hash element of the resulting hash
 should be endianness-corrected (byte-swapped).
 
-The 32-bit hash of the string `The strict avalanche criterion` is `1e74d56e`.
+The prvhash42_32 hash of the string `The strict avalanche criterion` is
+`1e74d56e`.
 
-The 64-bit hash of the same string is `86d2aeba09c5586c`.
+The prvhash42_64 hash of the same string is `86d2aeba09c5586c`.
+
+The prvhash82_64 hash of the same string is `6b28f402e92adbaf`.
 
 ## Entropy PRNG ##
 
-64-bit PRVHASH can be also used as a very efficient general-purpose PRNG with
-an external entropy source injections (like how the `/dev/urandom` works on
+PRVHASH can be also used as a very efficient general-purpose PRNG with an
+external entropy source injections (like how the `/dev/urandom` works on
 Unix): the 64-bit hash value can be used as a pseudo-random number, spliced
 into 8 output bytes each round: this was tested to work well when 8-bit true
 entropy injections are done inbetween 8 to 2048 generated random bytes (delay
@@ -79,12 +81,12 @@ with this solution was accompanied with a lot of trial and error).
 	lcg += Seed; // Add the internal entropy to the "lcg" variable (both random). Truncation is possible.
 
 Without external (message) entropy injections, the function can run for a
-prolonged time, generating pseudo-entropy without repetitions. When the
-external entropy is introduced, the function "shifts" into unrelated generator
-state. So, it can be said that the function "jumps" between a huge number of
+prolonged time, generating pseudo-entropy without much repetitions. When the
+external entropy is introduced, the function "shifts" into unrelated state.
+So, it can be said that the function "jumps" between a huge number of
 pseudo-random generators. Hash length affects the size of this "generator
-space", thus the function produces quality hashes for any required hash
-length.
+space", permitting the function to produce quality hashes for any required
+hash length.
 
 ## Other ##
 
