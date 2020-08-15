@@ -1,7 +1,8 @@
 /**
- * @file prvhash42.h
+ * @file prvhash82.h
  *
- * @brief The inclusion file for the "prvhash42" hash function.
+ * @brief The inclusion file for the "prvhash82" hash function. Hash length
+ * increment = 8.
  *
  * @mainpage
  *
@@ -36,14 +37,14 @@
 
 //$ nocpp
 
-#ifndef PRVHASH42_INCLUDED
-#define PRVHASH42_INCLUDED
+#ifndef PRVHASH82_INCLUDED
+#define PRVHASH82_INCLUDED
 
 #include <stdint.h>
 #include <string.h>
 
 /**
- * PRVHASH hash function (64-bit variables with 32-bit hash word). Produces
+ * PRVHASH hash function (128-bit variables with 64-bit hash word). Produces
  * hash of the specified Message.
  *
  * @param Message Message to produce hash from.
@@ -51,37 +52,43 @@
  * @param[out] Hash The resulting hash. If both InitLCG and InitSeed are
  * non-zero, the hash will not be initially reset to 0, otherwise the hash
  * should be pre-initialized with random bytes.
- * @param HashLen The required hash length, in bytes, should be >= 4, in
- * increments of 4.
+ * @param HashLen The required hash length, in bytes, should be >= 8, in
+ * increments of 8.
  * @param SeedXOR Optional value, to XOR the default seed with. To use the
  * default seed, set to 0. If both InitLCG and InitSeed are non-zero, this
  * SeedXOR is ignored and should be set to 0. Otherwise, the SeedXOR value
  * can have any bit length, and is used only as an additional entropy source.
  * @param InitLCG If both InitLCG and InitSeed are non-zero, both values
- * will be used as initial state of the hash function. Full 64-bit random
+ * will be used as initial state of the hash function. Full 128-bit random
  * value should be supplied in this case. See the considerations below.
  * @param InitSeed If both InitLCG and InitSeed are non-zero, both values
- * will be used as initial state of the hash function. Full 64-bit random
+ * will be used as initial state of the hash function. Full 128-bit random
  * value should be supplied in this case.
  */
 
-inline void prvhash42( const uint8_t* const Message, const int MessageLen,
-	uint8_t* const Hash, const int HashLen, const uint64_t SeedXOR,
-	const uint64_t InitLCG, const uint64_t InitSeed )
+inline void prvhash82( const uint8_t* const Message, const int MessageLen,
+	uint8_t* const Hash, const int HashLen, const __uint128_t SeedXOR,
+	const __uint128_t InitLCG, const __uint128_t InitSeed )
 {
-	uint64_t lcg; // Multiplier inspired by LCG. This is not a prime number.
-		// It is a random sequence of bits. This value can be regenerated at
-		// will, possibly using various statistical search methods. The best
-		// strategies: 1) Compose this number from 16-bit random values that
-		// have 6 to 10 random bits set; 2) Use a 64-bit random value that has
-		// 30-34 random bits set. An important consideration here is to pass
-		// the 16-bit Sparse test by default.
-	uint64_t Seed; // Generated similarly to "lcg".
+	__uint128_t lcg; // Multiplier inspired by LCG. This is not a prime
+		// number. It is a random sequence of bits. This value can be
+		// regenerated at will, possibly using various statistical search
+		// methods. The best strategies: 1) Compose this number from 16-bit
+		// random values that have 6 to 10 random bits set; 2) Use a 128-bit
+		// random value that has 60-68 random bits set. An important
+		// consideration here is to pass the 16-bit Sparse test by default.
+	__uint128_t Seed; // Generated similarly to "lcg".
 
 	if( InitLCG == 0 && InitSeed == 0 )
 	{
 		lcg = 15267459991392010589ULL;
-		Seed = 7928988912013905173ULL ^ SeedXOR;
+		lcg <<= 64;
+		lcg |= 14473286605592752231ULL;
+		Seed = 7928988912013905173ULL;
+		Seed <<= 64;
+		Seed |= 1846177453121048234ULL;
+		Seed ^= SeedXOR;
+
 		memset( Hash, 0, HashLen );
 	}
 	else
@@ -90,23 +97,24 @@ inline void prvhash42( const uint8_t* const Message, const int MessageLen,
 		Seed = InitSeed;
 	}
 
-	const int hl4 = ( HashLen >> 2 );
-	int c = MessageLen + hl4 + hl4 - MessageLen % hl4;
+	const int hl82 = ( HashLen >> 2 );
+	int c = MessageLen + hl82 + hl82 - MessageLen % hl82;
 	int hpos = 0;
 	int k;
 
-	for( k = 0; k < c; k++ )
+	for( k = 0; k < c; k += 2 )
 	{
-		const uint64_t msg = ( k < MessageLen ? Message[ k ] : 0x100 );
+		const uint64_t msg = ( k < MessageLen ? Message[ k ] : 0x100 ) |
+			( k < MessageLen - 1 ? Message[ k + 1 ] << 8 : 0x10000 );
 
 		Seed *= lcg;
-		uint32_t* const hc = (uint32_t*) &Hash[ hpos ];
+		uint64_t* const hc = (uint64_t*) &Hash[ hpos ];
 		const uint64_t ph = *hc;
-		*hc ^= (uint32_t) ( Seed >> 32 );
+		*hc ^= (uint64_t) ( Seed >> 64 );
 		Seed ^= ph ^ msg;
 		lcg += Seed;
 
-		hpos += 4;
+		hpos += 8;
 
 		if( hpos == HashLen )
 		{
@@ -115,4 +123,4 @@ inline void prvhash42( const uint8_t* const Message, const int MessageLen,
 	}
 }
 
-#endif // PRVHASH42_INCLUDED
+#endif // PRVHASH82_INCLUDED

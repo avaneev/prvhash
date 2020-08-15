@@ -32,7 +32,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.5
+ * @version 2.6
  */
 
 //$ nocpp
@@ -274,7 +274,7 @@ inline void prvrng_prvhash42_64( PRVRNG_CTX* const ctx, const uint64_t msg )
 	ctx -> Seed *= ctx -> lcg;
 	ph = ctx -> Hash >> 32;
 	ctx -> Hash ^= ctx -> Seed & 0xFFFFFFFF00000000ULL;
-	ctx -> Seed ^= ph;
+	ctx -> Seed ^= ph ^ 0;
 	ctx -> lcg += ctx -> Seed;
 }
 

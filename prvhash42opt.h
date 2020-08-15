@@ -32,7 +32,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.5
+ * @version 2.6
  */
 
 //$ nocpp
@@ -73,18 +73,86 @@ inline void prvhash42_32( const uint8_t* const Message, const int MessageLen,
 		lcg += Seed;
 	}
 
-	const uint64_t lmsg = ( MessageLen == 0 ? 0 : ~Message[ MessageLen - 1 ]);
-
 	Seed *= lcg;
 	const uint64_t ph = Hash;
 	Hash ^= Seed >> 32;
-	Seed ^= ph ^ lmsg;
+	Seed ^= ph ^ 0x100;
 	lcg += Seed;
 
 	Seed *= lcg;
 	Hash ^= Seed >> 32;
 
 	*(uint32_t*) Hash0 = (uint32_t) Hash;
+}
+
+/**
+ * This function corrects endianness of the resulting prvhash42 hash. This
+ * function may be called both after and before hashing session. Works only on
+ * little- and big-endian systems.
+ *
+ * @param[in,out] Hash The hash.
+ * @param HashLen The hash length, in bytes, should be >= 4, in increments of
+ * 4.
+ */
+
+inline void prvhash42_cend( uint8_t* const Hash, const int HashLen )
+{
+	int e = 1;
+
+	if( *(uint8_t*) &e != 0 )
+	{
+		return;
+	}
+
+	int i;
+
+	for( i = 0; i < HashLen; i += 4 )
+	{
+		const uint8_t h0 = Hash[ i + 0 ];
+		const uint8_t h1 = Hash[ i + 1 ];
+		Hash[ i + 0 ] = Hash[ i + 3 ];
+		Hash[ i + 1 ] = Hash[ i + 2 ];
+		Hash[ i + 2 ] = h1;
+		Hash[ i + 3 ] = h0;
+	}
+}
+
+/**
+ * This function corrects endianness of the resulting prvhash82 hash. This
+ * function may be called both after and before hashing session. Works only on
+ * little- and big-endian systems.
+ *
+ * @param[in,out] Hash The hash.
+ * @param HashLen The hash length, in bytes, should be >= 8, in increments of
+ * 8.
+ */
+
+inline void prvhash82_cend( uint8_t* const Hash, const int HashLen )
+{
+	int e = 1;
+
+	if( *(uint8_t*) &e != 0 )
+	{
+		return;
+	}
+
+	int i;
+
+	for( i = 0; i < HashLen; i += 8 )
+	{
+		const uint8_t h0 = Hash[ i + 0 ];
+		const uint8_t h1 = Hash[ i + 1 ];
+		const uint8_t h2 = Hash[ i + 2 ];
+		const uint8_t h3 = Hash[ i + 3 ];
+		Hash[ i + 0 ] = Hash[ i + 7 ];
+		Hash[ i + 1 ] = Hash[ i + 6 ];
+		Hash[ i + 2 ] = Hash[ i + 5 ];
+		Hash[ i + 3 ] = Hash[ i + 4 ];
+		Hash[ i + 4 ] = h3;
+		Hash[ i + 5 ] = h2;
+		Hash[ i + 6 ] = h1;
+		Hash[ i + 7 ] = h0;
+	}
 }
 
 #endif // PRVHASH42OPT_INCLUDED

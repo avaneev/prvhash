@@ -26,32 +26,37 @@ a second-order effect, with the internal random-number generator (the `Seed`)
 having a strong distribution skew towards logarithmic distribution. In
 practice, the `InitLCG`, `InitSeed` (instead of `SeedXOR`), and initial hash,
 can all be randomly seeded (see the suggestions in `prvhash42.h`), adding
-useful initial entropy (64 + 64 + hash length bits of total entropy).
+useful initial entropy (`lcg` + `Seed` + `Hash` bits of total entropy).
 
 32-, 64-, 128-, and 256-bit PRVHASH hashes pass all [SMHasher](https://github.com/rurban/smhasher)
 tests. Other hash lengths were not thoroughly tested, but extrapolations can
 be made. PRVHASH may possess cryptographic properties, but this is yet to be
 proven. This function is best used on pre-compressed, maximal entropy, data.
 To cope with the cases of sparse entropy, PRVHASH ends the hashing of the
-message with a `bitwise NOT` version of the last byte, as a pseudo-entropy
-injection. In author's opinion, this hash function is almost definitely
-non-reversible since it does not use fixed prime numbers, and due to
-non-linearities introduced by bit truncations.
+message with the trail of "impossible bytes", as a pseudo-entropy injection.
+In author's opinion, this hash function is almost definitely non-reversible
+since it does not use fixed prime numbers, and due to non-linearities
+introduced by bit truncations.
 
 PRVHASH can be easily transformed into a stream hash by creating a simple
 context structure, and moving its initialization to a separate function. It is
 a fixed-time hash function that depends only on message length.
 
-Please see the `prvhash42.h` file for details of the implementation (the
-`prvhash.h` and `prvhash4.h` are outdated versions).
+Please see the `prvhash42.h` file for the details of the implementation (the
+`prvhash.h` and `prvhash4.h` are outdated versions).  The `prvhash82.h` file
+implements the same function, but extended to 128-bit math: with some
+compilers it is faster than `prvhash42.h`.
 
-On big-endian architectures (ARM) each hash element of the resulting hash
-should be endianness-corrected (byte-swapped).
+On big-endian architectures (ARM), when transmitting hashes between systems,
+each hash element of the resulting hash should be endianness-corrected
+(byte-swapped).
 
 The prvhash42_32 hash of the string `The strict avalanche criterion` is
-`1e74d56e`.
+`c7b346c0`.
 
-The prvhash42_64 hash of the same string is `86d2aeba09c5586c`.
+The prvhash42_64 hash of the same string is `d70fde916abb0e5c`.
+
+The prvhash82_64 hash of the same string is `aa19bba631b8513c`.
 
 ## Entropy PRNG ##
 
@@ -87,6 +92,6 @@ hash length.
 
 ## Other ##
 
-[Follow me on Twitter](https://twitter.com/AlekseyVaneev)
+[Follow the author on Twitter](https://twitter.com/AlekseyVaneev)
 
 [Become a patron on Patreon](https://patreon.com/aleksey_vaneev)
