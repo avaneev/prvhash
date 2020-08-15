@@ -52,11 +52,11 @@ each hash element of the resulting hash should be endianness-corrected
 (byte-swapped).
 
 The prvhash42_32 hash of the string `The strict avalanche criterion` is
-`c7b346c0`.
+`17fc6d3c`.
 
-The prvhash42_64 hash of the same string is `d70fde916abb0e5c`.
+The prvhash42_64 hash of the same string is `e190ee0e5c876678`.
 
-The prvhash82_64 hash of the same string is `aa19bba631b8513c`.
+The prvhash82_64 hash of the same string is `ee1a6bc07b6212d6`.
 
 ## Entropy PRNG ##
 

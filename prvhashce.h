@@ -1,8 +1,7 @@
 /**
- * @file prvhash42opt.h
+ * @file prvhashce.h
  *
- * @brief The inclusion file for the "prvhash42" hash function, optimized for
- * 32-bit hash length, without endianness-correction.
+ * @brief The inclusion file for endianness-correction functions.
  *
  * @mainpage
  *
@@ -32,58 +31,15 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.6
+ * @version 2.7
  */
 
 //$ nocpp
 
-#ifndef PRVHASH42OPT_INCLUDED
-#define PRVHASH42OPT_INCLUDED
+#ifndef PRVHASHCE_INCLUDED
+#define PRVHASHCE_INCLUDED
 
 #include <stdint.h>
-
-/**
- * Optimized PRVHASH hash function. Produces 32-bit hash of the specified
- * Message using default initial "Hash", "lcg" and "Seed" values.
- *
- * @param Message Message to produce hash from.
- * @param MessageLen Message length, in bytes.
- * @param[out] Hash The resulting hash, 32-bit, not endianness-corrected.
- * @param SeedXOR Optional value, to XOR the default seed with. To use the
- * default seed, set to 0.
- */
-
-inline void prvhash42_32( const uint8_t* const Message, const int MessageLen,
-	uint8_t* const Hash0, const uint64_t SeedXOR )
-{
-	uint64_t Hash = 0;
-	uint64_t lcg = 15267459991392010589ULL;
-	uint64_t Seed = 7928988912013905173ULL ^ SeedXOR;
-
-	int k;
-
-	for( k = 0; k < MessageLen; k++ )
-	{
-		const uint64_t msg = Message[ k ];
-
-		Seed *= lcg;
-		const uint64_t ph = Hash;
-		Hash ^= Seed >> 32;
-		Seed ^= ph ^ msg;
-		lcg += Seed;
-	}
-
-	Seed *= lcg;
-	const uint64_t ph = Hash;
-	Hash ^= Seed >> 32;
-	Seed ^= ph ^ 0x100;
-	lcg += Seed;
-
-	Seed *= lcg;
-	Hash ^= Seed >> 32;
-
-	*(uint32_t*) Hash0 = (uint32_t) Hash;
-}
 
 /**
  * This function corrects endianness of the resulting prvhash42 hash. This
@@ -95,7 +51,7 @@ inline void prvhash42_32( const uint8_t* const Message, const int MessageLen,
  * 4.
  */
 
-inline void prvhash42_cend( uint8_t* const Hash, const int HashLen )
+inline void prvhash42_ce( uint8_t* const Hash, const int HashLen )
 {
 	int e = 1;
 
@@ -127,7 +83,7 @@ inline void prvhash42_cend( uint8_t* const Hash, const int HashLen )
  * 8.
  */
 
-inline void prvhash82_cend( uint8_t* const Hash, const int HashLen )
+inline void prvhash82_ce( uint8_t* const Hash, const int HashLen )
 {
 	int e = 1;
 
@@ -155,4 +111,4 @@ inline void prvhash82_cend( uint8_t* const Hash, const int HashLen )
 	}
 }
 
-#endif // PRVHASH42OPT_INCLUDED
+#endif // PRVHASHCE_INCLUDED
