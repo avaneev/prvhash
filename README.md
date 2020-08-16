@@ -96,6 +96,10 @@ produce quality hashes for any required hash length.
 
 ## Other ##
 
+It is possible to minimize bit biases by adding additional `hl42` term
+to `int c =` (in `prvhash42`) and `hl84` (in `prvhash82`). This will, however,
+increase overhead for shorter messages.
+
 [Follow the author on Twitter](https://twitter.com/AlekseyVaneev)
 
 [Become a patron on Patreon](https://patreon.com/aleksey_vaneev)
