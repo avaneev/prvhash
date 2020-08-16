@@ -70,6 +70,10 @@ the `prvrng.h` file: simply call the `prvrng_test64()` function. The
 `prvrng_test32()` implements the same technique, but with 32-bit hashes, for
 comparison purposes.
 
+On a side note, PRVHASH PRNG with 32-bit hashes, without external
+entropy injections: after 1.1 trillion iterations the internal pseudo-entropy
+was not lost.
+
 ## Description ##
 
 Here is the author's vision on how the core hash function works (in actuality,
