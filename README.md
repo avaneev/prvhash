@@ -72,23 +72,23 @@ comparison purposes.
 
 ## Description ##
 
-Here is the author's vision on how the function works (in actuality, coming up
-with this solution was accompanied with a lot of trial and error).
+Here is the author's vision on how the core hash function works (in actuality,
+coming up with this solution was accompanied with a lot of trial and error).
 
-    const uint64_t m = MessageByte; // Get 8 bits from the message.
-    Seed *= lcg; // Multiply random by random. Non-linearity induced due to truncation.
-    const uint64_t ph = *(uint32_t*) &Hash[ i ]; // Save the current hash.
-    *hc ^= (uint32_t) ( Seed >> 32 ); // Add the internal entropy to the hash.
-    Seed ^= ph ^ m; // Add saved hash's and message's entropy to the internal entropy.
+	Seed *= lcg; // Multiply random by random. Non-linearity induced due to truncation.
+	uint32_t* const hc = (uint32_t*) &Hash[ hpos ]; // Take the address of the hash word.
+	const uint64_t ph = *hc; // Save the current hash word.
+	*hc ^= (uint32_t) ( Seed >> 32 ); // Add the internal entropy to the hash word.
+	Seed ^= ph ^ msg; // Add saved hash word's and message's entropy to the internal entropy.
 	lcg += Seed; // Add the internal entropy to the "lcg" variable (both random). Truncation is possible.
 
-Without external (message) entropy injections, the function can run for a
+Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
-external entropy is introduced, the function "shifts" into unrelated state.
-So, it can be said that the function "jumps" between a huge number of
-pseudo-random generators. Hash length affects the size of this "generator
-space", permitting the function to produce quality hashes for any required
-hash length.
+external entropy (message) is introduced, the function "shifts" into an
+unrelated state unpredictably. So, it can be said that the function "jumps"
+within a space of a huge number of pseudo-random number generators. Hash
+length affects the size of this "generator space", permitting the function to
+produce quality hashes for any required hash length.
 
 ## Other ##
 
