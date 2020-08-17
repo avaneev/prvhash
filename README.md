@@ -96,9 +96,16 @@ produce quality hashes for any required hash length.
 
 ## Other ##
 
-It is possible to minimize bit biases by adding additional `hl42` term
+It is possible to minimize bit biases by adding an additional `hl42` term
 to `int c =` (in `prvhash42`) and `hl84` (in `prvhash82`). This will, however,
 increase overhead for shorter messages.
+
+An idea on how to further increase the raw speed of the hash function: it
+should be possible to create a fast fixed-length non-cryptographic hash
+(which meets most SMHasher requirements on its own, except AppendedZeroes and
+Zeroes tests) that compresses 16 input byte blocks into 4 hash bytes, that are
+then sent to PRVHASH input: this may provide an additional 2-3 times speed
+performance increase. This should still meet the security standards.
 
 [Follow the author on Twitter](https://twitter.com/AlekseyVaneev)
 
