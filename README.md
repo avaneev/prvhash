@@ -105,7 +105,9 @@ should be possible to create a fast fixed-length non-cryptographic hash
 (which meets most SMHasher requirements on its own, except AppendedZeroes and
 Zeroes tests) that compresses 16 input byte blocks into 4 hash bytes, that are
 then sent to PRVHASH input: this may provide an additional 2-3 times speed
-performance increase. This should still meet the security standards.
+performance increase. This should still meet the security standards and
+provide PRVHASH's unlimited-bit hash benefit, given each message is randomly
+seeded.
 
 [Follow the author on Twitter](https://twitter.com/AlekseyVaneev)
 
