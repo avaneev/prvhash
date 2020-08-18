@@ -71,7 +71,7 @@ coming up with this solution was accompanied with a lot of trial and error).
 
 	Seed *= lcg; // Multiply random by random. Non-linearity induced due to truncation.
 	uint32_t* const hc = (uint32_t*) &Hash[ hpos ]; // Take the address of the hash word.
-	const uint64_t ph = *hc; // Save the current hash word.
+	const uint64_t ph = *hc; // Save the current hash word. For entropy feedback.
 	const uint64_t ient = Seed >> 32; // Extract internal entropy.
 	*hc ^= (uint32_t) ient; // Add the internal entropy to the hash word.
 	Seed ^= ph ^ ient ^ msgw; // Mix internal entropy with itself, hash word's and message's entropy.
