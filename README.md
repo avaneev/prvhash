@@ -100,7 +100,7 @@ message's distribution becomes irrelevant. Yet, the message "shifts" the
 system into a new state, predictated by previous messages. Thus, it is
 possible to give names to random number generators: for example, pass a word
 "Michelle" to the hashing function, and then the generation will continue in
-the space predictated by this initial word.
+the space predictated by this initial word. Every bit of entropy matters.
 
 ## Other ##
 
