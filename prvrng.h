@@ -32,7 +32,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.8
+ * @version 2.9
  */
 
 //$ nocpp
@@ -204,15 +204,16 @@ inline uint64_t prvrng_gen_entropy64c16( PRVRNG_CTX* const ctx )
  * Internal function, calculates "prvhash42" round, for 32-bit hash.
  *
  * @param ctx Pointer to the context structure.
- * @param msg 8-bit entropy message.
+ * @param msgw Entropy message word.
  */
 
-inline void prvrng_prvhash42_32( PRVRNG_CTX* const ctx, const uint64_t msg )
+inline void prvrng_prvhash42_32( PRVRNG_CTX* const ctx, const uint64_t msgw )
 {
 	ctx -> Seed *= ctx -> lcg;
 	const uint64_t ph = (uint32_t) ctx -> Hash;
-	ctx -> Hash ^= ctx -> Seed >> 32;
-	ctx -> Seed ^= ph ^ msg;
+	const uint64_t ient = ctx -> Seed >> 32;
+	ctx -> Hash ^= ient;
+	ctx -> Seed ^= ph ^ ient ^ msgw;
 	ctx -> lcg += ctx -> Seed;
 }
 
@@ -226,19 +227,19 @@ inline uint8_t prvrng_gen32( PRVRNG_CTX* const ctx )
 {
 	if( ctx -> HashLeft == 0 )
 	{
-		uint64_t msg;
+		uint64_t msgw;
 
 		if( ctx -> EntCtr == 0 )
 		{
 			ctx -> EntCtr = ( (int) prvrng_gen_entropy( ctx ) + 1 ) << 2;
-			msg = prvrng_gen_entropy( ctx );
+			msgw = prvrng_gen_entropy( ctx );
 		}
 		else
 		{
-			msg = 0;
+			msgw = 0;
 		}
 
-		prvrng_prvhash42_32( ctx, msg );
+		prvrng_prvhash42_32( ctx, msgw );
 
 		ctx -> HashLeft = 4;
 		ctx -> LastHash = ctx -> Hash;
@@ -256,25 +257,27 @@ inline uint8_t prvrng_gen32( PRVRNG_CTX* const ctx )
  * Internal function, calculates "prvhash42" round, for 64-bit hash.
  *
  * @param ctx Pointer to the context structure.
- * @param msg 8-bit entropy message. Second message byte is assumed to be 0.
+ * @param msgw Entropy message word. Second message byte is assumed to be 0.
  */
 
-inline void prvrng_prvhash42_64( PRVRNG_CTX* const ctx, const uint64_t msg )
+inline void prvrng_prvhash42_64( PRVRNG_CTX* const ctx, const uint64_t msgw )
 {
 	// Lower 32 bits of hash.
 
 	ctx -> Seed *= ctx -> lcg;
 	uint64_t ph = (uint32_t) ctx -> Hash;
-	ctx -> Hash ^= ctx -> Seed >> 32;
-	ctx -> Seed ^= ph ^ msg;
+	uint64_t ient = ctx -> Seed >> 32;
+	ctx -> Hash ^= ient;
+	ctx -> Seed ^= ph ^ ient ^ msgw;
 	ctx -> lcg += ctx -> Seed;
 
 	// Upper 32 bits of hash.
 
 	ctx -> Seed *= ctx -> lcg;
-	ph = ctx -> Hash >> 32;
-	ctx -> Hash ^= ctx -> Seed & 0xFFFFFFFF00000000ULL;
-	ctx -> Seed ^= ph ^ 0;
+	ph = ctx -> Hash;
+	ient = ctx -> Seed & 0xFFFFFFFF00000000ULL;
+	ctx -> Hash ^= ient;
+	ctx -> Seed ^= (( ph ^ ient ) >> 32 ) ^ 0;
 	ctx -> lcg += ctx -> Seed;
 }
 
@@ -288,19 +291,19 @@ inline uint8_t prvrng_gen64( PRVRNG_CTX* const ctx )
 {
 	if( ctx -> HashLeft == 0 )
 	{
-		uint64_t msg;
+		uint64_t msgw;
 
 		if( ctx -> EntCtr == 0 )
 		{
 			ctx -> EntCtr = ( (int) prvrng_gen_entropy( ctx ) + 1 ) << 3;
-			msg = prvrng_gen_entropy( ctx );
+			msgw = prvrng_gen_entropy( ctx );
 		}
 		else
 		{
-			msg = 0;
+			msgw = 0;
 		}
 
-		prvrng_prvhash42_64( ctx, msg );
+		prvrng_prvhash42_64( ctx, msgw );
 
 		ctx -> HashLeft = 8;
 		ctx -> LastHash = ctx -> Hash;

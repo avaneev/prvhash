@@ -12,9 +12,7 @@ equal quality independent of the chosen hash length. PRVHASH is based on
 64-bit math. Hashes beyond 256-bits still require extensive testing, but, for
 example, any 32-bit element extracted from 512- or 2048-bit resulting hash is
 as collision resistant as just a 32-bit hash. The use of the function beyond
-512-bit hashes is easily possible, but has to be statistically tested. The
-extension of the hash function to 128-bit math also works well: this increases
-its properties exponentially.
+512-bit hashes is easily possible, but has to be statistically tested.
 
 PRVHASH is solely based on the butterfly effect, strongly inspired by LCG
 pseudo-random number generators. The generated hashes have good avalanche
@@ -33,30 +31,22 @@ tests. Other hash lengths were not thoroughly tested, but extrapolations can
 be made. PRVHASH may possess cryptographic properties, but this is yet to be
 proven. This function is best used on pre-compressed, maximal entropy, data.
 To cope with the cases of sparse entropy, PRVHASH ends the hashing of the
-message with the trail of "impossible bytes", as a pseudo-entropy injection.
+message with the trail of "impossible words", as a pseudo-entropy injection.
 In author's opinion, this hash function is almost definitely non-reversible
 since it does not use fixed prime numbers, and due to non-linearities
-introduced by bit truncations.
+induced by bit truncations.
 
 PRVHASH can be easily transformed into a stream hash by creating a simple
 context structure, and moving its initialization to a separate function. It is
 a fixed-time hash function that depends only on message length.
 
 Please see the `prvhash42.h` file for the details of the implementation (the
-`prvhash.h` and `prvhash4.h` are outdated versions).  The `prvhash82.h` file
-implements the same function, but extended to 128-bit math: with some
-compilers it is faster than `prvhash42.h`.
-
-On big-endian architectures (ARM), when transmitting hashes between systems,
-each hash element of the resulting hash should be endianness-corrected
-(byte-swapped).
+`prvhash.h` and `prvhash4.h` are outdated versions).
 
 The prvhash42_32 hash of the string `The strict avalanche criterion` is
-`17fc6d3c`.
+`d2b7e541`.
 
-The prvhash42_64 hash of the same string is `e190ee0e5c876678`.
-
-The prvhash82_64 hash of the same string is `ee1a6bc07b6212d6`.
+The prvhash42_64 hash of the same string is `074c0781032e633d`.
 
 ## Entropy PRNG ##
 
@@ -82,8 +72,9 @@ coming up with this solution was accompanied with a lot of trial and error).
 	Seed *= lcg; // Multiply random by random. Non-linearity induced due to truncation.
 	uint32_t* const hc = (uint32_t*) &Hash[ hpos ]; // Take the address of the hash word.
 	const uint64_t ph = *hc; // Save the current hash word.
-	*hc ^= (uint32_t) ( Seed >> 32 ); // Add the internal entropy to the hash word.
-	Seed ^= ph ^ msg; // Add saved hash word's and message's entropy to the internal entropy.
+	const uint64_t ient = Seed >> 32; // Extract internal entropy.
+	*hc ^= (uint32_t) ient; // Add the internal entropy to the hash word.
+	Seed ^= ph ^ ient ^ msgw; // Mix internal entropy with itself, hash word's and message's entropy.
 	lcg += Seed; // Add the internal entropy to the "lcg" variable (both random). Truncation is possible.
 
 Without external entropy (message) injections, the function can run for a
@@ -95,10 +86,6 @@ length affects the size of this "generator space", permitting the function to
 produce quality hashes for any required hash length.
 
 ## Other ##
-
-It is possible to minimize bit biases by adding an additional `hl42` term
-to `int c =` (in `prvhash42`) and `hl84` (in `prvhash82`). This will, however,
-increase overhead for shorter messages.
 
 [Follow the author on Twitter](https://twitter.com/AlekseyVaneev)
 
