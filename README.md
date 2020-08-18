@@ -82,24 +82,25 @@ prolonged time, generating pseudo-entropy without much repetitions. When the
 external entropy (message) is introduced, the function "shifts" into an
 unrelated state unpredictably. So, it can be said that the function "jumps"
 within a space of a huge number of pseudo-random number generators. Hash
-length affects the size of this "generator space", permitting the function to
-produce quality hashes for any required hash length.
+length affects the size of this "space of generators", permitting the function
+to produce quality hashes for any required hash length.
 
 How it works? First of all, this PRNG system, represented by the hash
-function, does not work with numbers in a common sense: it works with entropy.
-The current expression of system's internal entropy (the `Seed`) gets
-multiplied ("smeared") by a supportive variable - `lcg`, which is also a
-random value. Such multiplication changes the `Seed` into a logarithmic-like
-distribution, de-correlating (in distribution sense) its lower and higher
-32-bit parts. The lower 32 bits of the `Seed` are then updated by a mix of its
-own higher 32 bits, the hash word produced on previous rounds, and the
-message. The reason the message's entropy (which may be sparse or non-random)
-does not destabilize the system is because the message becomes hidden in a mix
-of internal and hash word's entropy. Yet, the message "shifts" the system into
-a new state, predictated by previous messages. Thus, it is possible to "give
-names" to random number generators: for example, pass a word "Michelle" to
-the hashing function, and then the generation will continue in the space
-predictated by this initial word.
+function, does not work with numbers in a common sense: it works with entropy,
+or a random sequence of bits. The current "expression" of system's overall
+internal entropy - the `Seed` - gets multiplied ("smeared") by a supportive
+variable - `lcg`, - which is also a random value. Such multiplication changes
+the `Seed` into a logarithmic-like distribution, de-correlating (in
+distribution sense) its lower and higher 32-bit parts. The lower 32 bits of
+the `Seed` are then updated by a mix of its own higher 32 bits, the hash word
+produced on previous rounds, and the message. The reason the message's entropy
+(which may be sparse or non-random) does not destabilize the system is because
+the message becomes hidden in a mix of internal and hash word's entropy,
+message's distribution becomes irrelevant. Yet, the message "shifts" the
+system into a new state, predictated by previous messages. Thus, it is
+possible to give names to random number generators: for example, pass a word
+"Michelle" to the hashing function, and then the generation will continue in
+the space predictated by this initial word.
 
 ## Other ##
 
