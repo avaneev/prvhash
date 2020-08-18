@@ -18,7 +18,7 @@ PRVHASH is solely based on the butterfly effect, strongly inspired by LCG
 pseudo-random number generators. The generated hashes have good avalanche
 properties. For best results, when creating HMACs, a random seed should be
 supplied to the hash function, but this is not a requirement. When each
-message in a set is randomly seeded, this allows hashes of such set to closely
+message in a set is given a random seed, this allows hashes of such set to closely
 follow the normal distribution. Without the seed, the normality is achieved as
 a second-order effect, with the internal random-number generator (the `Seed`)
 having a strong distribution skew towards logarithmic distribution. In
@@ -36,9 +36,9 @@ In author's opinion, this hash function is almost definitely non-reversible
 since it does not use fixed prime numbers, and due to non-linearities
 induced by bit truncations.
 
-PRVHASH can be easily transformed into a stream hash by creating a simple
+PRVHASH can be easily transformed into a streaming hash by creating a simple
 context structure, and moving its initialization to a separate function. It is
-a fixed-time hash function that depends only on message length.
+a fixed execution time hash function that depends only on message length.
 
 Please see the `prvhash42.h` file for the details of the implementation (the
 `prvhash.h` and `prvhash4.h` are outdated versions).
@@ -53,12 +53,12 @@ The prvhash42_64 hash of the same string is `074c0781032e633d`.
 PRVHASH can be also used as a very efficient general-purpose PRNG with an
 external entropy source injections (like how the `/dev/urandom` works on
 Unix): the 64-bit hash value can be used as a pseudo-random number, spliced
-into 8 output bytes each round: this was tested to work well when 8-bit true
-entropy injections are done inbetween 8 to 2048 generated random bytes (delay
-is also obtained via entropy source). An example generator is implemented in
-the `prvrng.h` file: simply call the `prvrng_test64()` function. The
-`prvrng_test32()` implements the same technique, but with 32-bit hashes, for
-comparison purposes.
+into 8 output bytes each round: this was tested, and works well when 8-bit
+true entropy injections are done inbetween 8 to 2048 generated random bytes
+(delay is also obtained via entropy source). An example generator is
+implemented in the `prvrng.h` file: simply call the `prvrng_test64()`
+function. The `prvrng_test32()` implements the same technique, but with
+32-bit hashes, for comparison purposes.
 
 On a side note, PRVHASH PRNG with 32-bit hashes, without external
 entropy injections: after 1.1 trillion iterations the internal pseudo-entropy
