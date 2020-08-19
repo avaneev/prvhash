@@ -64,6 +64,11 @@ implemented in the `prvrng.h` file: simply call the `prvrng_test64()`
 function. The `prvrng_test32()` implements the same technique, but with
 32-bit hashes, for comparison purposes.
 
+PRVRNG with 64-bit hashes passes `PractRand` 1 TB threshold, without or with
+only several "unusual" evaluations. Which suggests it's the first working
+TRNG in the world. This claim requires a lot more evaluations from independent
+researchers.
+
 On a side note, after 1.1 trillion iterations the internal pseudo-entropy
 was not lost in PRVHASH PRNG with 32-bit hashes, without external entropy
 injections.
