@@ -31,7 +31,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.9
+ * @version 2.10
  */
 
 //$ nocpp
@@ -90,9 +90,6 @@ inline void prvhash42( const uint8_t* const Msg, const int MsgLen,
 		Seed = InitSeed;
 	}
 
-	int e = 1;
-	e = *(uint8_t*) &e;
-
 	const int mlext = MsgLen + ( MsgLen < 4 ? 4 - MsgLen : 0 );
 	int c = mlext + HashLen * 3 - mlext % HashLen;
 	int hpos = 0;
@@ -104,11 +101,10 @@ inline void prvhash42( const uint8_t* const Msg, const int MsgLen,
 
 		if( k < MsgLen - 3 )
 		{
-			msgw = ( e != 0 ? (uint64_t) *(uint32_t*) &Msg[ k ] :
-				(uint64_t) Msg[ k ] |
-				(uint64_t) Msg[ k + 1 ] << 8 |
-				(uint64_t) Msg[ k + 2 ] << 16 |
-				(uint64_t) Msg[ k + 3 ] << 24 );
+			msgw = (uint32_t) Msg[ k ] |
+				(uint32_t) Msg[ k + 1 ] << 8 |
+				(uint32_t) Msg[ k + 2 ] << 16 |
+				(uint32_t) Msg[ k + 3 ] << 24;
 		}
 		else
 		{
@@ -134,7 +130,9 @@ inline void prvhash42( const uint8_t* const Msg, const int MsgLen,
 		}
 	}
 
-	if( e == 0 )
+	int e = 1;
+
+	if( *(uint8_t*) &e == 0 )
 	{
 		for( k = 0; k < HashLen; k += 4 )
 		{
