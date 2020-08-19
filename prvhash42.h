@@ -111,7 +111,7 @@ inline void prvhash42( const uint8_t* const Msg, const int MsgLen,
 			msgw = (uint64_t) ( k < MsgLen ? Msg[ k ] : 0x100 ) |
 				(uint64_t) ( k < MsgLen - 1 ? Msg[ k + 1 ] : 0x100 ) << 8 |
 				(uint64_t) ( k < MsgLen - 2 ? Msg[ k + 2 ] : 0x100 ) << 16 |
-				(uint64_t) ( k < MsgLen - 3 ? Msg[ k + 3 ] : 0x100 ) << 24;
+				0x100000000ULL;
 		}
 
 		Seed *= lcg;
