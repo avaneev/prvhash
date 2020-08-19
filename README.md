@@ -6,8 +6,8 @@ PRVHASH is a hash function that generates a pseudo-random number sequence
 derived from the message. Resulting hashes closely follow normal distribution
 of bit frequency. PRVHASH is conceptually similar to `keccak` and `RadioGatun`
 schemes, but is a completely different implementation of such concept.
-PRVHASH is both ["randomness extractor"](https://en.wikipedia.org/wiki/Randomness_extractor)
-and "extendable-output function".
+PRVHASH is both a ["randomness extractor"](https://en.wikipedia.org/wiki/Randomness_extractor)
+and an "extendable-output function".
 
 PRVHASH can generate 32- to unlimited-bit hashes, yielding hashes of roughly
 equal quality independent of the chosen hash length. PRVHASH is based on
@@ -20,13 +20,14 @@ PRVHASH is solely based on the butterfly effect, strongly inspired by LCG
 pseudo-random number generators. The generated hashes have good avalanche
 properties. For best results, when creating HMACs, a random seed should be
 supplied to the hash function, but this is not a requirement. When each
-message in a set is given a random seed, this allows hashes of such set to closely
-follow the normal distribution. Without the seed, the normality is achieved as
-a second-order effect, with the internal random-number generator (the `Seed`)
-having a strong distribution skew towards logarithmic distribution. In
-practice, the `InitLCG`, `InitSeed` (instead of `SeedXOR`), and initial hash,
-can all be randomly seeded (see the suggestions in `prvhash42.h`), adding
-useful initial entropy (`lcg` + `Seed` + `Hash` bits of total entropy).
+message in a set is given a random seed, this allows hashes of such set to
+closely follow the normal distribution. Without the seed, the normality is
+achieved as a second-order effect, with the internal random-number generator
+(the `Seed`) having a strong distribution skew towards logarithmic
+distribution. In practice, the `InitLCG`, `InitSeed` (instead of `SeedXOR`),
+and initial hash, can all be randomly seeded (see the suggestions in
+`prvhash42.h`), adding useful initial entropy (`lcg` + `Seed` + `Hash` bits of
+total entropy).
 
 32-, 64-, 128-, and 256-bit PRVHASH hashes pass all [SMHasher](https://github.com/rurban/smhasher)
 tests. Other hash lengths were not thoroughly tested, but extrapolations can
@@ -35,8 +36,9 @@ proven. This function is best used on pre-compressed, maximal entropy, data.
 To cope with the cases of sparse entropy, PRVHASH ends the hashing of the
 message with the trail of "impossible words", as a pseudo-entropy injection.
 In author's opinion, this hash function is almost definitely non-reversible
-since it does not use fixed prime numbers, and due to non-linearities
-induced by bit truncations.
+as it does not use fixed prime numbers, has non-linearities induced by bit
+truncations, and because the message enters the system only as a mix with the
+system's internal entropy, without permutations of any sort.
 
 PRVHASH can be easily transformed into a streaming hash by creating a simple
 context structure, and moving its initialization to a separate function. It is
@@ -62,9 +64,9 @@ implemented in the `prvrng.h` file: simply call the `prvrng_test64()`
 function. The `prvrng_test32()` implements the same technique, but with
 32-bit hashes, for comparison purposes.
 
-On a side note, PRVHASH PRNG with 32-bit hashes, without external
-entropy injections: after 1.1 trillion iterations the internal pseudo-entropy
-was not lost.
+On a side note, after 1.1 trillion iterations the internal pseudo-entropy
+was not lost in PRVHASH PRNG with 32-bit hashes, without external entropy
+injections.
 
 ## Description ##
 
@@ -100,10 +102,15 @@ produced on previous rounds, and the message. The reason the message's entropy
 the message becomes hidden in a mix of internal and hash word's entropy;
 message's distribution becomes irrelevant. Mixing with the hash word also
 partly restores normal distribution of `Seed`s lower 32 bits. The message
-"shifts" the system into a new state, predictated by previous messages. Thus,
-it is possible to give names to random number generators: for example, pass a
-word "Michelle" to the hashing function, and then the generation will continue
-in the space predictated by this initial word. Every bit of entropy matters.
+"shifts" the system into a new state, predictated by previous messages.
+Iterative mixing of the hash words with the `Seed` assures that the resulting
+hashes follow normal distribution and uniformity, irrespective of the
+distribution anomalities of the `Seed` itself.
+
+With PRVHASH it is possible to give names to random number generators: for
+example, pass a word "Michelle" to the hashing function, and then the
+generation will continue in the space predictated by this initial word. Every
+bit of entropy matters.
 
 ## Other ##
 
