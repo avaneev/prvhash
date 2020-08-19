@@ -47,11 +47,12 @@
  * hash of the specified message. This function applies endianness correction
  * automatically (on little- and big-endian processors).
  *
- * @param Msg Message to produce hash from.
+ * @param Msg Message to produce hash from. The alignment is unimportant.
  * @param MsgLen Message length, in bytes.
  * @param[out] Hash The resulting hash. If both InitLCG and InitSeed are
  * non-zero, the hash will not be initially reset to 0, and it should be
- * pre-initialized with random bytes.
+ * pre-initialized with random bytes. On systems where this is relevant, this
+ * address should be aligned to 32 bits.
  * @param HashLen The required hash length, in bytes, should be >= 4, in
  * increments of 4.
  * @param SeedXOR Optional value, to XOR the default seed with. To use the
