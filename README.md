@@ -4,8 +4,10 @@
 
 PRVHASH is a hash function that generates a pseudo-random number sequence
 derived from the message. Resulting hashes closely follow normal distribution
-of bit frequency. PRVHASH is conceptually similar to `keccak` scheme, but is a
-completely different implementation of this concept.
+of bit frequency. PRVHASH is conceptually similar to `keccak` and `RadioGatun`
+schemes, but is a completely different implementation of such concept.
+PRVHASH is both ["randomness extractor"](https://en.wikipedia.org/wiki/Randomness_extractor)
+and "extendable-output function".
 
 PRVHASH can generate 32- to unlimited-bit hashes, yielding hashes of roughly
 equal quality independent of the chosen hash length. PRVHASH is based on
@@ -95,14 +97,13 @@ distribution sense) its lower and higher 32-bit parts. The lower 32 bits of
 the `Seed` are then updated by a mix of its own higher 32 bits, the hash word
 produced on previous rounds, and the message. The reason the message's entropy
 (which may be sparse or non-random) does not destabilize the system is because
-the message becomes hidden in a mix of internal and hash word's entropy,
+the message becomes hidden in a mix of internal and hash word's entropy;
 message's distribution becomes irrelevant. Mixing with the hash word also
-partly restores normal distribution of `Seed`s lower 32 bits. While the
-message "shifts" the system into a new state, predictated by previous
-messages. Thus, it is possible to give names to random number generators: for
-example, pass a word "Michelle" to the hashing function, and then the
-generation will continue in the space predictated by this initial word. Every
-bit of entropy matters.
+partly restores normal distribution of `Seed`s lower 32 bits. The message
+"shifts" the system into a new state, predictated by previous messages. Thus,
+it is possible to give names to random number generators: for example, pass a
+word "Michelle" to the hashing function, and then the generation will continue
+in the space predictated by this initial word. Every bit of entropy matters.
 
 ## Other ##
 
