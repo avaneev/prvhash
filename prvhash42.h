@@ -82,8 +82,8 @@ inline void prvhash42( const uint8_t* const Msg, const int MsgLen,
 
 	if( InitLCG == 0 && InitSeed == 0 )
 	{
-		lcg = 893592860440302287ULL;
-		Seed = 16415550407972344319ULL ^ SeedXOR;
+		lcg = 15430973964284598734ULL;
+		Seed = 1691555508060032701ULL ^ SeedXOR;
 		memset( Hash, 0, HashLen );
 	}
 	else

@@ -49,9 +49,9 @@ Please see the `prvhash42.h` file for the details of the implementation (the
 `prvhash.h` and `prvhash4.h` are outdated versions).
 
 The prvhash42 32-bit hash of the string `The strict avalanche criterion` is
-`531c9dec`.
+`dac72cb1`.
 
-The prvhash42 64-bit hash of the same string is `89c959d629dc2863`.
+The prvhash42 64-bit hash of the same string is `f7ac47b10d2762fb`.
 
 ## Entropy PRNG ##
 
