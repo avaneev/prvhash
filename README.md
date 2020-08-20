@@ -34,11 +34,12 @@ tests. Other hash lengths were not thoroughly tested, but extrapolations can
 be made. PRVHASH may possess cryptographic properties, but this is yet to be
 proven. This function is best used on pre-compressed, maximal entropy, data.
 To cope with the cases of sparse entropy, PRVHASH ends the hashing of the
-message with the trail of "impossible words", as a pseudo-entropy injection.
-In author's opinion, this hash function is almost definitely non-reversible
-as it does not use fixed prime numbers, has non-linearities induced by bit
-truncations, and because the message enters the system only as a mix with the
-system's internal entropy, without permutations of any sort.
+message with the trail of `bitwise NOT` version of the final byte, as a
+pseudo-entropy injection. In author's opinion, this hash function is almost
+definitely irreversible as it does not use fixed prime numbers, has
+non-linearities induced by bit truncations, and because the message enters the
+system only as a mix with the system's internal entropy, without permutations
+of any sort.
 
 PRVHASH can be easily transformed into a streaming hash by creating a simple
 context structure, and moving its initialization to a separate function. It is
@@ -48,9 +49,9 @@ Please see the `prvhash42.h` file for the details of the implementation (the
 `prvhash.h` and `prvhash4.h` are outdated versions).
 
 The prvhash42 32-bit hash of the string `The strict avalanche criterion` is
-`d2b7e541`.
+`531c9dec`.
 
-The prvhash42 64-bit hash of the same string is `074c0781032e633d`.
+The prvhash42 64-bit hash of the same string is `89c959d629dc2863`.
 
 ## Entropy PRNG ##
 
@@ -75,8 +76,9 @@ injections.
 
 ## Description ##
 
-Here is the author's vision on how the core hash function works (in actuality,
-coming up with this solution was accompanied with a lot of trial and error).
+Here is the author's vision on how the core hash function works. In actuality,
+coming up with this solution was accompanied with a lot of trial and error.
+It was especially hard to find a better "hashing finalization" solution.
 
 	Seed *= lcg; // Multiply random by random. Non-linearity induced due to truncation.
 	uint32_t* const hc = (uint32_t*) &Hash[ hpos ]; // Take the address of the hash word.
