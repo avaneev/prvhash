@@ -18,12 +18,12 @@ as collision resistant as just a 32-bit hash. The use of the function beyond
 
 PRVHASH is solely based on the butterfly effect, strongly inspired by LCG
 pseudo-random number generators. The generated hashes have good avalanche
-properties. For best results, when creating HMACs, a random seed should be
+properties. For best results, when creating (H)MACs, a random seed should be
 supplied to the hash function, but this is not a requirement. When each
 message in a set is given a random seed, this allows hashes of such set to
-closely follow the normal distribution. Without the seed, the normality is
-achieved as a second-order effect, with the internal random-number generator
-(the `Seed`) having a strong distribution skew towards logarithmic
+closely follow the normal distribution. Without the seed, the normality of a
+set is achieved as a second-order effect, with the internal random-number
+generator (the `Seed`) having a strong distribution skew towards logarithmic
 distribution. In practice, the `InitLCG`, `InitSeed` (instead of `SeedXOR`),
 and initial hash, can all be randomly seeded (see the suggestions in
 `prvhash42.h`), adding useful initial entropy (`lcg` + `Seed` + `Hash` bits of
@@ -112,7 +112,7 @@ state, predictated by previous messages. Mixing the `Seed` with the hash word
 partly restores normal distribution of `Seed`'s lower 32 bits. Iterative
 mixing of the hash words with the `Seed` assures that the resulting hashes
 follow normal distribution and uniformity, irrespective of the distribution
-anomalities of the `Seed` itself.
+anomalies of the `Seed` itself.
 
 With PRVHASH it is possible to give names to random number generators: for
 example, pass a word "Michelle" to the hashing function, and then the
