@@ -54,6 +54,7 @@ typedef struct {
 	uint64_t Seed[ 4 ]; ///< Current parallel "Seed" values.
 	uint8_t Block[ 16 ]; ///< Intermediate input data block.
 	size_t BlockFill; ///< The number of bytes filled in the Block.
+	uint8_t* Hash; ///< Pointer to the hash buffer.
 	int HashLen; ///< Hash buffer length, in bytes, >= 4, in increments of 4.
 	int HashPos; ///< Hash buffer position.
 	uint8_t fb; ///< Final stream byte value, for hashing finalization.
@@ -69,7 +70,8 @@ typedef struct {
  * not be initially reset to the default values, and it should be
  * pre-initialized with uniformly random bytes (it will be automatically
  * endianness-corrected). On systems where this is relevant, this address
- * should be aligned to 32 bits.
+ * should be aligned to 32 bits. This pointer will be stored in the "ctx"
+ * structure.
  * @param HashLen The required hash length, in bytes, should be >= 4, in
  * increments of 4.
  * @param SeedXOR Optional values, to XOR the default seeds with. To use the
@@ -135,6 +137,7 @@ inline void prvhash42s_init( PRVHASH42S_CTX* ctx, uint8_t* const Hash,
 	prvhash42_ec( Hash, HashLen );
 
 	ctx -> BlockFill = 0;
+	ctx -> Hash = Hash;
 	ctx -> HashLen = HashLen;
 	ctx -> HashPos = 0;
 	ctx -> fb = 0xFF;
@@ -147,14 +150,13 @@ inline void prvhash42s_init( PRVHASH42S_CTX* ctx, uint8_t* const Hash,
  * the prvhash42s_final() function should be called.
  *
  * @param ctx Context structure.
- * @param[in,out] Hash The hash buffer.
  * @param Msg The message to produce hash from. The alignment of the message
  * is unimportant.
  * @param MsgLen Message's length, in bytes.
  */
 
-inline void prvhash42s_update( PRVHASH42S_CTX* ctx, uint8_t* const Hash,
-	const uint8_t* Msg, size_t MsgLen )
+inline void prvhash42s_update( PRVHASH42S_CTX* ctx, const uint8_t* Msg,
+	size_t MsgLen )
 {
 	if( MsgLen == 0 )
 	{
@@ -171,7 +173,11 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, uint8_t* const Hash,
 	uint64_t Seed2 = ctx -> Seed[ 1 ];
 	uint64_t Seed3 = ctx -> Seed[ 2 ];
 	uint64_t Seed4 = ctx -> Seed[ 3 ];
-	int HashPos = ctx -> HashPos;
+
+	const uint32_t* const HashEnd =
+		(uint32_t*) ( ctx -> Hash + ctx -> HashLen );
+
+	uint32_t* hc = (uint32_t*) ( ctx -> Hash + ctx -> HashPos );
 	size_t BlockFill = ctx -> BlockFill;
 
 	while( BlockFill + MsgLen >= 16 )
@@ -199,7 +205,6 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, uint8_t* const Hash,
 			(uint32_t) MsgBlock[ 2 ] << 16 | (uint32_t) MsgBlock[ 3 ] << 24;
 
 		Seed1 *= lcg1;
-		uint32_t* const hc = (uint32_t*) &Hash[ HashPos ];
 		uint64_t ph = *hc ^ ( Seed1 >> 32 );
 		Seed1 ^= ph ^ msgw;
 		lcg1 += Seed1;
@@ -230,11 +235,11 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, uint8_t* const Hash,
 
 		*hc = (uint32_t) ph;
 
-		HashPos += 4;
+		hc++;
 
-		if( HashPos == ctx -> HashLen )
+		if( hc == HashEnd )
 		{
-			HashPos = 0;
+			hc = (uint32_t*) ctx -> Hash;
 		}
 	}
 
@@ -246,7 +251,7 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, uint8_t* const Hash,
 	ctx -> Seed[ 1 ] = Seed2;
 	ctx -> Seed[ 2 ] = Seed3;
 	ctx -> Seed[ 3 ] = Seed4;
-	ctx -> HashPos = HashPos;
+	ctx -> HashPos = (int) ( (uint8_t*) hc - ctx -> Hash );
 
 	memcpy( ctx -> Block + BlockFill, Msg, MsgLen );
 	ctx -> BlockFill = BlockFill + MsgLen;
@@ -259,30 +264,29 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, uint8_t* const Hash,
  * processors).
  *
  * @param ctx Context structure.
- * @param[in,out] Hash The hash buffer.
  */
 
-inline void prvhash42s_final( PRVHASH42S_CTX* ctx, uint8_t* const Hash )
+inline void prvhash42s_final( PRVHASH42S_CTX* ctx )
 {
 	uint8_t fbytes[ 16 ];
 	memset( fbytes, ctx -> fb, 16 );
 
-	prvhash42s_update( ctx, Hash, fbytes, 4 );
+	prvhash42s_update( ctx, fbytes, 4 );
 
 	if( ctx -> BlockFill > 0 )
 	{
-		prvhash42s_update( ctx, Hash, fbytes, 16 - ctx -> BlockFill );
+		prvhash42s_update( ctx, fbytes, 16 - ctx -> BlockFill );
 	}
 
 	int c = ctx -> HashLen * 2 - ctx -> HashPos;
 
 	while( c > 0 )
 	{
-		prvhash42s_update( ctx, Hash, fbytes, 16 );
+		prvhash42s_update( ctx, fbytes, 16 );
 		c -= 4;
 	}
 
-	prvhash42_ec( Hash, ctx -> HashLen );
+	prvhash42_ec( ctx -> Hash, ctx -> HashLen );
 }
 
 /**
@@ -305,8 +309,8 @@ inline void prvhash42s_oneshot( const uint8_t* const Msg, const size_t MsgLen,
 	PRVHASH42S_CTX ctx;
 
 	prvhash42s_init( &ctx, Hash, HashLen, 0, 0 );
-	prvhash42s_update( &ctx, Hash, Msg, MsgLen );
-	prvhash42s_final( &ctx, Hash );
+	prvhash42s_update( &ctx, Msg, MsgLen );
+	prvhash42s_final( &ctx );
 }
 
 #endif // PRVHASH42S_INCLUDED
