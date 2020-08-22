@@ -82,10 +82,9 @@ It was especially hard to find a better "hashing finalization" solution.
 
 	Seed *= lcg; // Multiply random by random. Non-linearity induced due to truncation.
 	uint32_t* const hc = (uint32_t*) &Hash[ hpos ]; // Take the address of the hash word.
-	const uint64_t ph = *hc; // Save the current hash word. For entropy feedback.
-	const uint64_t ient = Seed >> 32; // Extract internal entropy.
-	*hc ^= (uint32_t) ient; // Add the internal entropy to the hash word.
-	Seed ^= ph ^ ient ^ msgw; // Mix internal entropy with itself, hash word's and message's entropy.
+	const uint64_t ph = *hc ^ ( Seed >> 32 ); // Mix hash word with the internal entropy.
+	Seed ^= ph ^ msgw; // Mix internal entropy with hash word's and message's entropy. Feedback.
+	*hc = (uint32_t) ph; // Store the updated hash word.
 	lcg += Seed; // Add the internal entropy to the "lcg" variable (both random). Truncation is possible.
 
 Without external entropy (message) injections, the function can run for a

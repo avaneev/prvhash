@@ -32,7 +32,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.11
+ * @version 2.12
  */
 
 //$ nocpp
@@ -210,10 +210,8 @@ inline uint64_t prvrng_gen_entropy64c16( PRVRNG_CTX* const ctx )
 inline void prvrng_prvhash42_32( PRVRNG_CTX* const ctx, const uint64_t msgw )
 {
 	ctx -> Seed *= ctx -> lcg;
-	const uint64_t ph = (uint32_t) ctx -> Hash;
-	const uint64_t ient = ctx -> Seed >> 32;
-	ctx -> Hash ^= ient;
-	ctx -> Seed ^= ph ^ ient ^ msgw;
+	ctx -> Hash ^= ctx -> Seed >> 32;
+	ctx -> Seed ^= (uint32_t) ctx -> Hash ^ msgw;
 	ctx -> lcg += ctx -> Seed;
 }
 
@@ -262,22 +260,18 @@ inline uint8_t prvrng_gen32( PRVRNG_CTX* const ctx )
 
 inline void prvrng_prvhash42_64( PRVRNG_CTX* const ctx, const uint64_t msgw )
 {
-	// Lower 32 bits of hash.
+	// Lower 32 bits of hash value.
 
 	ctx -> Seed *= ctx -> lcg;
-	uint64_t ph = (uint32_t) ctx -> Hash;
-	uint64_t ient = ctx -> Seed >> 32;
-	ctx -> Hash ^= ient;
-	ctx -> Seed ^= ph ^ ient ^ msgw;
+	ctx -> Hash ^= ctx -> Seed >> 32;
+	ctx -> Seed ^= (uint32_t) ctx -> Hash ^ msgw;
 	ctx -> lcg += ctx -> Seed;
 
-	// Upper 32 bits of hash.
+	// Upper 32 bits of hash value.
 
 	ctx -> Seed *= ctx -> lcg;
-	ph = ctx -> Hash;
-	ient = ctx -> Seed & 0xFFFFFFFF00000000ULL;
-	ctx -> Hash ^= ient;
-	ctx -> Seed ^= (( ph ^ ient ) >> 32 ) ^ 0;
+	ctx -> Hash ^= ctx -> Seed & 0xFFFFFFFF00000000ULL;
+	ctx -> Seed ^= ( ctx -> Hash >> 32 ) ^ 0;
 	ctx -> lcg += ctx -> Seed;
 }
 
