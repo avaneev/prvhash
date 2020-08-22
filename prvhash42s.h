@@ -88,7 +88,7 @@ inline void prvhash42s_init( PRVHASH42S_CTX* ctx, uint8_t* const Hash,
 {
 	if( InitVec == 0 )
 	{
-		if( HashLen <= 512 )
+		if( HashLen <= 64 )
 		{
 			static const uint8_t InitHash[ 64 ] = { 172, 167, 85, 251, 226,
 				96, 162, 255, 180, 46, 251, 62, 177, 20, 202, 167, 248, 183,
