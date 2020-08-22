@@ -14,7 +14,9 @@ equal quality independent of the chosen hash length. PRVHASH is based on
 64-bit math. Hashes beyond 256-bits still require extensive testing, but, for
 example, any 32-bit element extracted from 512- or 2048-bit resulting hash is
 as collision resistant as just a 32-bit hash. The use of the function beyond
-512-bit hashes is easily possible, but has to be statistically tested.
+512-bit hashes is easily possible, but has to be statistically tested. It is
+a fixed execution time hash function that depends only on message length. A
+streamed hashing implementation is available.
 
 PRVHASH is solely based on the butterfly effect, strongly inspired by LCG
 pseudo-random number generators. The generated hashes have good avalanche
@@ -41,17 +43,13 @@ non-linearities induced by bit truncations, and because the message enters the
 system only as a mix with the system's internal entropy, without permutations
 of any sort.
 
-PRVHASH can be easily transformed into a streaming hash by creating a simple
-context structure, and moving its initialization to a separate function. It is
-a fixed execution time hash function that depends only on message length.
-
 Please see the `prvhash42.h` file for the details of the implementation (the
 `prvhash.h` and `prvhash4.h` are outdated versions).
 
-The prvhash42 32-bit hash of the string `The strict avalanche criterion` is
-`dac72cb1`.
+The default prvhash42 32-bit hash of the string `The strict avalanche
+criterion` is `dac72cb1`.
 
-The prvhash42 64-bit hash of the same string is `f7ac47b10d2762fb`.
+The default prvhash42 64-bit hash of the same string is `f7ac47b10d2762fb`.
 
 ## Entropy PRNG ##
 
@@ -65,14 +63,35 @@ implemented in the `prvrng.h` file: simply call the `prvrng_test64()`
 function. The `prvrng_test32()` implements the same technique, but with
 32-bit hashes, for comparison purposes.
 
-PRVRNG with 64-bit hashes passes `PractRand` 2 TB threshold, without or with
-only several "unusual" evaluations. Which suggests it's the first working
+`prvrng_gen64()`-based generator passes `PractRand` 8 TB threshold, without or
+with only a few "unusual" evaluations. Which suggests it's the first working
 universal TRNG in the world. This claim requires a lot more evaluations from
 independent researchers.
 
 On a side note, after 1.1 trillion iterations the internal pseudo-entropy
 was not lost in PRVHASH PRNG with 32-bit hashes, without external entropy
 injections.
+
+## Streamed Hashing ##
+
+The file `prvhash42s.h` implements a relatively fast streamed hashing
+function by utilizing a parallel `prvhash42` structure. Please take a look
+at the `prvhash42s_oneshot()` function for usage example. The `prvhash42s`
+offers an extremely increased security and hashing speed. The amount of
+entropy mixing going on in this implementation is substantial.
+
+The default prvhash42s 256-bit hash of the string
+`The quick brown fox jumps over the lazy dog` is
+`64aa3caa35c606034819b675211ea6d801828917aceeea7fb38433bcc456dd9b`.
+
+The default prvhash42s 64-bit hash of the string `The strict avalanche
+criterion` is `84ee1223d201a698`.
+
+This streamed hash function produces hash values that are different to the
+`prvhash42` hash function. It is incorrect to use both of these hash function
+implementations on the same data set. While the `prvhash42` can be used as
+a fast hashmap/table hash, it is not so fast on large data blocks. The
+`prvhash42s` can be used to create hashes of large data blocks like files.
 
 ## Description ##
 
