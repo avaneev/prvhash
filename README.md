@@ -84,6 +84,12 @@ The default prvhash42s 256-bit hash of the string
 `The quick brown fox jumps over the lazy dog` is
 `64aa3caa35c606034819b675211ea6d801828917aceeea7fb38433bcc456dd9b`.
 
+The default prvhash42s 256-bit hash of the string
+`The quick brown fox jumps over the lazy dof` is
+`ec291abc95200fff7d32cb0b855c76d5a9bf3968af28311e8511310e9afb8399`.
+Which demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect):
+119 bits are different.
+
 The default prvhash42s 64-bit hash of the string `The strict avalanche
 criterion` is `84ee1223d201a698`.
 
