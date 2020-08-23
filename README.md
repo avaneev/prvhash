@@ -82,18 +82,18 @@ entropy mixing going on in this implementation is substantial.
 
 The default prvhash42s 256-bit hash of the string
 `The quick brown fox jumps over the lazy dog` is
-`64aa3caa35c606034819b675211ea6d801828917aceeea7fb38433bcc456dd9b`.
+`02ecf2c0429d4223466c8bef40bd7c0c029f16c211f5ad9a24e0bcd5bc9b0bf3`.
 
 The default prvhash42s 256-bit hash of the string
 `The quick brown fox jumps over the lazy dof` is
-`ec291abc95200fff7d32cb0b855c76d5a9bf3968af28311e8511310e9afb8399`.
+`78e09900e677c05719eeca20de7af0f55f0bfeb83ee4d53ec29a3d2c9d22e160`.
 Which demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect):
-119 bits are different. On a set of 216553 English words, pair-wise hash
+128 bits are different. On a set of 216553 English words, pair-wise hash
 comparisons give average 50.0% difference in resulting hash bits, which fully
 satisfies the strict avalanche criterion.
 
 The default prvhash42s 64-bit hash of the string `The strict avalanche
-criterion` is `84ee1223d201a698`.
+criterion` is `ffe3deb76484c36d`.
 
 This streamed hash function produces hash values that are different to the
 `prvhash42` hash function. It is incorrect to use both of these hash function
@@ -112,7 +112,7 @@ It was especially hard to find a better "hashing finalization" solution.
 	const uint64_t ph = *hc ^ ( Seed >> 32 ); // Mix hash word with the internal entropy.
 	Seed ^= ph ^ msgw; // Mix the internal entropy with hash word's and message's entropy. Entropy feedback.
 	*hc = (uint32_t) ph; // Store the updated hash word.
-	lcg += Seed; // Add the internal entropy to the "lcg" variable (both random). Truncation is possible.
+	lcg += Seed + msgw2; // Mix in the internal entropy, and an additional message. Truncation is possible.
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
@@ -124,21 +124,22 @@ to produce quality hashes for any required hash length.
 
 How does it work? First of all, this PRNG system, represented by the hash
 function, does not work with numbers in a common sense: it works with entropy,
-or a random sequence of bits. The current "expression" of system's overall
-internal entropy - the `Seed` - gets multiplied ("smeared") by a supportive
-variable - `lcg`, - which is also a random value. Such multiplication changes
-the `Seed` into a logarithmic-like distribution, dividing (in distribution
-sense) its lower and higher 32-bit parts. The lower 32 bits of the `Seed` are
-then updated by a mix of its own higher 32 bits, the hash word produced on
-previous rounds, and the message. The reason the message's entropy (which may
-be sparse or non-random) does not destabilize the system is because the
-message becomes hidden in a mix of internal and hash word's entropy; message's
-distribution becomes irrelevant. The message "shifts" the system into a new
-state, predictated by previous messages. Mixing the `Seed` with the hash word
-partly restores normal distribution of `Seed`'s lower 32 bits. Iterative
-mixing of the hash words with the `Seed` assures that the resulting hashes
-follow normal distribution and uniformity, irrespective of the distribution
-anomalies of the `Seed` itself.
+or a quasi-random sequence of bits. The current "expression" of system's
+overall internal entropy (which is almost uniformly-random) - the `Seed` -
+gets multiplied ("smeared") by a supportive variable - `lcg`, - which is also
+a random value. Such multiplication changes the `Seed` into a logarithmic-like
+distribution, dividing (in distribution sense) its lower and higher 32-bit
+parts. The lower 32 bits of the `Seed` are then updated by a mix of its own
+higher 32 bits, the hash word produced on previous rounds, and the message.
+The reason the message's entropy (which may be sparse or non-random) does not
+destabilize the system is because the message becomes hidden in a mix of
+internal and hash word's entropy; message's distribution becomes irrelevant.
+The message "shifts" the system into a new state, predictated by previous
+messages. Mixing the `Seed` with the hash word partly restores the normal
+distribution of `Seed`'s and `lcg`'s lower 32 bits. Iterative mixing of the
+hash words with the `Seed` assures that the resulting hashes follow normal
+distribution and uniformity, irrespective of the distribution anomalies of
+the `Seed` itself.
 
 With PRVHASH it is possible to give names to random number generators: for
 example, pass a word "Michelle" to the hashing function, and then the

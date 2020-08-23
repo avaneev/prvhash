@@ -33,7 +33,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.13
+ * @version 2.14
  */
 
 //$ nocpp
@@ -45,6 +45,8 @@
 #include <string.h>
 #include "prvhash42ec.h"
 
+#define PRVHASH42S_LEN 32 // Intermediate block length, in bytes.
+
 /**
  * The context structure of the "prvhash42s_X" functions.
  */
@@ -52,7 +54,7 @@
 typedef struct {
 	uint64_t lcg[ 4 ]; ///< Current parallel "lcg" values.
 	uint64_t Seed[ 4 ]; ///< Current parallel "Seed" values.
-	uint8_t Block[ 16 ]; ///< Intermediate input data block.
+	uint8_t Block[ PRVHASH42S_LEN ]; ///< Intermediate input data block.
 	size_t BlockFill; ///< The number of bytes filled in the Block.
 	uint8_t* Hash; ///< Pointer to the hash buffer.
 	int HashLen; ///< Hash buffer length, in bytes, >= 4, in increments of 4.
@@ -180,14 +182,15 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, const uint8_t* Msg,
 	uint32_t* hc = (uint32_t*) ( ctx -> Hash + ctx -> HashPos );
 	size_t BlockFill = ctx -> BlockFill;
 
-	while( BlockFill + MsgLen >= 16 )
+	while( BlockFill + MsgLen >= PRVHASH42S_LEN )
 	{
 		const uint8_t* MsgBlock = Msg;
 		uint64_t msgw;
+		uint64_t msgw2;
 
 		if( BlockFill > 0 )
 		{
-			const size_t CopyLen = 16 - ctx -> BlockFill;
+			const size_t CopyLen = PRVHASH42S_LEN - ctx -> BlockFill;
 			MsgBlock = ctx -> Block;
 			memcpy( ctx -> Block + ctx -> BlockFill, Msg, CopyLen );
 
@@ -197,41 +200,53 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, const uint8_t* Msg,
 		}
 		else
 		{
-			Msg += 16;
-			MsgLen -= 16;
+			Msg += PRVHASH42S_LEN;
+			MsgLen -= PRVHASH42S_LEN;
 		}
 
 		msgw = (uint32_t) MsgBlock[ 0 ] | (uint32_t) MsgBlock[ 1 ] << 8 |
 			(uint32_t) MsgBlock[ 2 ] << 16 | (uint32_t) MsgBlock[ 3 ] << 24;
 
+		msgw2 = (uint32_t) MsgBlock[ 16 ] | (uint32_t) MsgBlock[ 17 ] << 8 |
+			(uint32_t) MsgBlock[ 18 ] << 16 | (uint32_t) MsgBlock[ 19 ] << 24;
+
 		Seed1 *= lcg1;
 		uint64_t ph = *hc ^ ( Seed1 >> 32 );
 		Seed1 ^= ph ^ msgw;
-		lcg1 += Seed1;
+		lcg1 += Seed1 + msgw2;
 
 		msgw = (uint32_t) MsgBlock[ 4 ] | (uint32_t) MsgBlock[ 5 ] << 8 |
 			(uint32_t) MsgBlock[ 6 ] << 16 | (uint32_t) MsgBlock[ 7 ] << 24;
 
+		msgw2 = (uint32_t) MsgBlock[ 20 ] | (uint32_t) MsgBlock[ 21 ] << 8 |
+			(uint32_t) MsgBlock[ 22 ] << 16 | (uint32_t) MsgBlock[ 23 ] << 24;
+
 		Seed2 *= lcg2;
 		ph ^= Seed2 >> 32;
 		Seed2 ^= ph ^ msgw;
-		lcg2 += Seed2;
+		lcg2 += Seed2 + msgw2;
 
 		msgw = (uint32_t) MsgBlock[ 8 ] | (uint32_t) MsgBlock[ 9 ] << 8 |
 			(uint32_t) MsgBlock[ 10 ] << 16 | (uint32_t) MsgBlock[ 11 ] << 24;
 
+		msgw2 = (uint32_t) MsgBlock[ 24 ] | (uint32_t) MsgBlock[ 25 ] << 8 |
+			(uint32_t) MsgBlock[ 26 ] << 16 | (uint32_t) MsgBlock[ 27 ] << 24;
+
 		Seed3 *= lcg3;
 		ph ^= Seed3 >> 32;
 		Seed3 ^= ph ^ msgw;
-		lcg3 += Seed3;
+		lcg3 += Seed3 + msgw2;
 
 		msgw = (uint32_t) MsgBlock[ 12 ] | (uint32_t) MsgBlock[ 13 ] << 8 |
 			(uint32_t) MsgBlock[ 14 ] << 16 | (uint32_t) MsgBlock[ 15 ] << 24;
 
+		msgw2 = (uint32_t) MsgBlock[ 28 ] | (uint32_t) MsgBlock[ 29 ] << 8 |
+			(uint32_t) MsgBlock[ 30 ] << 16 | (uint32_t) MsgBlock[ 31 ] << 24;
+
 		Seed4 *= lcg4;
 		ph ^= Seed4 >> 32;
 		Seed4 ^= ph ^ msgw;
-		lcg4 += Seed4;
+		lcg4 += Seed4 + msgw2;
 
 		*hc = (uint32_t) ph;
 
@@ -268,21 +283,21 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, const uint8_t* Msg,
 
 inline void prvhash42s_final( PRVHASH42S_CTX* ctx )
 {
-	uint8_t fbytes[ 16 ];
-	memset( fbytes, ctx -> fb, 16 );
+	uint8_t fbytes[ PRVHASH42S_LEN ];
+	memset( fbytes, ctx -> fb, PRVHASH42S_LEN );
 
 	prvhash42s_update( ctx, fbytes, 4 );
 
 	if( ctx -> BlockFill > 0 )
 	{
-		prvhash42s_update( ctx, fbytes, 16 - ctx -> BlockFill );
+		prvhash42s_update( ctx, fbytes, PRVHASH42S_LEN - ctx -> BlockFill );
 	}
 
 	int c = ctx -> HashLen * 2 - ctx -> HashPos;
 
 	while( c > 0 )
 	{
-		prvhash42s_update( ctx, fbytes, 16 );
+		prvhash42s_update( ctx, fbytes, PRVHASH42S_LEN );
 		c -= 4;
 	}
 
