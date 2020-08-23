@@ -82,18 +82,18 @@ entropy mixing going on in this implementation is substantial.
 
 The default prvhash42s 256-bit hash of the string
 `The quick brown fox jumps over the lazy dog` is
-`02ecf2c0429d4223466c8bef40bd7c0c029f16c211f5ad9a24e0bcd5bc9b0bf3`.
+`b7de62b441f983793a98bc267b5b811732090564e8301a4b8cd193d9e5ea13ac`.
 
 The default prvhash42s 256-bit hash of the string
 `The quick brown fox jumps over the lazy dof` is
-`78e09900e677c05719eeca20de7af0f55f0bfeb83ee4d53ec29a3d2c9d22e160`.
+`ef04be381b9f45589d20549dc062fd0ad275de14d87d170193fe6c1b71e99968`.
 Which demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect):
-128 bits are different. On a set of 216553 English words, pair-wise hash
+129 bits are different. On a set of 216553 English words, pair-wise hash
 comparisons give average 50.0% difference in resulting hash bits, which fully
 satisfies the strict avalanche criterion.
 
 The default prvhash42s 64-bit hash of the string `The strict avalanche
-criterion` is `ffe3deb76484c36d`.
+criterion` is `1e144ffccd0714db`.
 
 This streamed hash function produces hash values that are different to the
 `prvhash42` hash function. It is incorrect to use both of these hash function
@@ -124,10 +124,10 @@ to produce quality hashes for any required hash length.
 
 How does it work? First of all, this PRNG system, represented by the hash
 function, does not work with numbers in a common sense: it works with entropy,
-or a quasi-random sequence of bits. The current "expression" of system's
-overall internal entropy (which is almost uniformly-random) - the `Seed` -
-gets multiplied ("smeared") by a supportive variable - `lcg`, - which is also
-a random value. Such multiplication changes the `Seed` into a logarithmic-like
+or random sequences of bits. The current "expression" of system's overall
+internal entropy (which is almost uniformly-random) - the `Seed` - gets
+multiplied ("smeared") by a supportive variable - `lcg`, - which is also a
+random value. Such multiplication changes the `Seed` into a logarithmic-like
 distribution, dividing (in distribution sense) its lower and higher 32-bit
 parts. The lower 32 bits of the `Seed` are then updated by a mix of its own
 higher 32 bits, the hash word produced on previous rounds, and the message.
