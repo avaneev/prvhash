@@ -88,9 +88,9 @@ inline void prvhash42( const uint8_t* const Msg, const int MsgLen,
 		Seed = prvhash42_u64ec( InitVec + 8 );
 	}
 
-	const uint8_t lb = ( MsgLen > 0 ? ~Msg[ MsgLen - 1 ] : 0xFF );
+	const uint8_t lb = (uint8_t) ( MsgLen > 0 ? ~Msg[ MsgLen - 1 ] : 0xFF );
 	const int mlext = MsgLen + 4;
-	int c = mlext + HashLen + ( HashLen - mlext % HashLen );
+	const int c = mlext + HashLen + ( HashLen - mlext % HashLen );
 	int hpos = 0;
 	int k;
 

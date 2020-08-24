@@ -126,6 +126,8 @@ inline uint32_t prvhash42_u32ec( const uint8_t* const p )
 
 #endif // PRVHASH42_LITTLE_ENDIAN
 
+#if PRVHASH42_LITTLE_ENDIAN
+
 /**
  * This function corrects (inverses) endianness of the specified hash value.
  *
@@ -135,18 +137,22 @@ inline uint32_t prvhash42_u32ec( const uint8_t* const p )
  * increments of 4. 
  */
 
+inline void prvhash42_ec( uint8_t* const, const int )
+{
+}
+
+#else // PRVHASH42_LITTLE_ENDIAN
+
 inline void prvhash42_ec( uint8_t* const Hash, const int HashLen )
 {
-	#if !PRVHASH42_LITTLE_ENDIAN
+	int k;
 
-		int k;
-
-		for( k = 0; k < HashLen; k += 4 )
-		{
-			*(uint32_t*) ( Hash + k ) = prvhash42_u32ec( Hash + k );
-		}
-
-	#endif // !PRVHASH42_LITTLE_ENDIAN
+	for( k = 0; k < HashLen; k += 4 )
+	{
+		*(uint32_t*) ( Hash + k ) = prvhash42_u32ec( Hash + k );
+	}
 }
+
+#endif // PRVHASH42_LITTLE_ENDIAN
 
 #endif // PRVHASH42EC_INCLUDED

@@ -141,7 +141,7 @@ inline void prvhash42s_init( PRVHASH42S_CTX* ctx, uint8_t* const Hash,
 	ctx -> Hash = Hash;
 	ctx -> HashLen = HashLen;
 	ctx -> HashPos = 0;
-	ctx -> fb = 0xFF;
+	ctx -> fb = (uint8_t) 0xFF;
 }
 
 /**
@@ -164,7 +164,7 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, const uint8_t* Msg,
 		return;
 	}
 
-	ctx -> fb = ~Msg[ MsgLen - 1 ];
+	ctx -> fb = (uint8_t) ~Msg[ MsgLen - 1 ];
 
 	uint64_t lcg1 = ctx -> lcg[ 0 ];
 	uint64_t lcg2 = ctx -> lcg[ 1 ];
