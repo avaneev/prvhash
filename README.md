@@ -81,22 +81,22 @@ offers an extremely increased security and hashing speed. The amount of
 entropy mixing going on in this implementation is substantial.
 
 The default prvhash42s 64-bit hash of the string `The strict avalanche
-criterion` is `1e144ffccd0714db`.
+criterion` is `bf2e13b8cedf30a3`.
 
 The default prvhash42s 256-bit hash of the string
 `The quick brown fox jumps over the lazy dog` is
-`b7de62b441f983793a98bc267b5b811732090564e8301a4b8cd193d9e5ea13ac`
-(Shannon entropy index is 3.90).
+`043bcff5f2c436b8207969a633ba590afb08c469b511b79f0e0269365856a0d6`
+(Shannon entropy index is 3.80).
 
 The default prvhash42s 256-bit hash of the string
 `The quick brown fox jumps over the lazy dof` is
-`ef04be381b9f45589d20549dc062fd0ad275de14d87d170193fe6c1b71e99968`
-(Shannon entropy index is 3.87).
+`ac5e886fea918e327154113f957a6ad1ba63c36b3b91b0c75f589527445a26ac`
+(Shannon entropy index is 3.86).
 
-This demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect):
-129 bits are different. On a set of 216553 English words, pair-wise hash
-comparisons give average 50.0% difference in resulting hash bits, which fully
-satisfies the strict avalanche criterion.
+This demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect).
+On a set of 216553 English words, pair-wise hash comparisons give average
+50.0% difference in resulting hash bits, which fully satisfies the strict
+avalanche criterion.
 
 This streamed hash function produces hash values that are different to the
 `prvhash42` hash function. It is incorrect to use both of these hash function

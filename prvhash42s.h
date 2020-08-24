@@ -211,16 +211,16 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, const uint8_t* Msg,
 		Seed1 ^= ph ^ msgw;
 		lcg1 += Seed1 + msgw2;
 
-		msgw = prvhash42_u32ec( MsgBlock + 20 );
-		msgw2 = prvhash42_u32ec( MsgBlock + 4 );
+		msgw = prvhash42_u32ec( MsgBlock + 24 );
+		msgw2 = prvhash42_u32ec( MsgBlock + 8 );
 
 		Seed2 *= lcg2;
 		ph ^= Seed2 >> 32;
 		Seed2 ^= ph ^ msgw;
 		lcg2 += Seed2 + msgw2;
 
-		msgw = prvhash42_u32ec( MsgBlock + 24 );
-		msgw2 = prvhash42_u32ec( MsgBlock + 8 );
+		msgw = prvhash42_u32ec( MsgBlock + 20 );
+		msgw2 = prvhash42_u32ec( MsgBlock + 4 );
 
 		Seed3 *= lcg3;
 		ph ^= Seed3 >> 32;
