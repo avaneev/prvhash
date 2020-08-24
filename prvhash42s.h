@@ -203,7 +203,7 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, const uint8_t* Msg,
 			MsgLen -= PRVHASH42S_LEN;
 		}
 
-		msgw = prvhash42_u32ec( MsgBlock + 28 );
+		msgw = prvhash42_u32ec( MsgBlock + 16 );
 		msgw2 = prvhash42_u32ec( MsgBlock + 0 );
 
 		Seed1 *= lcg1;
@@ -211,7 +211,7 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, const uint8_t* Msg,
 		Seed1 ^= ph ^ msgw;
 		lcg1 += Seed1 + msgw2;
 
-		msgw = prvhash42_u32ec( MsgBlock + 24 );
+		msgw = prvhash42_u32ec( MsgBlock + 20 );
 		msgw2 = prvhash42_u32ec( MsgBlock + 4 );
 
 		Seed2 *= lcg2;
@@ -219,7 +219,7 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, const uint8_t* Msg,
 		Seed2 ^= ph ^ msgw;
 		lcg2 += Seed2 + msgw2;
 
-		msgw = prvhash42_u32ec( MsgBlock + 20 );
+		msgw = prvhash42_u32ec( MsgBlock + 24 );
 		msgw2 = prvhash42_u32ec( MsgBlock + 8 );
 
 		Seed3 *= lcg3;
@@ -227,7 +227,7 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, const uint8_t* Msg,
 		Seed3 ^= ph ^ msgw;
 		lcg3 += Seed3 + msgw2;
 
-		msgw = prvhash42_u32ec( MsgBlock + 16 );
+		msgw = prvhash42_u32ec( MsgBlock + 28 );
 		msgw2 = prvhash42_u32ec( MsgBlock + 12 );
 
 		Seed4 *= lcg4;

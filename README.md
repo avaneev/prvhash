@@ -81,20 +81,20 @@ offers an extremely increased security and hashing speed. The amount of
 entropy mixing going on in this implementation is substantial.
 
 The default prvhash42s 64-bit hash of the string `The strict avalanche
-criterion` is `adf664706b72e1a5`.
+criterion` is `1e144ffccd0714db`.
 
 The default prvhash42s 256-bit hash of the string
 `The quick brown fox jumps over the lazy dog` is
-`2b0506707793aae2fffcebc4d1177a9eccecc441a24b70a45a8df9f6cca0ad41`
-(Shannon entropy index is 3.79).
+`b7de62b441f983793a98bc267b5b811732090564e8301a4b8cd193d9e5ea13ac`
+(Shannon entropy index is 3.90).
 
 The default prvhash42s 256-bit hash of the string
 `The quick brown fox jumps over the lazy dof` is
-`38b843fdadaa16e9e8495202f7033a89ffa38cc23de8a780d7c281c5fb969ff6`
-(Shannon entropy index is 3.85).
+`ef04be381b9f45589d20549dc062fd0ad275de14d87d170193fe6c1b71e99968`
+(Shannon entropy index is 3.87).
 
 This demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect):
-128 bits are different. On a set of 216553 English words, pair-wise hash
+129 bits are different. On a set of 216553 English words, pair-wise hash
 comparisons give average 50.0% difference in resulting hash bits, which fully
 satisfies the strict avalanche criterion.
 
