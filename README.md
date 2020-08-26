@@ -26,10 +26,9 @@ message in a set is given a random seed, this allows hashes of such set to
 closely follow the normal distribution. Without the seed, the normality of a
 set is achieved as a second-order effect, with the internal random-number
 generator (the `Seed`) having a strong distribution skew towards logarithmic
-distribution. In practice, the `InitLCG`, `InitSeed` (instead of `SeedXOR`),
-and initial hash, can all be randomly seeded (see the suggestions in
-`prvhash42.h`), adding useful initial entropy (`lcg` + `Seed` + `Hash` bits of
-total entropy).
+distribution. In practice, the `InitVec` (instead of `SeedXOR`), and initial
+hash, can all be randomly seeded (see the suggestions in `prvhash42.h`),
+adding useful initial entropy (`InitVec` + `Hash` bits of total entropy).
 
 32-, 64-, 128-, and 256-bit PRVHASH hashes pass all [SMHasher](https://github.com/rurban/smhasher)
 tests. Other hash lengths were not thoroughly tested, but extrapolations can
@@ -44,12 +43,17 @@ system only as a mix with the system's internal entropy, without permutations
 of any sort.
 
 Please see the `prvhash42.h` file for the details of the implementation (the
-`prvhash.h` and `prvhash4.h` are outdated versions).
+`prvhash.h` and `prvhash4.h` are outdated versions). Note that `42` refers to
+the core hash function's version (4-byte hash word, version 2).
 
-The default prvhash42 32-bit hash of the string `The strict avalanche
-criterion` is `dac72cb1`.
+The default `prvhash42.h`-based 32-bit hash of the string `The strict
+avalanche criterion` is `dac72cb1`.
 
-The default prvhash42 64-bit hash of the same string is `f7ac47b10d2762fb`.
+The default `prvhash42.h`-based 64-bit hash of the same string is
+`f7ac47b10d2762fb`.
+
+A proposed short name for hashes created with `prvhash42.h` is `PRH42-N`,
+where `N` is the hash length in bits (e.g. `PRH42-256`).
 
 ## Entropy PRNG ##
 
@@ -80,10 +84,10 @@ at the `prvhash42s_oneshot()` function for usage example. The `prvhash42s`
 offers an extremely increased security and hashing speed. The amount of
 entropy mixing going on in this implementation is substantial.
 
-The default prvhash42s 64-bit hash of the string `The strict avalanche
-criterion` is `bf2e13b8cedf30a3`.
+The default `prvhash42s.h`-based 64-bit hash of the string `The strict
+avalanche criterion` is `bf2e13b8cedf30a3`.
 
-The default prvhash42s 256-bit hash of the string
+The default `prvhash42s.h`-based 256-bit hash of the string
 `The quick brown fox jumps over the lazy dog` is
 `043bcff5f2c436b8207969a633ba590afb08c469b511b79f0e0269365856a0d6`
 (Shannon entropy index is 3.80).
@@ -103,6 +107,9 @@ This streamed hash function produces hash values that are different to the
 implementations on the same data set. While the `prvhash42` can be used as
 a fast hashmap/table hash, it is not so fast on large data blocks. The
 `prvhash42s` can be used to create hashes of large data blocks like files.
+
+A proposed short name for hashes created with `prvhash42s.h` is `PRH42S-N`,
+where `N` is the hash length in bits (e.g. `PRH42S-256`).
 
 ## Description ##
 
@@ -125,29 +132,29 @@ within a space of a huge number of pseudo-random number generators. Hash
 length affects the size of this "space of generators", permitting the function
 to produce quality hashes for any required hash length.
 
-How does it work? First of all, this PRNG system, represented by the hash
+How does it work? First of all, this PRNG system, represented by the core hash
 function, does not work with numbers in a common sense: it works with entropy,
-or random sequences of bits. The current "expression" of system's overall
-internal entropy (which is almost uniformly-random with a few anomalies) -
-the `Seed` - gets multiplied ("smeared") by a supportive variable - `lcg`, -
-which is also a similar random value. Such multiplication changes the `Seed`
-into a logarithmic-like distribution, dividing (in distribution sense) its
-lower and higher 32-bit parts. The lower 32 bits of the `Seed` are then
-updated by a mix of its own higher 32 bits, the hash word produced on previous
-rounds, and the message. The reason the message's entropy (which may be sparse
-or non-random) does not destabilize the system is because the message becomes
-hidden in a mix of internal and hash word's entropy; message's distribution
-becomes irrelevant. The message "shifts" the system into a new state,
-predictated by previous messages. Mixing the `Seed` with the hash word partly
-restores the normal distribution of `Seed`'s and `lcg`'s lower 32 bits.
-Iterative mixing of the hash words with the `Seed` assures that the resulting
-hashes follow normal distribution and uniformity, irrespective of the
-distribution anomalies of the `Seed` itself. The `Seed` and `lcg` variables
-work in tandem, with each variable able to independently absorb up to 32 bits
-of external (message) entropy.
+or uniformly-random sequences of bits. The current "expression" of system's
+overall internal entropy (which is almost uniformly-random with a few
+anomalies) - the `Seed` - gets multiplied ("smeared") by a supportive
+variable - `lcg`, - which is also a similar random value. Such multiplication
+changes the `Seed` into a logarithmic-like distribution, dividing (in
+distribution sense) its lower and higher 32-bit parts. The lower 32 bits of
+the `Seed` are then updated by a mix of its own higher 32 bits, the hash word
+produced on previous rounds, and the message. The reason the message's entropy
+(which may be sparse or non-random) does not destabilize the system is because
+the message becomes hidden in a mix of internal and hash word's entropy;
+message's distribution becomes irrelevant. The message "shifts" the system
+into a new state, predictated by previous messages. Mixing the `Seed` with the
+hash word partly restores the normal distribution of `Seed`'s and `lcg`'s
+lower 32 bits. Iterative mixing of the hash words with the `Seed` assures that
+the resulting hashes follow normal distribution and uniformity, irrespective
+of the distribution anomalies of the `Seed` itself. The `Seed` and `lcg`
+variables work in tandem, with each variable able to independently absorb up
+to 32 bits of external (message) entropy.
 
 With PRVHASH it is possible to give names to random number generators: for
-example, pass a word "Michelle" to the hashing function, and then the
+example, pass a word "Michelle" to the core hash function, and then the
 generation will continue in the space predictated by this initial word. Every
 bit of entropy matters.
 
