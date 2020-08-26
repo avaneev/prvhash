@@ -85,17 +85,17 @@ offers an extremely increased security and hashing speed. The amount of
 entropy mixing going on in this implementation is substantial.
 
 The default `prvhash42s.h`-based 64-bit hash of the string `The strict
-avalanche criterion` is `bf2e13b8cedf30a3`.
+avalanche criterion` is `674a8966aa565e98`.
 
 The default `prvhash42s.h`-based 256-bit hash of the string
 `The quick brown fox jumps over the lazy dog` is
-`043bcff5f2c436b8207969a633ba590afb08c469b511b79f0e0269365856a0d6`
-(Shannon entropy index is 3.80).
+`15686a68c01f2e1843509d51d3660d1d92be4c19fbc465819af9fb619ba0e99d`
+(Shannon entropy index is 3.78).
 
 The default prvhash42s 256-bit hash of the string
 `The quick brown fox jumps over the lazy dof` is
-`ac5e886fea918e327154113f957a6ad1ba63c36b3b91b0c75f589527445a26ac`
-(Shannon entropy index is 3.86).
+`aef1709da356f2b1e1e490e498c1329e0880e7d3d4a28a2aa49f17f44882b7b9`
+(Shannon entropy index is 3.83).
 
 This demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect).
 On a set of 216553 English words, pair-wise hash comparisons give average
