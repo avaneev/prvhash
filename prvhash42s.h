@@ -33,7 +33,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.16
+ * @version 2.17
  */
 
 //$ nocpp
@@ -69,10 +69,11 @@ typedef struct {
  * @param ctx Context structure.
  * @param[in,out] Hash The hash buffer. If InitVec is non-NULL, the hash will
  * not be initially reset to the default values, and it should be
- * pre-initialized with uniformly random bytes (it will be automatically
- * endianness-corrected). On systems where this is relevant, this address
- * should be aligned to 32 bits. This pointer will be stored in the "ctx"
- * structure.
+ * pre-initialized with uniformly-random bytes (there are no restrictions on
+ * which values to use for initialization: even all-zero values can be used).
+ * The provided hash will be automatically endianness-corrected. On systems
+ * where this is relevant, this address should be aligned to 32 bits. This
+ * pointer will be stored in the "ctx" structure.
  * @param HashLen The required hash length, in bytes, should be >= 4, in
  * increments of 4.
  * @param SeedXOR Optional values, to XOR the default seeds with. To use the
@@ -81,8 +82,12 @@ typedef struct {
  * length, up to four 64-bit values can be supplied, and are used only as an
  * additional entropy source. They should be endianness-corrected.
  * @param InitVec If non-NULL, an "initialization vector" for internal "lcg"
- * and "Seed" variables. Full 64-byte uniformly random value should be
- * supplied in this case.
+ * and "Seed" variables. Full 64-byte uniformly-random value should be
+ * supplied in this case. Since it is imperative that the initialization
+ * vector is non-zero, the best strategies to generate it are: 1) compose the
+ * vector from 16-bit random values that have 5 to 11 random bits set; 2)
+ * compose the vector from 64-bit random values that have 29-35 random bits
+ * set.
  */
 
 inline void prvhash42s_init( PRVHASH42S_CTX* ctx, uint8_t* const Hash,

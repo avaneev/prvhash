@@ -32,7 +32,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.16
+ * @version 2.17
  */
 
 //$ nocpp
@@ -135,7 +135,7 @@ inline int prvrng_popcnt_u64( uint64_t v0 )
 
 /**
  * Function generates an 64-bit entropy value and assures this value has
- * between 30 and 34 bits set. This function is required to generate a stable
+ * between 29 and 35 bits set. This function is required to generate a stable
  * initial state of the hash function. This constraint is usually fulfilled in
  * 1-3 iterations, but in rare cases may require even 10 iterations.
  *
@@ -157,7 +157,7 @@ inline uint64_t prvrng_gen_entropy64c( PRVRNG_CTX* const ctx )
 
 		const int bcnt = prvrng_popcnt_u64( tv );
 
-		if( bcnt >= 30 && bcnt <= 34 )
+		if( bcnt >= 29 && bcnt <= 35 )
 		{
 			return( tv );
 		}
@@ -166,7 +166,7 @@ inline uint64_t prvrng_gen_entropy64c( PRVRNG_CTX* const ctx )
 
 /**
  * Function generates an 64-bit entropy value and assures this value is
- * composed of four 16-bit values that each have 6 to 10 bits set. This
+ * composed of four 16-bit values that each have 5 to 11 bits set. This
  * function is required to generate a stable initial state of the hash
  * function. This constraint is usually quickly satisfied.
  *
@@ -188,7 +188,7 @@ inline uint64_t prvrng_gen_entropy64c16( PRVRNG_CTX* const ctx )
 
 			const int bcnt = prvrng_popcnt_u16( tv );
 
-			if( bcnt >= 6 && bcnt <= 10 )
+			if( bcnt >= 5 && bcnt <= 11 )
 			{
 				val <<= 16;
 				val |= tv;
@@ -341,9 +341,9 @@ inline int prvrng_init32( PRVRNG_CTX* const ctx )
 
 	#endif // defined( PRVRNG_UNIX )
 
-	ctx -> Hash = prvrng_gen_entropy64c( ctx );
+	ctx -> Hash = prvrng_gen_entropy64c16( ctx );
 	ctx -> lcg = prvrng_gen_entropy64c16( ctx );
-	ctx -> Seed = prvrng_gen_entropy64c( ctx );
+	ctx -> Seed = prvrng_gen_entropy64c16( ctx );
 	ctx -> EntCtr = 0;
 	ctx -> HashLeft = 0;
 	ctx -> LastHash = 0;
