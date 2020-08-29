@@ -11,12 +11,11 @@ and an "extendable-output function".
 
 PRVHASH can generate 32- to unlimited-bit hashes, yielding hashes of roughly
 equal quality independent of the chosen hash length. PRVHASH is based on
-64-bit math. Hashes beyond 256-bits still require extensive testing, but, for
-example, any 32-bit element extracted from 512- or 2048-bit resulting hash is
-as collision resistant as just a 32-bit hash. The use of the function beyond
-512-bit hashes is easily possible, but has to be statistically tested. It is
-a fixed execution time hash function that depends only on message length. A
-streamed hashing implementation is available.
+64-bit math. The use of the function beyond 512-bit hashes is easily possible,
+but has to be statistically tested. For example, any 32-bit element extracted
+from 1024-, 2048-, or 4096-bit resulting hash is as collision resistant as
+just a 32-bit hash. It is a fixed execution time hash function that depends
+only on message length. A streamed hashing implementation is available.
 
 PRVHASH is solely based on the butterfly effect, strongly inspired by LCG
 pseudo-random number generators. The generated hashes have good avalanche
@@ -30,17 +29,17 @@ distribution. In practice, the `InitVec` (instead of `SeedXOR`), and initial
 hash, can all be randomly seeded (see the suggestions in `prvhash42.h`),
 adding useful initial entropy (`InitVec` + `Hash` bits of total entropy).
 
-32-, 64-, 128-, and 256-bit PRVHASH hashes pass all [SMHasher](https://github.com/rurban/smhasher)
+32-, 64-, 128-, 160-, 256- and 512-bit PRVHASH hashes pass all [SMHasher](https://github.com/rurban/smhasher)
 tests. Other hash lengths were not thoroughly tested, but extrapolations can
-be made. PRVHASH may possess cryptographic properties, but this is yet to be
-proven. This function is best used on pre-compressed, maximal entropy, data.
-To cope with the cases of sparse entropy, PRVHASH ends the hashing of the
-message with the trail of `bitwise NOT` version of the final byte, as a
-pseudo-entropy injection. In author's opinion, this hash function is almost
-definitely irreversible as it does not use fixed prime numbers, has
-non-linearities induced by bit truncations, and because the message enters the
-system only as a mix with the system's internal entropy, without permutations
-of any sort.
+be made. PRVHASH possesses most of the cryptographic properties, but this
+aspect has to be tested further. This function is best used on pre-compressed,
+maximal-entropy, data. To cope with the cases of sparse entropy, PRVHASH ends
+the hashing of the message with the trail of `bitwise NOT` version of the
+final byte, as a pseudo-entropy injection. In author's opinion, this hash
+function is almost definitely irreversible as it does not use fixed prime
+numbers, has non-linearities induced by bit truncations, and because the
+message enters the system only as a mix with the system's internal entropy
+without permutations of any sort.
 
 Please see the `prvhash42.h` file for the details of the implementation (the
 `prvhash.h` and `prvhash4.h` are outdated versions). Note that `42` refers to
@@ -119,7 +118,7 @@ It was especially hard to find a better "hashing finalization" solution.
 
 	Seed *= lcg; // Multiply random by random. Non-linearity induced due to truncation.
 	uint32_t* const hc = (uint32_t*) &Hash[ hpos ]; // Take the address of the hash word.
-	const uint64_t ph = *hc ^ ( Seed >> 32 ); // Mix hash word with the internal entropy.
+	const uint64_t ph = *hc ^ ( Seed >> 32 ); // Mix hash word with the internal entropy (truncated).
 	Seed ^= ph ^ msgw; // Mix the internal entropy with hash word's and message's entropy. Entropy feedback.
 	*hc = (uint32_t) ph; // Store the updated hash word.
 	lcg += Seed + msgw2; // Mix in the internal entropy, and an additional message. Truncation is possible.
