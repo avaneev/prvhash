@@ -7,7 +7,8 @@ derived from the message. Resulting hashes closely follow normal distribution
 of bit frequency. PRVHASH is conceptually similar to `keccak` and `RadioGatun`
 schemes, but is a completely different implementation of such concept.
 PRVHASH is both a ["randomness extractor"](https://en.wikipedia.org/wiki/Randomness_extractor)
-and an "extendable-output function".
+and an "extendable-output function" (XOF), however the resulting hashes have
+security level that corresponds to the hash length specification.
 
 PRVHASH can generate 32- to unlimited-bit hashes, yielding hashes of roughly
 equal quality independent of the chosen hash length. PRVHASH is based on
@@ -26,8 +27,8 @@ closely follow the normal distribution. Without the seed, the normality of a
 set is achieved as a second-order effect, with the internal random-number
 generator (the `Seed`) having a strong distribution skew towards logarithmic
 distribution. In practice, the `InitVec` (instead of `SeedXOR`), and initial
-hash, can all be randomly seeded (see the suggestions in `prvhash42.h`),
-adding useful initial entropy (`InitVec` + `Hash` bits of total entropy).
+hash, can both be randomly seeded (see the suggestions in `prvhash42.h`),
+adding useful initial entropy (`InitVec` and `Hash` bits of overall entropy).
 
 32-, 64-, 128-, 160-, 256- and 512-bit PRVHASH hashes pass all [SMHasher](https://github.com/rurban/smhasher)
 tests. Other hash lengths were not thoroughly tested, but extrapolations can
