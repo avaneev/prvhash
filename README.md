@@ -10,7 +10,7 @@ PRVHASH is both a ["randomness extractor"](https://en.wikipedia.org/wiki/Randomn
 and an "extendable-output function" (XOF), however the resulting hashes have
 security level that corresponds to the hash length specification: the
 collision resistance is equal to `2^(n/2)` while the preimage resistance is
-equal to `(2^n)`, where `n` is the resulting hash length.
+equal to `2^n`, where `n` is the resulting hash length.
 
 PRVHASH can generate 32- to unlimited-bit hashes, yielding hashes of roughly
 equal quality independent of the chosen hash length. PRVHASH is based on
