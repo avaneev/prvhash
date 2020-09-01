@@ -31,7 +31,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.17
+ * @version 2.18
  */
 
 //$ nocpp
@@ -53,7 +53,7 @@
  * @param[in,out] Hash The resulting hash. If InitVec is non-NULL, the hash
  * will not be initially reset to 0, and it should be pre-initialized with
  * uniformly-random bytes (there are no restrictions on which values to use
- * for initialization: even all-zero values can be used). The provided hash
+ * for initialization: even an all-zero value can be used). The provided hash
  * will be automatically endianness-corrected. On systems where this is
  * relevant, this address should be aligned to 32 bits.
  * @param HashLen The required hash length, in bytes, should be >= 4, in
@@ -95,7 +95,7 @@ inline void prvhash42( const uint8_t* const Msg, const int MsgLen,
 	}
 
 	const uint8_t lb = (uint8_t) ( MsgLen > 0 ? ~Msg[ MsgLen - 1 ] : 0xFF );
-	const int mlext = MsgLen + 4;
+	const int mlext = MsgLen + (( 4 - ( MsgLen & 3 )) & 3 );
 	const int c = mlext + HashLen + ( HashLen - mlext % HashLen );
 	int hpos = 0;
 	int k;

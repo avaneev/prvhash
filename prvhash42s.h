@@ -33,7 +33,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.17
+ * @version 2.18
  */
 
 //$ nocpp
@@ -70,10 +70,10 @@ typedef struct {
  * @param[in,out] Hash The hash buffer. If InitVec is non-NULL, the hash will
  * not be initially reset to the default values, and it should be
  * pre-initialized with uniformly-random bytes (there are no restrictions on
- * which values to use for initialization: even all-zero values can be used).
- * The provided hash will be automatically endianness-corrected. On systems
- * where this is relevant, this address should be aligned to 32 bits. This
- * pointer will be stored in the "ctx" structure.
+ * which values to use for initialization: even an all-zero value can be
+ * used). The provided hash will be automatically endianness-corrected. On
+ * systems where this is relevant, this address should be aligned to 32 bits.
+ * This pointer will be stored in the "ctx" structure.
  * @param HashLen The required hash length, in bytes, should be >= 4, in
  * increments of 4.
  * @param SeedXOR Optional values, to XOR the default seeds with. To use the
@@ -96,20 +96,22 @@ inline void prvhash42s_init( PRVHASH42S_CTX* ctx, uint8_t* const Hash,
 {
 	if( InitVec == 0 )
 	{
-		if( HashLen <= 64 )
-		{
-			static const uint8_t InitHash[ 64 ] = { 172, 167, 85, 251, 226,
-				96, 162, 255, 180, 46, 251, 62, 177, 20, 202, 167, 248, 183,
-				164, 209, 140, 203, 201, 43, 221, 106, 45, 82, 228, 49, 176,
-				55, 175, 162, 250, 129, 110, 93, 157, 252, 139, 190, 152, 216,
-				230, 204, 137, 175, 96, 192, 220, 12, 218, 73, 207, 216, 89,
-				187, 233, 62, 54, 120, 73, 173 };
+		const int IHLen = 64;
+		static const uint8_t InitHash[ IHLen ] = { 172, 167, 85, 251, 226, 96,
+			162, 255, 180, 46, 251, 62, 177, 20, 202, 167, 248, 183, 164, 209,
+			140, 203, 201, 43, 221, 106, 45, 82, 228, 49, 176, 55, 175, 162,
+			250, 129, 110, 93, 157, 252, 139, 190, 152, 216, 230, 204, 137,
+			175, 96, 192, 220, 12, 218, 73, 207, 216, 89, 187, 233, 62, 54,
+			120, 73, 173 };
 
+		if( HashLen <= IHLen )
+		{
 			memcpy( Hash, InitHash, HashLen );
 		}
 		else
 		{
-			memset( Hash, 0, HashLen );
+			memcpy( Hash, InitHash, IHLen );
+			memset( Hash + IHLen, 0, HashLen - IHLen );
 		}
 
 		ctx -> lcg[ 0 ] = 15430973964284598734ULL;
@@ -277,8 +279,6 @@ inline void prvhash42s_final( PRVHASH42S_CTX* ctx )
 {
 	uint8_t fbytes[ PRVHASH42S_LEN ];
 	memset( fbytes, ctx -> fb, PRVHASH42S_LEN );
-
-	prvhash42s_update( ctx, fbytes, 4 );
 
 	if( ctx -> BlockFill > 0 )
 	{
