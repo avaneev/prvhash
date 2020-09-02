@@ -117,9 +117,10 @@ where `N` is the hash length in bits (e.g. `PRH42S-256`).
 
 ## Use As A Stream Cipher ##
 
-The core hash function can be used as a stream cipher if the message is
-repeatedly hashed, possibly with an embedded counter, nonce and key, and its
-length is equal to hash length.
+The core hash function can be used as a stream cipher if the message is used
+as a state variable, repeatedly hashed, possibly with an embedded counter,
+nonce and key. The resulting output can then be used in varying quantities
+as an entropy to hide (XOR) the ciphered message.
 
 ## Description ##
 
