@@ -39,10 +39,12 @@ aspect has to be tested further. This function is best used on pre-compressed,
 maximal-entropy, data. To cope with the cases of sparse entropy, PRVHASH ends
 the hashing of the message with the trail of `bitwise NOT` version of the
 final byte, as a pseudo-entropy injection. In author's opinion, this hash
-function is almost definitely irreversible as it does not use fixed prime
-numbers, has non-linearities induced by bit truncations, and because the
-message enters the system only as a mix with the system's internal entropy
-without permutations of any sort.
+function is definitely irreversible as it does not use fixed prime numbers,
+has non-linearities (loss of state information) induced by bit truncations,
+and because the message enters the system only as a mix with the system's
+internal entropy without permutations of any sort. The very first
+`Seed *= lcg` instruction is provably irreversible: `Seed /= lcg` cannot be
+used for inversion since `Seed` is truncated and `lcg` is not a prime number.
 
 Please see the `prvhash42.h` file for the details of the implementation (the
 `prvhash.h` and `prvhash4.h` are outdated versions). Note that `42` refers to
@@ -112,6 +114,12 @@ a fast hashmap/table hash, it is not so fast on large data blocks. The
 
 A proposed short name for hashes created with `prvhash42s.h` is `PRH42S-N`,
 where `N` is the hash length in bits (e.g. `PRH42S-256`).
+
+## Use As A Stream Cipher ##
+
+The core hash function can be used as a stream cipher if the message is
+repeatedly hashed, possibly with an embedded counter, nonce and key, and its
+length is equal to hash length.
 
 ## Description ##
 
