@@ -39,12 +39,13 @@ aspect has to be tested further. This function is best used on pre-compressed,
 maximal-entropy, data. To cope with the cases of sparse entropy, PRVHASH ends
 the hashing of the message with the trail of `bitwise NOT` version of the
 final byte, as a pseudo-entropy injection. In author's opinion, this hash
-function is definitely irreversible as it does not use fixed prime numbers,
-has non-linearities (loss of state information) induced by bit truncations,
-and because the message enters the system only as a mix with the system's
-internal entropy without permutations of any sort. The very first
-`Seed *= lcg` instruction is provably irreversible: `Seed /= lcg` cannot be
-used for inversion since `Seed` is truncated and `lcg` is not a prime number.
+function is almost definitely irreversible as it does not use fixed prime
+numbers, has non-linearities (loss of state information) induced by bit
+truncations, and because the message enters the system only as a mix with the
+system's internal entropy without permutations of any sort. The very first
+`Seed *= lcg` instruction is highly irreversible: `Seed /= lcg` cannot be
+used for inversion since `Seed` is truncated, and `lcg` is usually not a prime
+number (probabilistically, `lcg` may be a prime in 2.1% of rounds).
 
 Please see the `prvhash42.h` file for the details of the implementation (the
 `prvhash.h` and `prvhash4.h` are outdated versions). Note that `42` refers to
@@ -71,10 +72,10 @@ implemented in the `prvrng.h` file: simply call the `prvrng_test64()`
 function. The `prvrng_test32()` implements the same technique, but with
 32-bit hashes, for comparison purposes.
 
-`prvrng_gen64()`-based generator passes `PractRand` 8 TB threshold, without or
-with only a few "unusual" evaluations. Which suggests it's the first working
-universal TRNG in the world. This claim requires a lot more evaluations from
-independent researchers.
+`prvrng_gen64()`-based generator passes `PractRand` 32 TB threshold, without
+or with only a few "unusual" evaluations. Which suggests it's the first
+working universal TRNG in the world. This claim requires a lot more
+evaluations from independent researchers.
 
 On a side note, after 1.1 trillion iterations the internal pseudo-entropy
 was not lost in PRVHASH PRNG with 32-bit hashes, without external entropy
