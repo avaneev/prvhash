@@ -135,6 +135,7 @@ It was especially hard to find a better "hashing finalization" solution.
 	Seed ^= ph ^ msgw; // Mix the internal entropy with hash word's and message's entropy. Entropy feedback.
 	*hc = (uint32_t) ph; // Store the updated hash word.
 	lcg += Seed + msgw2; // Mix in the internal entropy, and an additional message. Truncation is possible.
+	lcg += lcg & 1; // Optional instruction: eliminates prime numbers at some speed penalty.
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
