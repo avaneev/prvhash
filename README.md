@@ -2,15 +2,17 @@
 
 ## Introduction ##
 
-PRVHASH is a hash function that generates a pseudo-random number sequence
+PRVHASH is a hash function that generates a [pseudo-random number sequence](https://en.wikipedia.org/wiki/Pseudorandom_number_generator)
 derived from the message. Resulting hashes closely follow normal distribution
-of bit frequency. PRVHASH is conceptually similar to `keccak` and `RadioGatun`
+of bit frequency. PRVHASH is conceptually similar to [`keccak`](https://en.wikipedia.org/wiki/SHA-3)
+and [`RadioGatun`](https://en.wikipedia.org/wiki/RadioGat%C3%BAn)
 schemes, but is a completely different implementation of such concept.
 PRVHASH is both a ["randomness extractor"](https://en.wikipedia.org/wiki/Randomness_extractor)
 and an "extendable-output function" (XOF), however the resulting hashes have
-security level that corresponds to the hash length specification: the
-collision resistance is equal to `2^(n/2)` while the preimage resistance is
-equal to `2^n`, where `n` is the resulting hash length.
+[security level](https://en.wikipedia.org/wiki/Security_of_cryptographic_hash_functions)
+that corresponds to the hash length specification: the collision resistance is
+equal to `2^(n/2)` while the preimage resistance is equal to `2^n`, where `n`
+is the resulting hash length.
 
 PRVHASH can generate 32- to unlimited-bit hashes, yielding hashes of roughly
 equal quality independent of the chosen hash length. PRVHASH is based on
@@ -20,7 +22,7 @@ from 1024-, 2048-, or 4096-bit resulting hash is as collision resistant as
 just a 32-bit hash. It is a fixed execution time hash function that depends
 only on message length. A streamed hashing implementation is available.
 
-PRVHASH is solely based on the butterfly effect, strongly inspired by LCG
+PRVHASH is solely based on the butterfly effect, strongly inspired by [LCG](https://en.wikipedia.org/wiki/Linear_congruential_generator)
 pseudo-random number generators. The generated hashes have good avalanche
 properties. For best results, when creating (H)MACs, a random seed should be
 supplied to the hash function, but this is not a requirement. When each
@@ -35,17 +37,18 @@ adding useful initial entropy (`InitVec` and `Hash` bits of overall entropy).
 32-, 64-, 128-, 160-, 256- and 512-bit PRVHASH hashes pass all [SMHasher](https://github.com/rurban/smhasher)
 tests. Other hash lengths were not thoroughly tested, but extrapolations can
 be made. PRVHASH possesses most of the cryptographic properties, but this
-aspect has to be tested further. This function is best used on pre-compressed,
-maximal-entropy, data. To cope with the cases of sparse entropy, PRVHASH ends
-the hashing of the message with the trail of `bitwise NOT` version of the
-final byte, as a pseudo-entropy injection. In author's opinion, this hash
-function is almost definitely irreversible as it does not use fixed prime
-numbers, has non-linearities (loss of state information) induced by bit
-truncations, and because the message enters the system only as a mix with the
-system's internal entropy without permutations of any sort. The very first
-`Seed *= lcg` instruction is highly irreversible: `Seed /= lcg` cannot be
-used for inversion since `Seed` is truncated, and `lcg` is usually not a prime
-number (probabilistically, `lcg` may be a prime in 2.2% of rounds).
+aspect has yet to be better proven. This function is best used on
+pre-compressed, maximal-entropy, data. To cope with the cases of sparse
+entropy, PRVHASH ends the hashing of the message with the trail of
+`bitwise NOT` version of the final byte, as a pseudo-entropy injection. In
+author's opinion, this hash function is almost definitely [irreversible](https://en.wikipedia.org/wiki/One-way_function)
+as it does not use fixed prime numbers, has non-linearities (loss of state
+information) induced by bit truncations, and because the message enters the
+system only as a mix with the system's internal entropy without permutations
+of any sort. The very first `Seed *= lcg` instruction is highly irreversible:
+`Seed /= lcg` cannot be used for inversion since `Seed` is truncated, and
+`lcg` is usually not a prime number (probabilistically, `lcg` may be a prime
+in 2.2% of rounds).
 
 Please see the `prvhash42.h` file for the details of the implementation (the
 `prvhash.h` and `prvhash4.h` are outdated versions). Note that `42` refers to
@@ -72,10 +75,10 @@ implemented in the `prvrng.h` file: simply call the `prvrng_test64()`
 function. The `prvrng_test32()` implements the same technique, but with
 32-bit hashes, for comparison purposes.
 
-`prvrng_gen64()`-based generator passes `PractRand` 32 TB threshold, without
-or with only a few "unusual" evaluations. Which suggests it's the first
-working universal TRNG in the world. This claim requires a lot more
-evaluations from independent researchers.
+`prvrng_gen64()`-based generator passes [`PractRand`](http://pracrand.sourceforge.net/)
+32 TB threshold, without or with only a few "unusual" evaluations. Which
+suggests it's the first working universal TRNG in the world. This claim
+requires a lot more evaluations from independent researchers.
 
 On a side note, after 1.1 trillion iterations the internal pseudo-entropy
 was not lost in PRVHASH PRNG with 32-bit hashes, without external entropy
@@ -118,10 +121,10 @@ where `N` is the hash length in bits (e.g. `PRH42S-256`).
 
 ## Use As A Stream Cipher ##
 
-The core hash function can be used as a stream cipher if the message is used
-as a state variable, repeatedly hashed, possibly with an embedded counter,
-nonce and key. The resulting output can then be used in varying quantities
-as an entropy to hide (XOR) the ciphered message.
+The core hash function can be used as a [stream cipher](https://en.wikipedia.org/wiki/Stream_cipher)
+if the message is used as a state variable, repeatedly hashed, possibly with
+an embedded counter, nonce and key. The resulting output can then be used in
+varying quantities as an entropy to hide (XOR) the ciphered message.
 
 ## Description ##
 
@@ -146,7 +149,7 @@ length affects the size of this "space of generators", permitting the function
 to produce quality hashes for any required hash length.
 
 How does it work? First of all, this PRNG system, represented by the core hash
-function, does not work with numbers in a common sense: it works with entropy,
+function, does not work with numbers in a common sense: it works with [entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)),
 or uniformly-random sequences of bits. The current "expression" of system's
 overall internal entropy (which is almost uniformly-random with a few
 anomalies) - the `Seed` - gets multiplied ("smeared") by a supportive
