@@ -45,7 +45,7 @@ truncations, and because the message enters the system only as a mix with the
 system's internal entropy without permutations of any sort. The very first
 `Seed *= lcg` instruction is highly irreversible: `Seed /= lcg` cannot be
 used for inversion since `Seed` is truncated, and `lcg` is usually not a prime
-number (probabilistically, `lcg` may be a prime in 2.1% of rounds).
+number (probabilistically, `lcg` may be a prime in 2.2% of rounds).
 
 Please see the `prvhash42.h` file for the details of the implementation (the
 `prvhash.h` and `prvhash4.h` are outdated versions). Note that `42` refers to
