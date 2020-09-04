@@ -41,11 +41,11 @@ aspect has yet to be better proven. This function is best used on
 pre-compressed, maximal-entropy, data. To cope with the cases of sparse
 entropy, PRVHASH ends the hashing of the message with the trail of
 `bitwise NOT` version of the final byte, as a pseudo-entropy injection. In
-author's opinion, this hash function is almost definitely [irreversible](https://en.wikipedia.org/wiki/One-way_function)
+author's opinion, this hash function is provably [irreversible](https://en.wikipedia.org/wiki/One-way_function)
 as it does not use fixed prime numbers, has non-linearities (loss of state
 information) induced by bit truncations, and because the message enters the
 system only as a mix with the system's internal entropy without permutations
-of any sort. The very first `Seed *= lcg` instruction is highly irreversible:
+of any sort. The very first `Seed *= lcg` instruction is almost irreversible:
 `Seed /= lcg` cannot be used for inversion since `Seed` is truncated, and
 `lcg` is usually not a prime number (probabilistically, `lcg` may be a prime
 in 2.2% of rounds).
@@ -138,7 +138,11 @@ It was especially hard to find a better "hashing finalization" solution.
 	Seed ^= ph ^ msgw; // Mix the internal entropy with hash word's and message's entropy. Entropy feedback.
 	*hc = (uint32_t) ph; // Store the updated hash word.
 	lcg += Seed + msgw2; // Mix in the internal entropy, and an additional message. Truncation is possible.
-	lcg += lcg & 1; // Optional instruction: eliminates prime numbers at some speed penalty.
+
+An optional variant of the first instruction which eliminates prime numbers
+at the cost of some speed and 1-bit reduction of security:
+
+	Seed *= lcg + ( lcg & 1 );
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
