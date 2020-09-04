@@ -82,7 +82,9 @@ requires a lot more evaluations from independent researchers.
 
 On a side note, after 1.1 trillion iterations the internal pseudo-entropy
 was not lost in PRVHASH PRNG with 32-bit hashes, without external entropy
-injections.
+injections. Generally speaking, the probability of losing entropy is
+negligible while with external entropy injections this probability is zero
+(the `lcg` variable is an accumulator of entropy).
 
 ## Streamed Hashing ##
 
@@ -171,7 +173,8 @@ lower 32 bits. Iterative mixing of the hash words with the `Seed` assures that
 the resulting hashes follow normal distribution and uniformity, irrespective
 of the distribution anomalies of the `Seed` itself. The `Seed` and `lcg`
 variables work in tandem, with each variable able to independently absorb up
-to 32 bits of external (message) entropy.
+to 32 bits of external (message) entropy. Note that `lcg` being an accumulator
+quickly leaves a possible zero state.
 
 With PRVHASH it is possible to give names to random number generators: for
 example, pass a word "Michelle" to the core hash function, and then the
