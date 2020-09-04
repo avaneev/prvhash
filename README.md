@@ -142,10 +142,9 @@ It was especially hard to find a better "hashing finalization" solution.
 	lcg += Seed + msgw2; // Mix in the internal entropy, and an additional message. Truncation is possible.
 
 An optional variant of the first instruction which eliminates prime numbers
-at the cost of some speed and 1-bit reduction of security (this variant works
-only if `msgw2` is not used):
+at the cost of some speed, and probably some security:
 
-	Seed *= lcg + ( lcg & 1 );
+	Seed *= lcg << 1;
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
