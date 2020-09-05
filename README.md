@@ -42,13 +42,13 @@ pre-compressed, maximal-entropy, data. To cope with the cases of sparse
 entropy, PRVHASH ends the hashing of the message with the trail of
 `bitwise NOT` version of the final byte, as a pseudo-entropy injection. In
 author's opinion, this hash function is provably [irreversible](https://en.wikipedia.org/wiki/One-way_function)
-as it does not use fixed prime numbers, has non-linearities (loss of state
-information) induced by bit truncations, and because the message enters the
-system only as a mix with the system's internal entropy without permutations
-of any sort. The very first `Seed *= lcg` instruction is almost irreversible:
-`Seed /= lcg` cannot be used for inversion since `Seed` is truncated, and
-`lcg` is usually not a prime number (probabilistically, `lcg` may be a prime
-in 2.2% of rounds).
+as it does not use fixed prime numbers, its output depends on all prior input,
+the function has non-linearities (loss of state information) induced by bit
+truncations, and because the message enters the system only as a mix with the
+system's internal entropy without permutations of any sort. The very first
+`Seed *= lcg` instruction is hard to reverse: `Seed /= lcg` cannot be used
+for inversion directly since `Seed` is truncated, and `lcg` is usually not a
+prime number (probabilistically, `lcg` may be a prime in 2.2% of rounds).
 
 Please see the `prvhash42.h` file for the details of the implementation (the
 `prvhash.h` and `prvhash4.h` are outdated versions). Note that `42` refers to
@@ -126,7 +126,10 @@ where `N` is the hash length in bits (e.g. `PRH42S-256`).
 The core hash function can be used as a [stream cipher](https://en.wikipedia.org/wiki/Stream_cipher)
 if the message is used as a state variable, repeatedly hashed, possibly with
 an embedded counter, nonce and key. The resulting output can then be used in
-varying quantities as an entropy to hide (XOR) the ciphered message.
+varying quantities as an entropy to hide (XOR) the ciphered message. Ciphering
+with a known initial state may need to bypass several initial hashing rounds
+for the function to "settle down". The state variable's size may need to be
+chosen in a way so that it is not a multiple of hash length.
 
 ## Description ##
 
@@ -142,8 +145,8 @@ It was especially hard to find a better "hashing finalization" solution.
 	lcg += Seed + msgw2; // Mix in the internal entropy, and an additional message. Truncation is possible.
 
 An optional variant of the first instruction which eliminates prime numbers
-at the cost of some speed, and probably some security (it works only if
-`msgw2` is not used):
+at the cost of some speed (it works only if `msgw2` is not used). It
+complicates the function reversal:
 
 	Seed *= lcg + ( lcg & 1 );
 
