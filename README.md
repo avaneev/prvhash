@@ -45,10 +45,11 @@ author's opinion, this hash function is provably [irreversible](https://en.wikip
 as it does not use fixed prime numbers, its output depends on all prior input,
 the function has non-linearities (loss of state information) induced by bit
 truncations, and because the message enters the system only as a mix with the
-system's internal entropy without permutations of any sort. The very first
-`Seed *= lcg` instruction is hard to reverse: `Seed /= lcg` cannot be used
-for inversion directly since `Seed` is truncated, and `lcg` is usually not a
-prime number (probabilistically, `lcg` may be a prime in 2.2% of rounds).
+system's internal entropy without permutations of any sort. Additionally,
+the very first `Seed *= lcg` instruction is hard to reverse: `Seed /= lcg`
+cannot be used for inversion directly since `Seed` is truncated, and `lcg` is
+usually not a prime number (probabilistically, `lcg` may be a prime in 2.2% of
+rounds): with some probability, several solutions are possible.
 
 Please see the `prvhash42.h` file for the details of the implementation (the
 `prvhash.h` and `prvhash4.h` are outdated versions). Note that `42` refers to
