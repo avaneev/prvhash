@@ -33,7 +33,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.18
+ * @version 2.19
  */
 
 //$ nocpp
@@ -85,8 +85,8 @@ typedef struct {
  * and "Seed" variables. Full 64-byte uniformly-random value should be
  * supplied in this case. Since it is imperative that the initialization
  * vector is non-zero, the best strategies to generate it are: 1) compose the
- * vector from 16-bit random values that have 5 to 11 random bits set; 2)
- * compose the vector from 64-bit random values that have 29-35 random bits
+ * vector from 16-bit random values that have 4 to 12 random bits set; 2)
+ * compose the vector from 64-bit random values that have 28-36 random bits
  * set.
  */
 
@@ -114,14 +114,14 @@ inline void prvhash42s_init( PRVHASH42S_CTX* ctx, uint8_t* const Hash,
 			memset( Hash + IHLen, 0, HashLen - IHLen );
 		}
 
-		ctx -> lcg[ 0 ] = 15430973964284598734ULL;
-		ctx -> Seed[ 0 ] = 1691555508060032701ULL;
-		ctx -> lcg[ 1 ] = 16844254422239577268ULL;
-		ctx -> Seed[ 1 ] = 17689199984941210651ULL;
-		ctx -> lcg[ 2 ] = 9438764482189277435ULL;
-		ctx -> Seed[ 2 ] = 8957989961226852929ULL;
-		ctx -> lcg[ 3 ] = 9240887253754568176ULL;
-		ctx -> Seed[ 3 ] = 4923208466141845544ULL;
+		ctx -> lcg[ 0 ] = 11556796507443277151ULL;
+		ctx -> Seed[ 0 ] = 10548428651729720817ULL;
+		ctx -> lcg[ 1 ] = 10704547264887375914ULL;
+		ctx -> Seed[ 1 ] = 13794555928830477562ULL;
+		ctx -> lcg[ 2 ] = 6709769659337316744ULL;
+		ctx -> Seed[ 2 ] = 5865555861213275199ULL;
+		ctx -> lcg[ 3 ] = 6866989938101941860ULL;
+		ctx -> Seed[ 3 ] = 18279480195748323821ULL;
 
 		if( SeedXOR != 0 )
 		{
@@ -194,6 +194,15 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, const uint8_t* Msg,
 		uint64_t msgw;
 		uint64_t msgw2;
 
+		Seed1 *= lcg1;
+		Seed1 = ~Seed1;
+		Seed2 *= lcg2;
+		Seed2 = ~Seed2;
+		Seed3 *= lcg3;
+		Seed3 = ~Seed3;
+		Seed4 *= lcg4;
+		Seed4 = ~Seed4;
+
 		if( BlockFill > 0 )
 		{
 			const size_t CopyLen = PRVHASH42S_LEN - ctx -> BlockFill;
@@ -213,7 +222,6 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, const uint8_t* Msg,
 		msgw = prvhash42_u32ec( MsgBlock + 12 );
 		msgw2 = prvhash42_u32ec( MsgBlock + 0 );
 
-		Seed1 *= lcg1;
 		uint64_t ph = *hc ^ ( Seed1 >> 32 );
 		Seed1 ^= ph ^ msgw;
 		lcg1 += Seed1 + msgw2;
@@ -221,7 +229,6 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, const uint8_t* Msg,
 		msgw = prvhash42_u32ec( MsgBlock + 8 );
 		msgw2 = prvhash42_u32ec( MsgBlock + 24 );
 
-		Seed2 *= lcg2;
 		ph ^= Seed2 >> 32;
 		Seed2 ^= ph ^ msgw;
 		lcg2 += Seed2 + msgw2;
@@ -229,7 +236,6 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, const uint8_t* Msg,
 		msgw = prvhash42_u32ec( MsgBlock + 20 );
 		msgw2 = prvhash42_u32ec( MsgBlock + 28 );
 
-		Seed3 *= lcg3;
 		ph ^= Seed3 >> 32;
 		Seed3 ^= ph ^ msgw;
 		lcg3 += Seed3 + msgw2;
@@ -237,7 +243,6 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, const uint8_t* Msg,
 		msgw = prvhash42_u32ec( MsgBlock + 4 );
 		msgw2 = prvhash42_u32ec( MsgBlock + 16 );
 
-		Seed4 *= lcg4;
 		ph ^= Seed4 >> 32;
 		Seed4 ^= ph ^ msgw;
 		lcg4 += Seed4 + msgw2;

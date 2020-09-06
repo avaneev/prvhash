@@ -32,7 +32,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.18
+ * @version 2.19
  */
 
 //$ nocpp
@@ -135,7 +135,7 @@ inline int prvrng_popcnt_u64( uint64_t v0 )
 
 /**
  * Function generates an 64-bit entropy value and assures this value has
- * between 29 and 35 bits set. This function is required to generate a stable
+ * between 28 and 36 bits set. This function is required to generate a stable
  * initial state of the hash function. This constraint is usually fulfilled in
  * 1-3 iterations, but in rare cases may require even 10 iterations.
  *
@@ -157,7 +157,7 @@ inline uint64_t prvrng_gen_entropy64c( PRVRNG_CTX* const ctx )
 
 		const int bcnt = prvrng_popcnt_u64( tv );
 
-		if( bcnt >= 29 && bcnt <= 35 )
+		if( bcnt >= 28 && bcnt <= 36 )
 		{
 			return( tv );
 		}
@@ -166,7 +166,7 @@ inline uint64_t prvrng_gen_entropy64c( PRVRNG_CTX* const ctx )
 
 /**
  * Function generates an 64-bit entropy value and assures this value is
- * composed of four 16-bit values that each have 5 to 11 bits set. This
+ * composed of four 16-bit values that each have 4 to 12 bits set. This
  * function is required to generate a stable initial state of the hash
  * function. This constraint is usually quickly satisfied.
  *
@@ -188,7 +188,7 @@ inline uint64_t prvrng_gen_entropy64c16( PRVRNG_CTX* const ctx )
 
 			const int bcnt = prvrng_popcnt_u16( tv );
 
-			if( bcnt >= 5 && bcnt <= 11 )
+			if( bcnt >= 4 && bcnt <= 12 )
 			{
 				val <<= 16;
 				val |= tv;
@@ -210,6 +210,7 @@ inline uint64_t prvrng_gen_entropy64c16( PRVRNG_CTX* const ctx )
 inline void prvrng_prvhash42_32( PRVRNG_CTX* const ctx, const uint64_t msgw )
 {
 	ctx -> Seed *= ctx -> lcg;
+	ctx -> Seed = ~ctx -> Seed;
 	ctx -> Hash ^= ctx -> Seed >> 32;
 	ctx -> Seed ^= (uint32_t) ctx -> Hash ^ msgw;
 	ctx -> lcg += ctx -> Seed;
@@ -263,6 +264,7 @@ inline void prvrng_prvhash42_64( PRVRNG_CTX* const ctx, const uint64_t msgw )
 	// Lower 32 bits of hash value.
 
 	ctx -> Seed *= ctx -> lcg;
+	ctx -> Seed = ~ctx -> Seed;
 	ctx -> Hash ^= ctx -> Seed >> 32;
 	ctx -> Seed ^= (uint32_t) ctx -> Hash ^ msgw;
 	ctx -> lcg += ctx -> Seed;
@@ -270,6 +272,7 @@ inline void prvrng_prvhash42_64( PRVRNG_CTX* const ctx, const uint64_t msgw )
 	// Upper 32 bits of hash value.
 
 	ctx -> Seed *= ctx -> lcg;
+	ctx -> Seed = ~ctx -> Seed;
 	ctx -> Hash ^= ctx -> Seed & 0xFFFFFFFF00000000ULL;
 	ctx -> Seed ^= ( ctx -> Hash >> 32 ) ^ 0;
 	ctx -> lcg += ctx -> Seed;

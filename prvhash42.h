@@ -31,7 +31,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.18
+ * @version 2.19
  */
 
 //$ nocpp
@@ -67,8 +67,8 @@
  * "lcg" and "Seed" variables. Full 16-byte uniformly-random value should be
  * supplied in this case. Since it is imperative that the initialization
  * vector is non-zero, the best strategies to generate it are: 1) compose the
- * vector from 16-bit random values that have 5 to 11 random bits set; 2)
- * compose the vector from 64-bit random values that have 29-35 random bits
+ * vector from 16-bit random values that have 4 to 12 random bits set; 2)
+ * compose the vector from 64-bit random values that have 28-36 random bits
  * set.
  */
 
@@ -83,8 +83,8 @@ inline void prvhash42( const uint8_t* const Msg, const int MsgLen,
 	{
 		memset( Hash, 0, HashLen );
 
-		lcg = 15430973964284598734ULL;
-		Seed = 1691555508060032701ULL ^ SeedXOR;
+		lcg = 6308131542680191958ULL;
+		Seed = 8415268829946098982ULL ^ SeedXOR;
 	}
 	else
 	{
@@ -117,6 +117,7 @@ inline void prvhash42( const uint8_t* const Msg, const int MsgLen,
 		}
 
 		Seed *= lcg;
+		Seed = ~Seed;
 		uint32_t* const hc = (uint32_t*) &Hash[ hpos ];
 		const uint64_t ph = *hc ^ ( Seed >> 32 );
 		Seed ^= ph ^ msgw;
