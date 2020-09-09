@@ -32,7 +32,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.19
+ * @version 2.20
  */
 
 //$ nocpp
@@ -211,9 +211,10 @@ inline void prvrng_prvhash42_32( PRVRNG_CTX* const ctx, const uint64_t msgw )
 {
 	ctx -> Seed *= ctx -> lcg;
 	ctx -> Seed = ~ctx -> Seed;
-	ctx -> Hash ^= ctx -> Seed >> 32;
-	ctx -> Seed ^= (uint32_t) ctx -> Hash ^ msgw;
+	uint64_t hl = ctx -> lcg >> 32 ^ msgw;
 	ctx -> lcg += ctx -> Seed;
+	ctx -> Hash ^= ctx -> Seed >> 32;
+	ctx -> Seed ^= (uint32_t) ctx -> Hash ^ hl;
 }
 
 /**
@@ -227,11 +228,12 @@ inline uint8_t prvrng_gen32( PRVRNG_CTX* const ctx )
 	if( ctx -> HashLeft == 0 )
 	{
 		uint64_t msgw;
+		const uint64_t SelfStart = ( ctx -> lcg == 0 && ctx -> Hash == 0 );
 
-		if( ctx -> EntCtr == 0 )
+		if( ctx -> EntCtr == 0 || SelfStart > 0 )
 		{
 			ctx -> EntCtr = ( (int) prvrng_gen_entropy( ctx ) + 1 ) << 2;
-			msgw = prvrng_gen_entropy( ctx );
+			msgw = prvrng_gen_entropy( ctx ) + SelfStart;
 		}
 		else
 		{
@@ -265,17 +267,19 @@ inline void prvrng_prvhash42_64( PRVRNG_CTX* const ctx, const uint64_t msgw )
 
 	ctx -> Seed *= ctx -> lcg;
 	ctx -> Seed = ~ctx -> Seed;
-	ctx -> Hash ^= ctx -> Seed >> 32;
-	ctx -> Seed ^= (uint32_t) ctx -> Hash ^ msgw;
+	uint64_t hl = ctx -> lcg >> 32 ^ msgw;
 	ctx -> lcg += ctx -> Seed;
+	ctx -> Hash ^= ctx -> Seed >> 32;
+	ctx -> Seed ^= (uint32_t) ctx -> Hash ^ hl;
 
 	// Upper 32 bits of hash value.
 
 	ctx -> Seed *= ctx -> lcg;
 	ctx -> Seed = ~ctx -> Seed;
-	ctx -> Hash ^= ctx -> Seed & 0xFFFFFFFF00000000ULL;
-	ctx -> Seed ^= ( ctx -> Hash >> 32 ) ^ 0;
+	hl = ctx -> lcg >> 32 ^ 0;
 	ctx -> lcg += ctx -> Seed;
+	ctx -> Hash ^= ctx -> Seed & 0xFFFFFFFF00000000ULL;
+	ctx -> Seed ^= ctx -> Hash >> 32 ^ hl;
 }
 
 /**
