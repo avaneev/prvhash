@@ -70,11 +70,10 @@ Unix): the 64-bit hash value can be used as a pseudo-random number, spliced
 into 8 output bytes each round: this was tested, and works well when 8-bit
 true entropy injections are done inbetween 8 to 2048 generated random bytes
 (delay is also obtained via entropy source). An example generator is
-implemented in the `prvrng.h` file: simply call the `prvrng_test64()`
-function. The `prvrng_test32()` implements the same technique, but with
-32-bit hashes, for comparison purposes.
+implemented in the `prvrng.h` file: simply call the `prvrng_test64p2()`
+function.
 
-`prvrng_gen64()`-based generator passes [`PractRand`](http://pracrand.sourceforge.net/)
+`prvrng_gen64p2()`-based generator passes [`PractRand`](http://pracrand.sourceforge.net/)
 32 TB threshold, without or with only a few "unusual" evaluations. Which
 suggests it's the first working universal TRNG in the world. This claim
 requires a lot more evaluations from independent researchers.
@@ -104,14 +103,24 @@ words is minimal. Another way to increase the structural limit is to exploit a
 parallel PRNG structure demonstrated in the `prvhash42s.h` file, which also
 increases the security exponentially.
 
-Note that when initally or at some point both `lcg` and `Hash` values are
-zero, this PRNG initiates a self-starting sequence. With external entropy
-injections or when PRNG is used in the arrangement outlined above (XOR of
-two distant hash words), with many hash words in the system, the detection of
-self-starting sequence becomes improbable. Admittedly, the existence of such
-self-starting sequence is one of the most questionable aspects of this PRNG
-system. On the other hand, the self-starting sequence can be avoided by adding
-entropy the moment the system reaches zero state.
+Note that when initally or at some point `lcg` value is zero, this PRNG
+initiates a self-starting sequence, due to discontinuity. It can be
+mathematically proven that in this case the function becomes completely
+irreverible: `Seed /= lcg` is incalculable when `lcg` is equal to 0. With
+external entropy injections or when PRNG is used in the arrangement outlined
+above (XOR of two distant hash words), with many hash words in the system, the
+detection of self-starting sequence becomes improbable. Admittedly, the
+existence of such self-starting sequence is one of the most questionable
+aspects of this PRNG system. On the other hand, the self-starting sequence can
+be avoided by replacing `lcg` with any non-zero random value the moment `lcg`
+reaches zero state, or forcibly injecting an entropy message when `lcg` turns
+zero: according to `PractRand` tests, both these approaches are good solutions
+to this problem.
+
+While `lcg`, `Seed`, and `Hash` variables should be initialized with good
+entropy source, the message can be sparsely random: even an increasing counter
+with prime-numbered period can be considered as having a good-enough sparse
+entropy.
 
 Since both internal variables (`Seed` and `lcg`) do not directly interact with
 the output (XORed), the PRNG has a high level of security: it is not enough to
@@ -204,6 +213,10 @@ distribution, irrespective of the distribution anomalies of the `Seed` itself.
 The `Seed` and `lcg` variables work in tandem, with each variable able to
 independently absorb up to 32 bits of external (message) entropy. Note that
 `lcg` being an accumulator quickly leaves a possible zero state.
+
+In essence, the hash function continously generates a pseudo-random number
+sequences and outputs the final random number sequence as a result. The
+message acts as a "pathway" to the final random number sequence.
 
 ## Other ##
 

@@ -63,12 +63,12 @@ typedef struct
 		HCRYPTPROV prov; ///< Crypt provider (for Windows).
 	#endif // defined( PRVRNG_UNIX )
 
-	uint64_t Hash; ///< Current hash value.
-	uint64_t lcg; ///< Current lcg value.
-	uint64_t Seed; ///< Current Seed value.
+	uint64_t lcg[ 2 ]; ///< Current lcg values.
+	uint64_t Seed[ 2 ]; ///< Current Seed values.
+	uint64_t Hash[ 2 ]; ///< Current 32-bit hash values.
 	int EntCtr; ///< Bytes remaining before entropy is injected.
 	int HashLeft; ///< Bytes left in hash.
-	uint64_t LastHash; ///< Previous generated hash.
+	uint64_t LastHash; ///< Previously generated hash.
 } PRVRNG_CTX;
 
 /**
@@ -113,76 +113,26 @@ inline int prvrng_popcnt_u16( const uint16_t v )
 }
 
 /**
- * This function calculates bit count of a 64-bit number, in a platform
- * independent way, can be replaced by an intrinsic.
- *
- * @param v0 Value.
- */
-
-inline int prvrng_popcnt_u64( uint64_t v0 )
-{
-	int r = 0;
-	int i;
-
-	for( i = 0; i < 4; i++ )
-	{
-		r += prvrng_popcnt_u16( (uint16_t) v0 );
-		v0 >>= 16;
-	}
-
-	return( r );
-}
-
-/**
- * Function generates an 64-bit entropy value and assures this value has
- * between 28 and 36 bits set. This function is required to generate a stable
- * initial state of the hash function. This constraint is usually fulfilled in
- * 1-3 iterations, but in rare cases may require even 10 iterations.
- *
- * @param ctx Pointer to the context structure.
- */
-
-inline uint64_t prvrng_gen_entropy64c( PRVRNG_CTX* const ctx )
-{
-	while( true )
-	{
-		uint64_t tv = 0;
-		int i;
-
-		for( i = 0; i < 8; i++ )
-		{
-			tv <<= 8;
-			tv += prvrng_gen_entropy( ctx );
-		}
-
-		const int bcnt = prvrng_popcnt_u64( tv );
-
-		if( bcnt >= 28 && bcnt <= 36 )
-		{
-			return( tv );
-		}
-	}
-}
-
-/**
- * Function generates an 64-bit entropy value and assures this value is
- * composed of four 16-bit values that each have 4 to 12 bits set. This
+ * Function generates an N-bit entropy value and assures this value is
+ * composed of "c" 16-bit values that each have 4 to 12 bits set. This
  * function is required to generate a stable initial state of the hash
  * function. This constraint is usually quickly satisfied.
  *
  * @param ctx Pointer to the context structure.
+ * @param c The number of 16-bit values to produce (4 for 64-bit value,
+ * 2 for 32-bit value).
  */
 
-inline uint64_t prvrng_gen_entropy64c16( PRVRNG_CTX* const ctx )
+inline uint64_t prvrng_gen_entropy_c16( PRVRNG_CTX* const ctx, const int c )
 {
 	uint64_t val = 0;
 	int j;
 
-	for( j = 0; j < 4; j++ )
+	for( j = 0; j < c; j++ )
 	{
 		while( true )
 		{
-			uint16_t tv = prvrng_gen_entropy( ctx );
+			uint16_t tv = (uint16_t) prvrng_gen_entropy( ctx );
 			tv <<= 8;
 			tv |= (uint16_t) prvrng_gen_entropy( ctx );
 
@@ -201,20 +151,31 @@ inline uint64_t prvrng_gen_entropy64c16( PRVRNG_CTX* const ctx )
 }
 
 /**
- * Internal function, calculates "prvhash42" round, for 32-bit hash.
+ * Internal function, calculates "prvhash42" round with parallel structure,
+ * for 32-bit hash.
  *
  * @param ctx Pointer to the context structure.
- * @param msgw Entropy message word.
+ * @param Hash Hash word.
+ * @param msgw Entropy message word (up to 32 bits).
  */
 
-inline void prvrng_prvhash42_32( PRVRNG_CTX* const ctx, const uint64_t msgw )
+inline void prvrng_prvhash42_32p2( PRVRNG_CTX* const ctx, uint64_t& Hash,
+	const uint64_t msgw )
 {
-	ctx -> Seed *= ctx -> lcg;
-	ctx -> Seed = ~ctx -> Seed;
-	uint64_t hl = ctx -> lcg >> 32 ^ msgw;
-	ctx -> lcg += ctx -> Seed;
-	ctx -> Hash ^= ctx -> Seed >> 32;
-	ctx -> Seed ^= (uint32_t) ctx -> Hash ^ hl;
+	ctx -> Seed[ 0 ] *= ctx -> lcg[ 0 ];
+	ctx -> Seed[ 1 ] *= ctx -> lcg[ 1 ];
+	ctx -> Seed[ 0 ] = ~ctx -> Seed[ 0 ];
+	ctx -> Seed[ 1 ] = ~ctx -> Seed[ 1 ];
+	const uint64_t hl0 = ctx -> lcg[ 0 ] >> 32 ^ msgw;
+	const uint64_t hl1 = ctx -> lcg[ 1 ] >> 32;
+	ctx -> lcg[ 0 ] += ctx -> Seed[ 0 ];
+	ctx -> lcg[ 1 ] += ctx -> Seed[ 1 ];
+
+	Hash ^= ctx -> Seed[ 0 ] >> 32;
+	ctx -> Seed[ 0 ] ^= Hash ^ hl0;
+
+	Hash ^= ctx -> Seed[ 1 ] >> 32;
+	ctx -> Seed[ 1 ] ^= Hash ^ hl1;
 }
 
 /**
@@ -223,72 +184,7 @@ inline void prvrng_prvhash42_32( PRVRNG_CTX* const ctx, const uint64_t msgw )
  * @param ctx Pointer to the context structure.
  */
 
-inline uint8_t prvrng_gen32( PRVRNG_CTX* const ctx )
-{
-	if( ctx -> HashLeft == 0 )
-	{
-		uint64_t msgw;
-		const uint64_t SelfStart = ( ctx -> lcg == 0 && ctx -> Hash == 0 );
-
-		if( ctx -> EntCtr == 0 || SelfStart > 0 )
-		{
-			ctx -> EntCtr = ( (int) prvrng_gen_entropy( ctx ) + 1 ) << 2;
-			msgw = prvrng_gen_entropy( ctx ) + SelfStart;
-		}
-		else
-		{
-			msgw = 0;
-		}
-
-		prvrng_prvhash42_32( ctx, msgw );
-
-		ctx -> HashLeft = 4;
-		ctx -> LastHash = ctx -> Hash;
-		ctx -> EntCtr--;
-	}
-
-	const uint8_t r = (uint8_t) ctx -> LastHash;
-	ctx -> LastHash >>= 8;
-	ctx -> HashLeft--;
-
-	return( r );
-}
-
-/**
- * Internal function, calculates "prvhash42" round, for 64-bit hash.
- *
- * @param ctx Pointer to the context structure.
- * @param msgw Entropy message word. Second message byte is assumed to be 0.
- */
-
-inline void prvrng_prvhash42_64( PRVRNG_CTX* const ctx, const uint64_t msgw )
-{
-	// Lower 32 bits of hash value.
-
-	ctx -> Seed *= ctx -> lcg;
-	ctx -> Seed = ~ctx -> Seed;
-	uint64_t hl = ctx -> lcg >> 32 ^ msgw;
-	ctx -> lcg += ctx -> Seed;
-	ctx -> Hash ^= ctx -> Seed >> 32;
-	ctx -> Seed ^= (uint32_t) ctx -> Hash ^ hl;
-
-	// Upper 32 bits of hash value.
-
-	ctx -> Seed *= ctx -> lcg;
-	ctx -> Seed = ~ctx -> Seed;
-	hl = ctx -> lcg >> 32 ^ 0;
-	ctx -> lcg += ctx -> Seed;
-	ctx -> Hash ^= ctx -> Seed & 0xFFFFFFFF00000000ULL;
-	ctx -> Seed ^= ctx -> Hash >> 32 ^ hl;
-}
-
-/**
- * Function generates the next random 8-bit number, for 64-bit hash.
- *
- * @param ctx Pointer to the context structure.
- */
-
-inline uint8_t prvrng_gen64( PRVRNG_CTX* const ctx )
+inline uint8_t prvrng_gen64p2( PRVRNG_CTX* const ctx )
 {
 	if( ctx -> HashLeft == 0 )
 	{
@@ -296,7 +192,7 @@ inline uint8_t prvrng_gen64( PRVRNG_CTX* const ctx )
 
 		if( ctx -> EntCtr == 0 )
 		{
-			ctx -> EntCtr = ( (int) prvrng_gen_entropy( ctx ) + 1 ) << 3;
+			ctx -> EntCtr = ( (int) prvrng_gen_entropy( ctx ) + 1 ) << 2;
 			msgw = prvrng_gen_entropy( ctx );
 		}
 		else
@@ -304,10 +200,26 @@ inline uint8_t prvrng_gen64( PRVRNG_CTX* const ctx )
 			msgw = 0;
 		}
 
-		prvrng_prvhash42_64( ctx, msgw );
+		int i;
+
+		for( i = 0; i < 2; i++ )
+		{
+			if( ctx -> lcg[ 0 ] == 0 )
+			{
+				ctx -> lcg[ 0 ] = prvrng_gen_entropy_c16( ctx, 4 );
+			}
+
+			if( ctx -> lcg[ 1 ] == 0 )
+			{
+				ctx -> lcg[ 1 ] = prvrng_gen_entropy_c16( ctx, 4 );
+			}
+
+			prvrng_prvhash42_32p2( ctx, ctx -> Hash[ i ], msgw );
+			msgw = 0;
+		}
 
 		ctx -> HashLeft = 8;
-		ctx -> LastHash = ctx -> Hash;
+		ctx -> LastHash = ctx -> Hash[ 0 ] | ctx -> Hash[ 1 ] << 32;
 		ctx -> EntCtr--;
 	}
 
@@ -327,7 +239,7 @@ inline uint8_t prvrng_gen64( PRVRNG_CTX* const ctx )
  * @return 0 if failed.
  */
 
-inline int prvrng_init32( PRVRNG_CTX* const ctx )
+inline int prvrng_init64p2( PRVRNG_CTX* const ctx )
 {
 	#if defined( PRVRNG_UNIX )
 
@@ -348,9 +260,15 @@ inline int prvrng_init32( PRVRNG_CTX* const ctx )
 
 	#endif // defined( PRVRNG_UNIX )
 
-	ctx -> Hash = prvrng_gen_entropy64c16( ctx );
-	ctx -> lcg = prvrng_gen_entropy64c16( ctx );
-	ctx -> Seed = prvrng_gen_entropy64c16( ctx );
+	int i;
+
+	for( i = 0; i < 2; i++ )
+	{
+		ctx -> lcg[ i ] = prvrng_gen_entropy_c16( ctx, 4 );
+		ctx -> Seed[ i ] = prvrng_gen_entropy_c16( ctx, 4 );
+		ctx -> Hash[ i ] = prvrng_gen_entropy_c16( ctx, 2 );
+	}
+
 	ctx -> EntCtr = 0;
 	ctx -> HashLeft = 0;
 	ctx -> LastHash = 0;
@@ -359,26 +277,12 @@ inline int prvrng_init32( PRVRNG_CTX* const ctx )
 }
 
 /**
- * Function initalizes the entropy PRNG context, for 64-bit hash. It also
- * seeds the generator with initial entropy.
- *
- * @param ctx Pointer to the context structure.
- * @param DoPreInit Pre-initialize the PRNG with the entropy source.
- * @return 0 if failed.
- */
-
-inline int prvrng_init64( PRVRNG_CTX* const ctx )
-{
-	return( prvrng_init32( ctx ));
-}
-
-/**
  * Function deinitializes the PRNG, for 32-bit hash.
  *
  * @param ctx Pointer to the context structure.
  */
 
-inline void prvrng_final32( PRVRNG_CTX* ctx )
+inline void prvrng_final64p2( PRVRNG_CTX* ctx )
 {
 	#if defined( PRVRNG_UNIX )
 
@@ -392,25 +296,14 @@ inline void prvrng_final32( PRVRNG_CTX* ctx )
 }
 
 /**
- * Function deinitializes the PRNG, for 64-bit hash.
- *
- * @param ctx Pointer to the context structure.
- */
-
-inline void prvrng_final64( PRVRNG_CTX* ctx )
-{
-	prvrng_final32( ctx );
-}
-
-/**
  * A test function for "prvrng", 32-bit hash-based. Prints 16 random bytes.
  */
 
-inline void prvrng_test32()
+inline void prvrng_test64p2()
 {
 	PRVRNG_CTX ctx;
 
-	if( !prvrng_init32( &ctx ))
+	if( !prvrng_init64p2( &ctx ))
 	{
 		printf( "Cannot obtain the entropy source!\n" );
 		return;
@@ -420,34 +313,10 @@ inline void prvrng_test32()
 
 	for( i = 0; i < 16; i++ )
 	{
-		printf( "%i\n", (int) prvrng_gen32( &ctx ));
+		printf( "%i\n", (int) prvrng_gen64p2( &ctx ));
 	}
 
-	prvrng_final32( &ctx );
-}
-
-/**
- * A test function for "prvrng", 64-bit hash-based. Prints 16 random bytes.
- */
-
-inline void prvrng_test64()
-{
-	PRVRNG_CTX ctx;
-
-	if( !prvrng_init64( &ctx ))
-	{
-		printf( "Cannot obtain the entropy source!\n" );
-		return;
-	}
-
-	int i;
-
-	for( i = 0; i < 16; i++ )
-	{
-		printf( "%i\n", (int) prvrng_gen64( &ctx ));
-	}
-
-	prvrng_final64( &ctx );
+	prvrng_final64p2( &ctx );
 }
 
 #endif // PRVRNG_INCLUDED
