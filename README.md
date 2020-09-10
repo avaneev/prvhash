@@ -104,9 +104,9 @@ words is minimal. Another way to increase the structural limit is to exploit a
 parallel PRNG structure demonstrated in the `prvhash42s.h` file, which also
 increases the security exponentially.
 
-Note that when initally, or at some point `lcg` value is zero, this PRNG
+Note that when initally or at some point the `lcg` value is zero, this PRNG
 initiates a self-starting sequence, due to discontinuity. It is mathematically
-obvious that in this case the function becomes completely irreverible:
+obvious that in this case the function becomes completely irreversible:
 `Seed /= lcg` is incalculable when `lcg` is equal to 0. With external entropy
 injections or when PRNG is used in the arrangement outlined above (XOR of two
 distant hash words), with many hash words in the system, the detection of
@@ -116,7 +116,7 @@ system. On the other hand, the self-starting sequence can be avoided by
 replacing `lcg` with any non-zero random value the moment `lcg` reaches zero
 state, or forcibly injecting an entropy message when `lcg` turns zero:
 according to `PractRand` tests, both these approaches are good solutions
-to this problem.
+to this nuance.
 
 While `lcg`, `Seed`, and `Hash` variables should be initialized with good
 entropy source, the message can be sparsely random: even an increasing counter
