@@ -87,10 +87,11 @@ This function, without external entropy injections, with any initial
 combination of `lcg`, `Seed`, and `Hash` eventually converges into one of
 random number sub-sequences. These are mostly time-delayed versions of only a
 smaller set of unique sequences. There are structural limits in this PRNG
-which can be easily reached with only a single hash word in the system. PRNG
-will produce random sequences with external entropy injections, but their
-randomnesss quality will be limited by the size of `lcg` and `Seed` variables.
-A good property of this PRNG is that when there are several hash words in the
+system which can be easily reached with only a small number of hash words in
+the system. PRNG will produce non-repeating random sequences with external
+entropy injections, but their randomnesss quality will be limited by the size
+of `lcg` and `Seed` variables, and the number of hash words in the system. A
+good property of this PRNG is that when there are several hash words in the
 system, each hash word has some structural distance from each other. For
 example, if there are 8 hash words in the system, the structural distance
 between hash word 0 and hash word 4 (1 and 5, etc.) is maximal. So, hash words
@@ -103,23 +104,23 @@ words is minimal. Another way to increase the structural limit is to exploit a
 parallel PRNG structure demonstrated in the `prvhash42s.h` file, which also
 increases the security exponentially.
 
-Note that when initally or at some point `lcg` value is zero, this PRNG
-initiates a self-starting sequence, due to discontinuity. It can be
-mathematically proven that in this case the function becomes completely
-irreverible: `Seed /= lcg` is incalculable when `lcg` is equal to 0. With
-external entropy injections or when PRNG is used in the arrangement outlined
-above (XOR of two distant hash words), with many hash words in the system, the
-detection of self-starting sequence becomes improbable. Admittedly, the
-existence of such self-starting sequence is one of the most questionable
-aspects of this PRNG system. On the other hand, the self-starting sequence can
-be avoided by replacing `lcg` with any non-zero random value the moment `lcg`
-reaches zero state, or forcibly injecting an entropy message when `lcg` turns
-zero: according to `PractRand` tests, both these approaches are good solutions
+Note that when initally, or at some point `lcg` value is zero, this PRNG
+initiates a self-starting sequence, due to discontinuity. It is mathematically
+obvious that in this case the function becomes completely irreverible:
+`Seed /= lcg` is incalculable when `lcg` is equal to 0. With external entropy
+injections or when PRNG is used in the arrangement outlined above (XOR of two
+distant hash words), with many hash words in the system, the detection of
+self-starting sequence becomes improbable. Admittedly, the existence of such
+self-starting sequence is one of the most questionable aspects of this PRNG
+system. On the other hand, the self-starting sequence can be avoided by
+replacing `lcg` with any non-zero random value the moment `lcg` reaches zero
+state, or forcibly injecting an entropy message when `lcg` turns zero:
+according to `PractRand` tests, both these approaches are good solutions
 to this problem.
 
 While `lcg`, `Seed`, and `Hash` variables should be initialized with good
 entropy source, the message can be sparsely random: even an increasing counter
-with prime-numbered period can be considered as having a good-enough sparse
+with prime-numbered period can be considered as having a suitable sparse
 entropy.
 
 Since both internal variables (`Seed` and `lcg`) do not directly interact with
@@ -214,9 +215,9 @@ The `Seed` and `lcg` variables work in tandem, with each variable able to
 independently absorb up to 32 bits of external (message) entropy. Note that
 `lcg` being an accumulator quickly leaves a possible zero state.
 
-In essence, the hash function continously generates a pseudo-random number
-sequences and outputs the final random number sequence as a result. The
-message acts as a "pathway" to the final random number sequence.
+In the essence, the hash function generates a continuous pseudo-random number
+sequence, and returns the final part of the sequence as a result. The message
+acts as a "pathway" to this final part.
 
 ## Other ##
 
