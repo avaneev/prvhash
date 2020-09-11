@@ -87,13 +87,13 @@ This function, without external entropy injections, with any initial
 combination of `lcg`, `Seed`, and `Hash` eventually converges into one of
 random number sub-sequences. These are mostly time-delayed versions of only a
 smaller set of unique sequences. There are structural limits in this PRNG
-system which can be easily reached with only a small number of hash words in
-the system. PRNG will produce non-repeating random sequences with external
-entropy injections, but their randomnesss quality will be limited by the size
-of `lcg` and `Seed` variables, and the number of hash words in the system. A
-good property of this PRNG is that when there are several hash words in the
-system, each hash word has some structural distance from each other. For
-example, if there are 8 hash words in the system, the structural distance
+system which can be easily reached if there is only a small number of hash
+words in the system. PRNG will produce non-repeating random sequences with
+external entropy injections, but their statistical quality will be limited by
+the size of `lcg` and `Seed` variables, and the number of hash words in the
+system. A good property of this PRNG is that when there are several hash words
+in the system, each hash word has some structural distance from each other.
+For example, if there are 8 hash words in the system, the structural distance
 between hash word 0 and hash word 4 (1 and 5, etc.) is maximal. So, hash words
 0 and 4 (1 and 5, etc.) can be XORed to produce a larger random structure.
 Generally speaking, it is incorrect to use every hash word as a random
@@ -215,9 +215,14 @@ The `Seed` and `lcg` variables work in tandem, with each variable able to
 independently absorb up to 32 bits of external (message) entropy. Note that
 `lcg` being an accumulator quickly leaves a possible zero state.
 
-In the essence, the hash function generates a continuous pseudo-random number
+In essence, the hash function generates a continuous pseudo-random number
 sequence, and returns the final part of the sequence as a result. The message
-acts as a "pathway" to this final part.
+acts as a "pathway" to this final part. So, the random sequence of numbers can
+be "programmed" to produce a neccessary outcome. Which in turn suggests that
+sparse entropy-driven random number generators or "randomness extractors" may
+not be as secure as previously thought. It may not be possible to completely
+eliminate influence on physical systems like radioactive decay, thermal noise,
+clocks, network activity and the like.
 
 ## Other ##
 
