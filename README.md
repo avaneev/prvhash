@@ -220,9 +220,7 @@ sequence, and returns the final part of the sequence as a result. The message
 acts as a "pathway" to this final part. So, the random sequence of numbers can
 be "programmed" to produce a neccessary outcome. Which in turn suggests that
 sparse entropy-driven random number generators or "randomness extractors" may
-not be as secure as previously thought. It may not be possible to completely
-eliminate influence on physical systems like radioactive decay, thermal noise,
-clocks, network activity and the like.
+not be secure when creating short keys (like 64-bit keys).
 
 ## Other ##
 
