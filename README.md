@@ -238,6 +238,20 @@ be "programmed" to produce a neccessary outcome. Which in turn suggests that
 sparse entropy-driven random number generators or "randomness extractors" may
 not be secure when creating short keys (like 64-bit keys).
 
+Here is the example of 8 independent (less than 0.027 mutual correlation)
+random number sequences that were "programmed" via entropy injections to
+produce the required values every 8 bytes ("PRVH"), with Shannon entropy
+index:
+
+	1dde74d0e383d8506c24fd7c43a56852748f3e9cc2085d5684f006524884fa48 (3.71)
+	fed79113e0e2a250cd647b13fcee6f52b006d86f2c955056d37942b583933048 (3.91)
+	a3395c35efea20502415647a1247895291dc64a09f89a756f54b284b85310348 (3.84)
+	edd9aceb80e1845042d26a1069b775525696a2d1e8051f56d1ec98f541ff5948 (3.81)
+	02bbb8578c1bf450d20e8e3dbeb85f522e64d80746a01756e29aa307363d6048 (3.85)
+	e3fdce1636803150c4e483a434aa0d529af3ed01ef9daf562361e4c4cb3c0048 (3.76)
+	48510c5f907a2f5017d43fbdab670d52995de67c79920856c67e3c96baa5ac48 (3.89)
+	98408dbb35cea250c41d85a229e2ec521ae0ef016fa87d56ac44c1a66d505848 (3.83)
+
 ## Other ##
 
 [Follow the author on Twitter](https://twitter.com/AlekseyVaneev)
