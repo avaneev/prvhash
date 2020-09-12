@@ -215,8 +215,10 @@ the `Seed` with the hash word partly restores the uniform distribution of
 assures that the resulting hashes follow uniform distribution, irrespective of
 the distribution anomalies of the `Seed` itself. The `Seed` and `lcg`
 variables work in tandem, with each variable able to independently absorb up
-to hash word bit size of external (message) entropy. Note that `lcg` being an
-accumulator quickly leaves a possible zero state.
+to hash word bit size of external (message) entropy (structurally, `Seed`
+accepts higher bits of the message while `lcg` accepts lower bits of the
+message). Note that `lcg` being an accumulator quickly leaves a possible zero
+state.
 
 In essence, the hash function generates a continuous pseudo-random number
 sequence, and returns the final part of the sequence as a result. The message
