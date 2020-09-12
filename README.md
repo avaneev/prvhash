@@ -234,9 +234,7 @@ entropy via the `Seed` variable.
 In essence, the hash function generates a continuous pseudo-random number
 sequence, and returns the final part of the sequence as a result. The message
 acts as a "pathway" to this final part. So, the random sequence of numbers can
-be "programmed" to produce a neccessary outcome. Which in turn suggests that
-sparse entropy-driven random number generators or "randomness extractors" may
-not be secure when creating short keys (like 64-bit keys).
+be "programmed" to produce a neccessary outcome.
 
 Here is the example of 8 independent (less than 0.027 mutual correlation)
 random number sequences that were "programmed" via entropy injections to
@@ -254,8 +252,11 @@ index:
 
 Obviously, this example does not scale well with sequence length, such
 "coarse" programming can be easily detected, but it passes `PractRand`'s 1KB
-threshold without fail. It is fairly easy to infrequently inject entropy so
-that PRNG produces required values after a required number of output bytes.
+threshold without fail.
+
+However, as this PRNG does not expose its momentary internal state, such
+"programming" is hardly possible to perform for an attacker, even if the
+entropy input channel is exposed.
 
 ## Other ##
 
