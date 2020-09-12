@@ -222,10 +222,11 @@ message).
 Note that `lcg` being an accumulator quickly leaves a possible zero state.
 Injecting (adding) a priorly unknown message via `lcg` variable requires a
 larger variable size: e.g. with 16-bit variable's size (and 8-bit hash word)
-this may not work very well: continously adding a constant will slightly
-reduce randomness structure; on the other hand, adding an increasing 8-bit
-counter to `lcg` does not reduce randomness structure. It is more practical to
-inject messages via the `Seed` variable.
+this may not work very well: continously adding a constant will reduce random
+structure limit by 1 bit; on the other hand, adding an increasing 8-bit
+counter to `lcg` does not reduce random structure limit, while adding a prime
+number period counter extends this limit incomprehensibly. It is more
+practical to inject messages via the `Seed` variable.
 
 In essence, the hash function generates a continuous pseudo-random number
 sequence, and returns the final part of the sequence as a result. The message
