@@ -81,7 +81,7 @@ requires a lot more evaluations from independent researchers.
 On a side note, after 1.1 trillion iterations the internal pseudo-entropy
 was not lost in PRVHASH PRNG with 32-bit hashes, without external entropy
 injections. Generally speaking, the probability of completely "stopping" is
-absent due to the structure of the hash function.
+absent due to the structure of the core hash function.
 
 This function, without external entropy injections, with any initial
 combination of `lcg`, `Seed`, and `Hash` eventually converges into one of
@@ -100,7 +100,7 @@ Generally speaking, it is incorrect to use every hash word as a random
 output: two structurally distant hash words should be XORed. When there are
 only 2 hash words in the system, it is however more practical to use every
 hash word as a random sequence as the structural distance between two hash
-words is minimal. Another way to increase the structural limit is to exploit a
+words is minimal. Another way to increase the structural limit is to use a
 parallel PRNG structure demonstrated in the `prvhash42s.h` file, which
 additionally increases the security exponentially.
 
@@ -114,7 +114,7 @@ self-starting sequence becomes improbable. Admittedly, the existence of such
 self-starting sequence is one of the most questionable aspects of this PRNG
 system. On the other hand, the self-starting sequence can be avoided by
 replacing `lcg` with any non-zero random value the moment `lcg` reaches zero
-state, or forcibly injecting an message entropy when `lcg` turns zero:
+state, or forcibly injecting a message entropy when `lcg` turns zero:
 according to `PractRand` tests, both these approaches are good solutions
 to this nuance.
 
@@ -123,8 +123,9 @@ entropy source, the message can be sparsely-random: even an increasing counter
 with prime period can be considered as having a suitable sparse entropy.
 
 Since both internal variables (`Seed` and `lcg`) interact with the output
-only indirectly (XOR operation), the PRNG has a high level of security: it is
-not enough to know the output of PRNG to predict its future values.
+only indirectly (XOR operation with further truncated multiplication), the
+PRNG has a high level of security: it is not enough to know the output of PRNG
+to predict its future values.
 
 ## Streamed Hashing ##
 
