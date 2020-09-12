@@ -252,6 +252,11 @@ index:
 	48510c5f907a2f5017d43fbdab670d52995de67c79920856c67e3c96baa5ac48 (3.89)
 	98408dbb35cea250c41d85a229e2ec521ae0ef016fa87d56ac44c1a66d505848 (3.83)
 
+Obviously, this example does not scale well with sequence length, such
+"coarse" programming can be easily detected, but it passes `PractRand`'s 1KB
+threshold without fail. It is fairly easy to infrequently inject entropy so
+that PRNG produces required values after a required number of output bytes.
+
 ## Other ##
 
 [Follow the author on Twitter](https://twitter.com/AlekseyVaneev)
