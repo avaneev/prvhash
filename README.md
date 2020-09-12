@@ -12,7 +12,7 @@ and an "extendable-output function" (XOF), however the resulting hashes have
 [security level](https://en.wikipedia.org/wiki/Security_of_cryptographic_hash_functions)
 that corresponds to the hash length specification: the collision resistance is
 equal to `2^(n/2)` while the preimage resistance is equal to `2^n`, where `n`
-is the resulting hash length.
+is the resulting hash length in bits.
 
 PRVHASH can generate 32- to unlimited-bit hashes, yielding hashes of roughly
 equal quality independent of the chosen hash length. PRVHASH is based on
@@ -30,7 +30,7 @@ message in a set is given a random seed, this allows hashes of such set to
 have a greater statistical distance from each other. In practice, the
 `InitVec` (instead of `SeedXOR`), and initial hash, can both be randomly
 seeded (see the suggestions in `prvhash42.h`), adding useful initial entropy
-(`InitVec` and `Hash` bits of overall entropy).
+(`InitVec` plus `Hash` total bits of entropy).
 
 32-, 64-, 128-, 160-, 256- and 512-bit PRVHASH hashes pass all [SMHasher](https://github.com/rurban/smhasher)
 tests. Other hash lengths were not thoroughly tested, but extrapolations can
@@ -66,7 +66,7 @@ where `N` is the hash length in bits (e.g. `PRH42-256`).
 
 PRVHASH can be also used as a very efficient general-purpose PRNG with an
 external entropy source injections (like how the `/dev/urandom` works on
-Unix): the 64-bit hash value can be used as a pseudo-random number, spliced
+Unix): the 64-bit hash value can be used as a pseudo-random number spliced
 into 8 output bytes each round: this was tested, and works well when 8-bit
 true entropy injections are done inbetween 8 to 2048 generated random bytes
 (delay is also obtained via entropy source). An example generator is
@@ -101,8 +101,8 @@ output: two structurally distant hash words should be XORed. When there are
 only 2 hash words in the system, it is however more practical to use every
 hash word as a random sequence as the structural distance between two hash
 words is minimal. Another way to increase the structural limit is to exploit a
-parallel PRNG structure demonstrated in the `prvhash42s.h` file, which also
-increases the security exponentially.
+parallel PRNG structure demonstrated in the `prvhash42s.h` file, which
+additionally increases the security exponentially.
 
 Note that when initally or at some point the `lcg` value is zero, this PRNG
 initiates a self-starting sequence, due to discontinuity. It is mathematically
@@ -114,18 +114,17 @@ self-starting sequence becomes improbable. Admittedly, the existence of such
 self-starting sequence is one of the most questionable aspects of this PRNG
 system. On the other hand, the self-starting sequence can be avoided by
 replacing `lcg` with any non-zero random value the moment `lcg` reaches zero
-state, or forcibly injecting an entropy message when `lcg` turns zero:
+state, or forcibly injecting an message entropy when `lcg` turns zero:
 according to `PractRand` tests, both these approaches are good solutions
 to this nuance.
 
 While `lcg`, `Seed`, and `Hash` variables should be initialized with good
-entropy source, the message can be sparsely random: even an increasing counter
-with prime-numbered period can be considered as having a suitable sparse
-entropy.
+entropy source, the message can be sparsely-random: even an increasing counter
+with prime period can be considered as having a suitable sparse entropy.
 
-Since both internal variables (`Seed` and `lcg`) do not directly interact with
-the output (XORed), the PRNG has a high level of security: it is not enough to
-know the output of PRNG to predict its future values.
+Since both internal variables (`Seed` and `lcg`) interact with the output
+only indirectly (XOR operation), the PRNG has a high level of security: it is
+not enough to know the output of PRNG to predict its future values.
 
 ## Streamed Hashing ##
 
@@ -156,8 +155,8 @@ avalanche criterion.
 This streamed hash function produces hash values that are different to the
 `prvhash42` hash function. It is incorrect to use both of these hash function
 implementations on the same data set. While the `prvhash42` can be used as
-a fast hashmap/table hash, it is not so fast on large data blocks. The
-`prvhash42s` can be used to create hashes of large data blocks like files.
+a fast table hash, it is not so fast on large data blocks. The `prvhash42s`
+can be used to create hashes of large data blocks like files.
 
 A proposed short name for hashes created with `prvhash42s.h` is `PRH42S-N`,
 where `N` is the hash length in bits (e.g. `PRH42S-256`).
@@ -178,13 +177,17 @@ coming up with this solution was accompanied with a lot of trial and error.
 It was especially hard to find a better "hashing finalization" solution.
 
 	Seed *= lcg; // Multiply random by random. Non-linearity induced due to truncation.
-	Seed = ~Seed; // An auxiliary instruction that reduces probability of entropy loss.
+	Seed = ~Seed; // An auxiliary instruction that eliminates entropy loss.
 	uint32_t* const hc = (uint32_t*) &Hash[ hpos ]; // Take the address of the hash word.
-	const uint64_t hl = lcg >> 32 ^ msgw; // Extract higher bits of "lcg" and mix with the message.
+	const uint64_t hl = lcg >> 32 ^ msgw; // Extract the higher bits of "lcg" and mix with the message.
 	lcg += Seed + msgw2; // Mix in the internal entropy, and an additional message. Truncation is possible.
 	const uint64_t ph = *hc ^ ( Seed >> 32 ); // Mix hash word with the internal entropy (truncated).
 	Seed ^= ph ^ hl; // Mix the internal entropy with hash word's and message's entropy. Entropy feedback.
 	*hc = (uint32_t) ph; // Store the updated hash word.
+
+(This core function can be arbitrarily scaled to any even-size variables:
+6-, 8-, 10-, 12-, 16-, 32-, 64-, 128-bit variable sizes were tested, with
+similar statistical results).
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
@@ -200,20 +203,20 @@ or random sequences of bits. The current "expression" of system's overall
 internal entropy - the `Seed` - gets multiplied ("smeared") by a supportive
 accumulator variable - `lcg`, - which is also a random value. Such
 multiplication changes the `Seed` into a logarithmic-like distribution,
-dividing (in distribution sense) its lower and higher 32-bit parts. The lower
-32 bits of the `Seed` are then updated by a mix of its own higher 32 bits,
-`lcg`'s higher 32-bits, the hash word produced on previous rounds, and the
-message. The reason the message's entropy (which may be sparse or non-random)
-does not destabilize the system is because the message becomes hidden in a mix
-of internal and hash word's entropy; message's distribution becomes
-irrelevant. The message "shifts" the system into a new state, predictated by
-previous messages. Mixing the `Seed` with the hash word partly restores the
-uniform distribution of `Seed`'s lower 32 bits. Iterative mixing of the hash
-words with the `Seed` assures that the resulting hashes follow uniform
-distribution, irrespective of the distribution anomalies of the `Seed` itself.
-The `Seed` and `lcg` variables work in tandem, with each variable able to
-independently absorb up to 32 bits of external (message) entropy. Note that
-`lcg` being an accumulator quickly leaves a possible zero state.
+dividing (in distribution sense) its lower and higher parts. The lower bits of
+the `Seed` are then updated by a mix of its own higher bits, `lcg`'s higher
+bits, the hash word produced on previous rounds, and the message. The reason
+the message's entropy (which may be sparse or non-random) does not destabilize
+the system is because the message becomes hidden in a mix of internal and hash
+word's entropy; message's distribution becomes irrelevant. The message
+"shifts" the system into a new state, predictated by previous messages. Mixing
+the `Seed` with the hash word partly restores the uniform distribution of
+`Seed`'s lower bits. Iterative mixing of the hash words with the `Seed`
+assures that the resulting hashes follow uniform distribution, irrespective of
+the distribution anomalies of the `Seed` itself. The `Seed` and `lcg`
+variables work in tandem, with each variable able to independently absorb up
+to hash word bit size of external (message) entropy. Note that `lcg` being an
+accumulator quickly leaves a possible zero state.
 
 In essence, the hash function generates a continuous pseudo-random number
 sequence, and returns the final part of the sequence as a result. The message
