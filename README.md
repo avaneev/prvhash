@@ -221,13 +221,15 @@ accepts higher bits of the message while `lcg` accepts lower bits of the
 message).
 
 Note that `lcg` being an accumulator quickly leaves a possible zero state.
-Injecting (adding) a priorly unknown message via `lcg` variable requires a
+Injecting (adding) a priorly unknown message via the `lcg` variable requires a
 larger variable size: e.g. with 16-bit variable's size (and 8-bit hash word)
 this may not work very well: continously adding a constant will reduce random
-structure limit by 1 bit; on the other hand, adding an increasing 8-bit
-counter to `lcg` does not reduce random structure limit, while adding a prime
-number period counter extends this limit incomprehensibly. It is more
-practical to inject messages via the `Seed` variable.
+structure limit by 2 bits; on the other hand, adding an increasing 8-bit
+counter to `lcg` with 16-bit size actually increases random structure limit by
+1 bit (any non-constant entropy usually maximizes this limit). With 64-bit
+variables there should be no practical issues by injecting entropy via the
+`lcg` variable. However, if possible, it is more predictable to inject
+entropy via the `Seed` variable.
 
 In essence, the hash function generates a continuous pseudo-random number
 sequence, and returns the final part of the sequence as a result. The message
