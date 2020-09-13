@@ -33,7 +33,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.20
+ * @version 2.21
  */
 
 //$ nocpp
@@ -212,7 +212,8 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, const uint8_t* Msg,
 		ph = *hc;
 
 		hl = lcg1 >> 32 ^ msgw;
-		lcg1 += Seed1 + msgw2;
+		lcg1 += Seed1;
+		lcg1 += msgw2;
 		ph ^= Seed1 >> 32;
 		Seed1 ^= ph ^ hl;
 
@@ -220,7 +221,8 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, const uint8_t* Msg,
 		msgw2 = prvhash42_u32ec( MsgBlock + 24 );
 
 		hl = lcg2 >> 32 ^ msgw;
-		lcg2 += Seed2 + msgw2;
+		lcg2 += Seed2;
+		lcg2 += msgw2;
 		ph ^= Seed2 >> 32;
 		Seed2 ^= ph ^ hl;
 
@@ -228,7 +230,8 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, const uint8_t* Msg,
 		msgw2 = prvhash42_u32ec( MsgBlock + 28 );
 
 		hl = lcg3 >> 32 ^ msgw;
-		lcg3 += Seed3 + msgw2;
+		lcg3 += Seed3;
+		lcg3 += msgw2;
 		ph ^= Seed3 >> 32;
 		Seed3 ^= ph ^ hl;
 
@@ -236,7 +239,8 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, const uint8_t* Msg,
 		msgw2 = prvhash42_u32ec( MsgBlock + 16 );
 
 		hl = lcg4 >> 32 ^ msgw;
-		lcg4 += Seed4 + msgw2;
+		lcg4 += Seed4;
+		lcg4 += msgw2;
 		ph ^= Seed4 >> 32;
 		Seed4 ^= ph ^ hl;
 

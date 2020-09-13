@@ -181,7 +181,8 @@ It was especially hard to find a better "hashing finalization" solution.
 	Seed = ~Seed; // An auxiliary instruction that eliminates entropy loss.
 	uint32_t* const hc = (uint32_t*) &Hash[ hpos ]; // Take the address of the hash word.
 	const uint64_t hl = lcg >> 32 ^ msgw; // Extract the higher bits of "lcg" and mix with the message.
-	lcg += Seed + msgw2; // Mix in the internal entropy, and an additional message. Truncation is possible.
+	lcg += Seed; // Mix in the internal entropy. Truncation is possible.
+	lcg += msgw2; // Mix in an additional (optional) message. Truncation is possible.
 	const uint64_t ph = *hc ^ ( Seed >> 32 ); // Mix hash word with the internal entropy (truncated).
 	Seed ^= ph ^ hl; // Mix the internal entropy with hash word's and message's entropy. Entropy feedback.
 	*hc = (uint32_t) ph; // Store the updated hash word.
@@ -223,13 +224,13 @@ message).
 Note that `lcg` being an accumulator quickly leaves a possible zero state.
 Injecting (adding) a priorly unknown message via the `lcg` variable requires a
 larger variable size: e.g. with 16-bit variable's size (and 8-bit hash word)
-this may not work very well: continously adding a constant will reduce random
-structure limit by 2 bits; on the other hand, adding an increasing 8-bit
-counter to `lcg` with 16-bit size actually increases random structure limit by
-1 bit (any non-constant entropy usually maximizes this limit). With 64-bit
-variables there should be no practical issues by injecting entropy via the
-`lcg` variable. However, if possible, it is more predictable to inject
-entropy via the `Seed` variable.
+this may not work very well due to double truncations: continously adding a
+constant will reduce random structure limit by 1-2 bits; on the other hand,
+adding an increasing 8-bit counter to 16-bit `lcg` actually increases random
+structure limit by 1-2 bits (any non-constant entropy usually maximizes this
+limit). With 64-bit variables there should be no practical issues by injecting
+entropy via the `lcg` variable. However, if possible, it is more predictable
+to inject entropy via the `Seed` variable.
 
 In essence, the hash function generates a continuous pseudo-random number
 sequence, and returns the final part of the sequence as a result. The message
