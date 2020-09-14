@@ -112,11 +112,11 @@ injections or when PRNG is used in the arrangement outlined above (XOR of two
 distant hash words), with many hash words in the system, the detection of
 self-starting sequence becomes improbable. Admittedly, the existence of such
 self-starting sequence is one of the most questionable aspects of this PRNG
-system. On the other hand, the self-starting sequence can be avoided by
-replacing `lcg` with any non-zero random value the moment `lcg` reaches zero
-state, or forcibly injecting a message entropy when `lcg` turns zero:
-according to `PractRand` tests, both these approaches are good solutions
-to this nuance.
+system. On the other hand, the self-starting sequence can be avoided by adding
+any non-zero random value to `lcg` the moment `lcg` reaches zero state, or
+injecting a message entropy via `Seed`. According to `PractRand` tests, both
+approaches are good solutions to this nuance; moreover, this is structurally
+correct (both `Seed` and `lcg` can accept external entropy).
 
 While `lcg`, `Seed`, and `Hash` variables should be initialized with good
 entropy source, the message can be sparsely-random: even an increasing counter
