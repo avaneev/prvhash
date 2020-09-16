@@ -88,21 +88,21 @@ combination of `lcg`, `Seed`, and `Hash` eventually converges into one of
 random number sub-sequences. These are mostly time-delayed versions of only a
 smaller set of unique sequences. There are structural limits in this PRNG
 system which can be easily reached if there is only a small number of hash
-words in the system. PRNG will produce non-repeating random sequences with
-external entropy injections, but their statistical quality will be limited by
-the size of `lcg` and `Seed` variables, and the number of hash words in the
-system. A good property of this PRNG is that when there are several hash words
-in the system, each hash word has some structural distance from each other.
-For example, if there are 8 hash words in the system, the structural distance
-between hash word 0 and hash word 4 (1 and 5, etc.) is maximal. So, hash words
-0 and 4 (1 and 5, etc.) can be XORed to produce a larger random structure.
-Generally speaking, it is incorrect to use every hash word as a random
-output: two structurally distant hash words should be XORed. When there are
-only 2 hash words in the system, it is however more practical to use every
-hash word as a random sequence as the structural distance between two hash
-words is minimal. Another way to increase the structural limit is to use a
-parallel PRNG structure demonstrated in the `prvhash42s.h` file, which
-additionally increases the security exponentially.
+words in the system. PRNG will continously produce non-repeating random
+sequences given external entropy injections, but their statistical quality
+on a larger frames will be limited by the size of `lcg` and `Seed` variables,
+and the number of hash words in the system. A good property of this PRNG is
+that when there are several hash words in the system, each hash word has some
+structural distance from each other. For example, if there are 8 hash words in
+the system, the structural distance between hash word 0 and hash word 4 (1 and
+5, etc.) is maximal. So, hash words 0 and 4 (1 and 5, etc.) can be XORed to
+produce a larger random structure. Generally speaking, it is incorrect to use
+every hash word as a random output: two structurally distant hash words should
+be XORed. When there are only 2 hash words in the system, it is however more
+practical to use every hash word as a random sequence as the structural
+distance between two hash words is minimal. Another way to increase the
+structural limit is to use a parallel PRNG structure demonstrated in the
+`prvhash42s.h` file, which additionally increases the security exponentially.
 
 Note that when initally or at some point the `lcg` value is zero, this PRNG
 initiates a self-starting sequence, due to discontinuity. It is mathematically
@@ -115,7 +115,7 @@ self-starting sequence is one of the most questionable aspects of this PRNG
 system. On the other hand, the self-starting sequence can be avoided by adding
 any non-zero random value to `lcg` the moment `lcg` reaches zero state, or
 injecting a message entropy via `Seed`. According to `PractRand` tests, both
-approaches are good solutions to this nuance; moreover, this is structurally
+approaches are good solutions to this nuance; moreover, they are structurally
 correct (both `Seed` and `lcg` can accept external entropy).
 
 While `lcg`, `Seed`, and `Hash` variables should be initialized with good
