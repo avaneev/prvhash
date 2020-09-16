@@ -118,9 +118,10 @@ injecting a message entropy via `Seed`. According to `PractRand` tests, both
 approaches are good solutions to this nuance; moreover, they are structurally
 correct (both `Seed` and `lcg` can accept external entropy).
 
-While `lcg`, `Seed`, and `Hash` variables should be initialized with good
-entropy source, the message can be sparsely-random: even an increasing counter
-with prime period can be considered as having a suitable sparse entropy.
+While `lcg`, `Seed`, and `Hash` variables are best initialized with good
+entropy source (structurally, they can accept just about any entropy quality),
+the message can be sparsely-random: even an increasing counter with prime
+period can be considered as having a suitable sparse entropy.
 
 Since both internal variables (`Seed` and `lcg`) interact with the output
 only indirectly (XOR operation with further truncated multiplication), the
