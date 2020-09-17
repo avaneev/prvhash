@@ -109,19 +109,20 @@ initiates a self-starting sequence, due to discontinuity. It is mathematically
 obvious that in this case the function becomes completely irreversible:
 `Seed /= lcg` is incalculable when `lcg` is equal to 0. With external entropy
 injections or when PRNG is used in the arrangement outlined above (XOR of two
-distant hash words), with many hash words in the system, the detection of
-self-starting sequence becomes improbable. Admittedly, the existence of such
-self-starting sequence is one of the most questionable aspects of this PRNG
-system. On the other hand, the self-starting sequence can be avoided by adding
-any non-zero random value to `lcg` the moment `lcg` reaches zero state, or
-injecting a message entropy via `Seed`. According to `PractRand` tests, both
-approaches are good solutions to this nuance; moreover, they are structurally
-correct (both `Seed` and `lcg` can accept external entropy).
+distant hash words), with many hash words in the system, and when hash words
+are non-zero, the detection of self-starting sequence becomes improbable.
+Admittedly, the existence of such self-starting sequence is one of the most
+questionable aspects of this PRNG system. On the other hand, the self-starting
+sequence can be avoided by adding any non-zero random value to `lcg` the
+moment `lcg` reaches zero state, or injecting a message entropy via `Seed`.
+According to `PractRand` tests, both approaches are good solutions to this
+nuance; moreover, they are structurally correct (both `Seed` and `lcg` can
+accept external entropy).
 
 While `lcg`, `Seed`, and `Hash` variables are best initialized with good
-entropy source (structurally, they can accept just about any entropy quality),
-the message can be sparsely-random: even an increasing counter with prime
-period can be considered as having a suitable sparse entropy.
+entropy source (however, structurally, they can accept just about any entropy
+quality), the message can be sparsely-random: even an increasing counter with
+prime period can be considered as having a suitable sparse entropy.
 
 Since both internal variables (`Seed` and `lcg`) interact with the output
 only indirectly (XOR operation with further truncated multiplication), the
