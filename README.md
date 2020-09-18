@@ -54,10 +54,10 @@ Please see the `prvhash42.h` file for the details of the implementation (the
 the core hash function's version (4-byte hash word, version 2).
 
 The default `prvhash42.h`-based 32-bit hash of the string `The strict
-avalanche criterion` is `a704a1b3`.
+avalanche criterion` is `64440127`.
 
 The default `prvhash42.h`-based 64-bit hash of the same string is
-`64cf24c1e0af931f`.
+`04b2f9a3bf85345c`.
 
 A proposed short name for hashes created with `prvhash42.h` is `PRH42-N`,
 where `N` is the hash length in bits (e.g. `PRH42-256`).
@@ -183,10 +183,10 @@ It was especially hard to find a better "hashing finalization" solution.
 	Seed = ~Seed; // An auxiliary instruction that eliminates entropy loss.
 	uint32_t* const hc = (uint32_t*) &Hash[ hpos ]; // Take the address of the hash word.
 	const uint64_t hl = lcg >> 32 ^ msgw; // Extract the higher bits of "lcg" and mix with the message.
-	lcg += Seed; // Mix in the internal entropy. Truncation is possible.
-	lcg += msgw2; // Mix in an additional (optional) message. Truncation is possible.
 	const uint64_t ph = *hc ^ ( Seed >> 32 ); // Mix hash word with the internal entropy (truncated).
+	lcg += Seed; // Mix in the internal entropy. Truncation is possible.
 	Seed ^= ph ^ hl; // Mix the internal entropy with hash word's and message's entropy. Entropy feedback.
+	lcg += msgw2; // Mix in an additional (optional) message. Truncation is possible.
 	*hc = (uint32_t) ph; // Store the updated hash word.
 
 (This core function can be arbitrarily scaled to any even-size variables:

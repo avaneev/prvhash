@@ -32,7 +32,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.21
+ * @version 2.22
  */
 
 //$ nocpp
@@ -72,23 +72,23 @@ typedef struct
 } PRVRNG_CTX;
 
 /**
- * Internal function returns a "true" entropy byte. This is simulated by
- * obtaining a byte from /dev/random or Windows' CryptGenRandom().
+ * Internal function returns a "true" entropy 16-bit word. This is simulated
+ * by obtaining a byte from /dev/random or Windows' CryptGenRandom().
  *
  * @param ctx Pointer to the context structure.
  */
 
-inline uint8_t prvrng_gen_entropy( PRVRNG_CTX* const ctx )
+inline uint16_t prvrng_gen_entropy16( PRVRNG_CTX* const ctx )
 {
-	uint8_t val = 0;
+	uint16_t val = 0;
 
 	#if defined( PRVRNG_UNIX )
 
-		fread( &val, 1, 1, ctx -> f );
+		fread( &val, 1, 2, ctx -> f );
 
 	#else // defined( PRVRNG_UNIX )
 
-		CryptGenRandom( ctx -> prov, 1, &val );
+		CryptGenRandom( ctx -> prov, 2, (uint8_t*) &val );
 
 	#endif // defined( PRVRNG_UNIX )
 
@@ -132,10 +132,7 @@ inline uint64_t prvrng_gen_entropy_c16( PRVRNG_CTX* const ctx, const int c )
 	{
 		while( true )
 		{
-			uint16_t tv = (uint16_t) prvrng_gen_entropy( ctx );
-			tv <<= 8;
-			tv |= (uint16_t) prvrng_gen_entropy( ctx );
-
+			const uint16_t tv = prvrng_gen_entropy16( ctx );
 			const int bcnt = prvrng_popcnt_u16( tv );
 
 			if( bcnt >= 4 && bcnt <= 12 )
@@ -192,8 +189,9 @@ inline uint8_t prvrng_gen64p2( PRVRNG_CTX* const ctx )
 
 		if( ctx -> EntCtr == 0 )
 		{
-			ctx -> EntCtr = ( (int) prvrng_gen_entropy( ctx ) + 1 ) << 2;
-			msgw = prvrng_gen_entropy( ctx );
+			const uint16_t v = prvrng_gen_entropy16( ctx );
+			ctx -> EntCtr = (( v & 0xFF ) + 1 ) << 2;
+			msgw = ( v >> 8 ) + 1;
 		}
 		else
 		{
@@ -206,12 +204,12 @@ inline uint8_t prvrng_gen64p2( PRVRNG_CTX* const ctx )
 		{
 			if( ctx -> lcg[ 0 ] == 0 )
 			{
-				ctx -> lcg[ 0 ] = prvrng_gen_entropy_c16( ctx, 4 );
+				ctx -> lcg[ 0 ] = prvrng_gen_entropy_c16( ctx, 2 );
 			}
 
 			if( ctx -> lcg[ 1 ] == 0 )
 			{
-				ctx -> lcg[ 1 ] = prvrng_gen_entropy_c16( ctx, 4 );
+				ctx -> lcg[ 1 ] = prvrng_gen_entropy_c16( ctx, 2 );
 			}
 
 			prvrng_prvhash42_32p2( ctx, ctx -> Hash[ i ], msgw );

@@ -31,7 +31,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.21
+ * @version 2.22
  */
 
 //$ nocpp
@@ -74,7 +74,7 @@
  * set.
  */
 
-inline void prvhash42( const uint8_t* const Msg, const int MsgLen,
+inline void prvhash42( const uint8_t* Msg, const int MsgLen,
 	uint8_t* const Hash, const int HashLen, const uint64_t SeedXOR,
 	const uint8_t InitVec[ 16 ])
 {
@@ -86,8 +86,8 @@ inline void prvhash42( const uint8_t* const Msg, const int MsgLen,
 	{
 		memset( Hash, 0, hlm );
 
-		lcg = 15252113002925621231ULL;
-		Seed = 17412655673657598932ULL ^ SeedXOR;
+		lcg = 16347860221670627854ULL;
+		Seed = 17878258369374729932ULL ^ SeedXOR;
 	}
 	else
 	{
@@ -97,35 +97,24 @@ inline void prvhash42( const uint8_t* const Msg, const int MsgLen,
 		Seed = prvhash42_u64ec( InitVec + 8 );
 	}
 
-	const uint8_t lb = (uint8_t) ( MsgLen > 0 ? ~Msg[ MsgLen - 1 ] : 0xFF );
-	const int mlext = MsgLen + (( 4 - ( MsgLen & 3 )) & 3 );
-	const int c = mlext + HashLen + ( hlm - mlext % hlm );
+	const uint8_t fb = (uint8_t) ( MsgLen > 0 ? ~Msg[ MsgLen - 1 ] : 0xFF );
+	const int mlext = MsgLen + (( 8 - ( MsgLen & 7 )) & 7 );
+	const int hl2 = HashLen << 1;
+	const int hlm2 = hlm << 1;
+	const uint8_t* const c = Msg + mlext + hl2 + ( hlm2 - mlext % hlm2 );
+	const uint8_t* const MsgEnd = Msg + MsgLen;
 	int hpos = 0;
-	int k;
 
-	for( k = 0; k < c; k += 4 )
+	while( Msg < c )
 	{
-		uint64_t msgw;
-
-		if( k < MsgLen - 3 )
-		{
-			msgw = prvhash42_u32ec( Msg + k );
-		}
-		else
-		{
-			msgw = (uint32_t) ( k < MsgLen ? Msg[ k ] : lb ) |
-				(uint32_t) ( k < MsgLen - 1 ? Msg[ k + 1 ] : lb ) << 8 |
-				(uint32_t) ( k < MsgLen - 2 ? Msg[ k + 2 ] : lb ) << 16 |
-				(uint32_t) lb << 24;
-		}
-
 		Seed *= lcg;
 		Seed = ~Seed;
 		uint32_t* const hc = (uint32_t*) &Hash[ hpos ];
-		const uint64_t hl = lcg >> 32 ^ msgw;
-		lcg += Seed;
+		const uint64_t hl = lcg >> 32 ^ prvhash42_lp32( Msg, MsgEnd, fb );
 		const uint64_t ph = *hc ^ ( Seed >> 32 );
+		lcg += Seed;
 		Seed ^= ph ^ hl;
+		lcg += prvhash42_lp32( Msg + 4, MsgEnd, fb );
 		*hc = (uint32_t) ph;
 
 		hpos += 4;
@@ -134,10 +123,14 @@ inline void prvhash42( const uint8_t* const Msg, const int MsgLen,
 		{
 			hpos = 0;
 		}
+
+		Msg += 8;
 	}
 
 	if( hlm > 4 )
 	{
+		int k;
+
 		for( k = 0; k < HashLen; k += 4 )
 		{
 			*(uint32_t*) ( Hash + k ) ^= *(uint32_t*) ( Hash + HashLen + k );
