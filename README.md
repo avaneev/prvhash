@@ -189,6 +189,11 @@ It was especially hard to find a better "hashing finalization" solution.
 	lcg += msgw2; // Mix in an additional (optional) message. Truncation is possible.
 	*hc = (uint32_t) ph; // Store the updated hash word.
 
+An alternative formulation of the first instruction, which does not require
+accumulation of the message (in `Seed` and `lcg`):
+
+	Seed = ( Seed ^ msgw ) * ( lcg ^ msgw2 );
+
 (This core function can be arbitrarily scaled to any even-size variables:
 6-, 8-, 10-, 12-, 16-, 32-, 64-, 128-bit variable sizes were tested, with
 similar statistical results).
