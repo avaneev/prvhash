@@ -32,7 +32,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.22
+ * @version 2.23
  */
 
 //$ nocpp
@@ -153,26 +153,26 @@ inline uint64_t prvrng_gen_entropy_c16( PRVRNG_CTX* const ctx, const int c )
  *
  * @param ctx Pointer to the context structure.
  * @param Hash Hash word.
- * @param msgw Entropy message word (up to 32 bits).
+ * @param msgw Entropy message word (up to 64 bits).
  */
 
 inline void prvrng_prvhash42_32p2( PRVRNG_CTX* const ctx, uint64_t& Hash,
 	const uint64_t msgw )
 {
-	ctx -> Seed[ 0 ] *= ctx -> lcg[ 0 ];
-	ctx -> Seed[ 1 ] *= ctx -> lcg[ 1 ];
-	ctx -> Seed[ 0 ] = ~ctx -> Seed[ 0 ];
-	ctx -> Seed[ 1 ] = ~ctx -> Seed[ 1 ];
-	const uint64_t hl0 = ctx -> lcg[ 0 ] >> 32 ^ msgw;
-	const uint64_t hl1 = ctx -> lcg[ 1 ] >> 32;
-	ctx -> lcg[ 0 ] += ctx -> Seed[ 0 ];
-	ctx -> lcg[ 1 ] += ctx -> Seed[ 1 ];
+	ctx -> Seed[ 0 ] += ctx -> lcg[ 0 ];
+	ctx -> Seed[ 1 ] += ctx -> lcg[ 1 ];
+	ctx -> Seed[ 0 ] *= ~ctx -> lcg[ 0 ] - ctx -> lcg[ 0 ];
+	ctx -> Seed[ 1 ] *= ~ctx -> lcg[ 1 ] - ctx -> lcg[ 1 ];
+	ctx -> lcg[ 0 ] += ~ctx -> Seed[ 0 ];
+	ctx -> lcg[ 1 ] += ~ctx -> Seed[ 1 ];
 
 	Hash ^= ctx -> Seed[ 0 ] >> 32;
-	ctx -> Seed[ 0 ] ^= Hash ^ hl0;
+	ctx -> Seed[ 0 ] ^= Hash;
 
 	Hash ^= ctx -> Seed[ 1 ] >> 32;
-	ctx -> Seed[ 1 ] ^= Hash ^ hl1;
+	ctx -> Seed[ 1 ] ^= Hash;
+
+	ctx -> lcg[ 0 ] ^= msgw;
 }
 
 /**
@@ -202,16 +202,6 @@ inline uint8_t prvrng_gen64p2( PRVRNG_CTX* const ctx )
 
 		for( i = 0; i < 2; i++ )
 		{
-			if( ctx -> lcg[ 0 ] == 0 )
-			{
-				ctx -> lcg[ 0 ] = prvrng_gen_entropy_c16( ctx, 2 );
-			}
-
-			if( ctx -> lcg[ 1 ] == 0 )
-			{
-				ctx -> lcg[ 1 ] = prvrng_gen_entropy_c16( ctx, 2 );
-			}
-
 			prvrng_prvhash42_32p2( ctx, ctx -> Hash[ i ], msgw );
 			msgw = 0;
 		}
