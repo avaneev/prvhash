@@ -31,7 +31,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.23
+ * @version 2.24
  */
 
 //$ nocpp
@@ -122,7 +122,7 @@ inline void prvhash42( const uint8_t* Msg, const int MsgLen,
 
 		if( Msg < MsgEnd )
 		{
-			lcg ^= prvhash42_lp32( Msg, MsgEnd, fb ) |
+			lcg ^= prvhash42_lp32_1( Msg, MsgEnd, fb ) |
 				(uint64_t) prvhash42_lp32( Msg + 4, MsgEnd, fb ) << 32;
 		}
 		else

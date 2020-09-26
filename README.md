@@ -68,8 +68,7 @@ function.
 
 `prvrng_gen64p2()`-based generator passes [`PractRand`](http://pracrand.sourceforge.net/)
 32 TB threshold, without or with only a few "unusual" evaluations. Which
-suggests it's the first working universal TRNG in the world. This claim
-requires a lot more evaluations from independent researchers.
+suggests it's the working universal TRNG.
 
 Note that due to the structure of the core hash function the probability of
 PRNG completely "stopping", or losing internal entropy, is absent.
@@ -78,14 +77,14 @@ This function, without external entropy injections, with any initial
 combination of `lcg`, `Seed`, and `Hash` eventually converges into one of
 random number sub-sequences. These are mostly time-delayed versions of only a
 smaller set of unique sequences. There are structural limits in this PRNG
-system which can be easily reached if there is only a small number of hash
-words in the system. PRNG will continously produce non-repeating random
-sequences given external entropy injections, but their statistical quality
-on a larger frames will be limited by the size of `lcg` and `Seed` variables,
-and the number of hash words in the system. Another way to increase the
-structural limit is to use a parallel PRNG structure demonstrated in the
-`prvhash42s.h` file, which additionally increases the security exponentially.
-Also any non-constant entropy usually maximizes the quality of randomness.
+system which can be reached if there is only a small number of hash words in
+the system. PRNG will continously produce non-repeating random sequences given
+external entropy injections, but their statistical quality on a larger frames
+will be limited by the size of `lcg` and `Seed` variables, and the number of
+hash words in the system. A way to increase the structural limit is to use a
+parallel PRNG structure demonstrated in the `prvhash42s.h` file, which
+additionally increases the security exponentially. Also any non-constant
+entropy usually maximizes the quality of randomness.
 
 While `lcg`, `Seed`, and `Hash` variables are best initialized with good
 entropy source (however, structurally, they can accept just about any entropy

@@ -32,7 +32,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.23
+ * @version 2.24
  */
 
 //$ nocpp
@@ -172,12 +172,38 @@ inline uint32_t prvhash42_lp32( const uint8_t* Msg,
 		return( prvhash42_u32ec( Msg ));
 	}
 
-	uint32_t r = ( Msg < MsgEnd ? *Msg : fb );
+	uint32_t r = ( Msg < MsgEnd ? *Msg : fb ) | (uint32_t) fb << 24;
 	Msg++;
 	r |= (uint32_t) ( Msg < MsgEnd ? *Msg : fb ) << 8;
 	Msg++;
 	r |= (uint32_t) ( Msg < MsgEnd ? *Msg : fb ) << 16;
-	r |= (uint32_t) fb << 24;
+
+	return( r );
+}
+
+/**
+ * Function loads 32-bit message word and pads it with "final byte" if read
+ * occurs beyond message end. This variant of the function assumes that
+ * Msg < MsgEnd.
+ *
+ * @param Msg Message pointer, alignment is unimportant.
+ * @param MsgEnd Message's end pointer.
+ * @param fb Final byte used for padding.
+ */
+
+inline uint32_t prvhash42_lp32_1( const uint8_t* Msg,
+	const uint8_t* const MsgEnd, const uint8_t fb )
+{
+	if( Msg < MsgEnd - 3 )
+	{
+		return( prvhash42_u32ec( Msg ));
+	}
+
+	uint32_t r = *Msg | (uint32_t) fb << 24;
+	Msg++;
+	r |= (uint32_t) ( Msg < MsgEnd ? *Msg : fb ) << 8;
+	Msg++;
+	r |= (uint32_t) ( Msg < MsgEnd ? *Msg : fb ) << 16;
 
 	return( r );
 }
@@ -220,7 +246,7 @@ inline uint32_t prvhash42_rnd( uint64_t& Seed, uint64_t& lcg )
  * @param c The number of Seed-lcg pairs in the buffer.
  */
 
-inline void prvhash42_cond( uint8_t InitVec[], int c )
+inline void prvhash42_cond( uint8_t InitVec[], const int c )
 {
 	int k;
 
