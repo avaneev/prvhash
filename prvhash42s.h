@@ -174,17 +174,21 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, const uint8_t* Msg,
 
 	while( BlockFill + MsgLen >= PRVHASH42S_LEN )
 	{
+		uint64_t xr = ~lcg1;
 		Seed1 += lcg1;
-		Seed1 *= ~lcg1 - lcg1;
+		Seed1 *= xr - lcg1;
 		lcg1 += ~Seed1;
+		xr = ~lcg2;
 		Seed2 += lcg2;
-		Seed2 *= ~lcg2 - lcg2;
+		Seed2 *= xr - lcg2;
 		lcg2 += ~Seed2;
+		xr = ~lcg3;
 		Seed3 += lcg3;
-		Seed3 *= ~lcg3 - lcg3;
+		Seed3 *= xr - lcg3;
 		lcg3 += ~Seed3;
+		xr = ~lcg4;
 		Seed4 += lcg4;
-		Seed4 *= ~lcg4 - lcg4;
+		Seed4 *= xr - lcg4;
 		lcg4 += ~Seed4;
 
 		uint64_t ph = *hc;

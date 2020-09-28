@@ -98,15 +98,16 @@ inline void prvhash42( const uint8_t* Msg, const int MsgLen,
 	const uint64_t fbm = fb * 0x0101010101010101ULL;
 	const uint8_t* const MsgEnd = Msg + MsgLen;
 	const int hl2 = HashLen << 1;
-	const uint8_t* const c = MsgEnd + 8 + hl2 +
-		( MsgLen > hl2 && ( MsgLen & 7 ) ? 0 : 8 );
+	const int ext = ( MsgLen > hl2 && ( MsgLen & 7 ) ? 8 : 16 );
+	const uint8_t* const c = MsgEnd + hl2 + ext;
 
 	int hpos = 0;
 
 	while( Msg < c )
 	{
+		const uint64_t xr = ~lcg;
 		Seed += lcg;
-		Seed *= ~lcg - lcg;
+		Seed *= xr - lcg;
 		lcg += ~Seed;
 		uint32_t* const hc = (uint32_t*) &Hash[ hpos ];
 		const uint64_t ph = *hc ^ Seed >> 32;
