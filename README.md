@@ -190,8 +190,9 @@ acts as a "pathway" to this final part. So, the random sequence of numbers can
 be "programmed" to produce a neccessary outcome. However, as this PRNG does
 not expose its momentary internal state, such "programming" is hardly possible
 to perform for an attacker, even if the entropy input channel is exposed:
-consider an `A*(B+C)` equation; an adversary can control `C`, but does not
-know values of `A` and `B`, thus this adversary cannot predict the outcome.
+consider an `A*(B+C)` equation, or more specifically, `(A+(B^C))*(B^C)`; an
+adversary can control `C`, but does not know the values of `A` and `B`, thus
+this adversary cannot predict the outcome.
 
 ## Other ##
 
