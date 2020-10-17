@@ -4,7 +4,8 @@
 
 PRVHASH is a hash function that generates a [uniform pseudo-random number
 sequence](https://en.wikipedia.org/wiki/Pseudorandom_number_generator)
-derived from the message. PRVHASH is conceptually similar to [`keccak`](https://en.wikipedia.org/wiki/SHA-3)
+derived from the message. PRVHASH is conceptually similar (in the sense of
+using a pseudo-random number sequence has a hash) to [`keccak`](https://en.wikipedia.org/wiki/SHA-3)
 and [`RadioGatun`](https://en.wikipedia.org/wiki/RadioGat%C3%BAn)
 schemes, but is a completely different implementation of such concept.
 PRVHASH is both a ["randomness extractor"](https://en.wikipedia.org/wiki/Randomness_extractor)
@@ -188,7 +189,9 @@ sequence, and returns the final part of the sequence as a result. The message
 acts as a "pathway" to this final part. So, the random sequence of numbers can
 be "programmed" to produce a neccessary outcome. However, as this PRNG does
 not expose its momentary internal state, such "programming" is hardly possible
-to perform for an attacker, even if the entropy input channel is exposed.
+to perform for an attacker, even if the entropy input channel is exposed:
+consider an `A*(B+C)` equation; an adversary can control `C`, but does not
+know values of `A` and `B`, thus this adversary cannot predict the outcome.
 
 ## Other ##
 
