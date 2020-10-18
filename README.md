@@ -5,7 +5,7 @@
 PRVHASH is a hash function that generates a [uniform pseudo-random number
 sequence](https://en.wikipedia.org/wiki/Pseudorandom_number_generator)
 derived from the message. PRVHASH is conceptually similar (in the sense of
-using a pseudo-random number sequence has a hash) to [`keccak`](https://en.wikipedia.org/wiki/SHA-3)
+using a pseudo-random number sequence as a hash) to [`keccak`](https://en.wikipedia.org/wiki/SHA-3)
 and [`RadioGatun`](https://en.wikipedia.org/wiki/RadioGat%C3%BAn)
 schemes, but is a completely different implementation of such concept.
 PRVHASH is both a ["randomness extractor"](https://en.wikipedia.org/wiki/Randomness_extractor)
