@@ -159,6 +159,11 @@ It was especially hard to find a better "hashing finalization" solution.
 6-, 8-, 10-, 12-, 16-, 32-, 64-, 128-bit variable sizes were tested, with
 similar statistical results).
 
+(For best security, the lower part of the `lcg` variable should be used as
+function's output, and the `lcg ^= msgw` instruction should be placed at the
+beginning of the core function: this will effectively isolate the system, as
+`lcg` and `Seed` are statistically uncorrelated).
+
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
 external entropy (message) is introduced, the function "shifts" into an
