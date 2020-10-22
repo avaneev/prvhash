@@ -162,7 +162,9 @@ similar statistical results).
 (For best security, the lower part of the `lcg` variable should be used as
 function's output, and the `lcg ^= msgw` instruction should be placed at the
 beginning of the core function: this will effectively isolate the system, as
-`lcg` and `Seed` are statistically uncorrelated).
+`lcg` and `Seed` are statistically uncorrelated; it is also advisable for
+best security to mix entropy input to the higher part of `lcg`, to avoid
+discerning the value of the `Seed` at all times).
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
