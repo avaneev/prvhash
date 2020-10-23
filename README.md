@@ -47,11 +47,11 @@ Please see the `prvhash42.h` file for the details of the implementation (the
 `prvhash.h` and `prvhash4.h` are outdated versions). Note that `42` refers to
 the core hash function's version (4-byte hash word, version 2).
 
-The default `prvhash42.h`-based 32-bit hash of the string `The strict
-avalanche criterion` is `cf35ae8c`.
+The default `prvhash42.h`-based 32-bit hash of the string `The cat is out of
+the bag` is `a0d175de`.
 
 The default `prvhash42.h`-based 64-bit hash of the same string is
-`58d53cb9765a9648`.
+`72ca96f954301401`.
 
 A proposed short name for hashes created with `prvhash42.h` is `PRH42-N`,
 where `N` is the hash length in bits (e.g. `PRH42-256`).
@@ -60,12 +60,10 @@ where `N` is the hash length in bits (e.g. `PRH42-256`).
 
 PRVHASH can be also used as a very efficient general-purpose PRNG with an
 external entropy source injections (like how the `/dev/urandom` works on
-Unix): the 64-bit hash value can be used as a pseudo-random number spliced
-into 8 output bytes each round: this was tested, and works well when 8-bit
-true entropy injections are done inbetween 8 to 2048 generated random bytes
-(delay is also obtained via entropy source). An example generator is
-implemented in the `prvrng.h` file: simply call the `prvrng_test64p2()`
-function.
+Unix): this was tested, and works well when 8-bit true entropy injections are
+done inbetween 8 to 2048 generated random bytes (delay is also obtained via
+entropy source). An example generator is implemented in the `prvrng.h` file:
+simply call the `prvrng_test64p2()` function.
 
 `prvrng_gen64p2()`-based generator passes [`PractRand`](http://pracrand.sourceforge.net/)
 32 TB threshold, without or with only a few "unusual" evaluations. Which
@@ -85,16 +83,16 @@ will be limited by the size of `lcg` and `Seed` variables, and the number of
 hash words in the system. A way to increase the structural limit is to use a
 parallel PRNG structure demonstrated in the `prvhash42s.h` file, which
 additionally increases the security exponentially. Also any non-constant
-entropy usually maximizes the quality of randomness.
+entropy input usually increases the period of randomness.
 
 While `lcg`, `Seed`, and `Hash` variables are best initialized with good
 entropy source (however, structurally, they can accept just about any entropy
 quality), the message can be sparsely-random: even an increasing counter can
 be considered as having a suitable sparse entropy.
 
-Since both internal variables (`Seed` and `lcg`) interact with the output
-only indirectly (XOR operation), the PRNG has a high level of security: it is
-not enough to know the output of PRNG to predict its future values.
+Since both internal variables (`Seed` and `lcg`) do not interact with the
+output directly, the PRNG has a high level of security: it is not enough to
+know the output of PRNG to predict its future values.
 
 ## Streamed Hashing ##
 
@@ -104,18 +102,16 @@ at the `prvhash42s_oneshot()` function for usage example. The `prvhash42s`
 offers an extremely increased security and hashing speed. The amount of
 entropy mixing going on in this implementation is substantial.
 
-The default `prvhash42s.h`-based 64-bit hash of the string `The strict
-avalanche criterion` is `26c8f699fdcb93d4`.
+The default `prvhash42s.h`-based 64-bit hash of the string `The cat is out of
+the bag` is `63cbf8d192b488cc`.
 
 The default `prvhash42s.h`-based 256-bit hash of the string
-`The quick brown fox jumps over the lazy dog` is
-`f8022665013a28d568f7f3e8d7460bba6ebe165e9914cf081cc126a63f95f721`
-(Shannon entropy index is 3.89).
+`Only a toilet bowl does not leak` is
+`db0ec0be977bed7a5762223af1f52ae2a9ccc8999ce8ed5578dfd830f403fb15`.
 
 The default prvhash42s 256-bit hash of the string
-`The quick brown fox jumps over the lazy dof` is
-`397b22112643d076216a9f1c7d300141c6c3a15a69e337d541dcc0f1227d13bc`
-(Shannon entropy index is 3.70).
+`Only a toilet bowl does not leal` is
+`788b6a8391890689dedbd98557d0ddb7dbcb52068346dbda73fc5d01f5f1c5c6`.
 
 This demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect).
 On a set of 216553 English words, pair-wise hash comparisons give average
@@ -131,40 +127,26 @@ can be used to create hashes of large data blocks like files.
 A proposed short name for hashes created with `prvhash42s.h` is `PRH42S-N`,
 where `N` is the hash length in bits (e.g. `PRH42S-256`).
 
-## Use As A Stream Cipher ##
-
-The core hash function can be used as a [stream cipher](https://en.wikipedia.org/wiki/Stream_cipher)
-if the message is used as a state variable, repeatedly hashed, possibly with
-an embedded counter, nonce and key. The resulting output can then be used in
-varying quantities as an entropy to hide (XOR) the ciphered message. Ciphering
-with a known initial state may need to bypass several initial hashing rounds
-for the function to "settle down".
-
 ## Description ##
 
 Here is the author's vision on how the core hash function works. In actuality,
 coming up with this solution was accompanied with a lot of trial and error.
 It was especially hard to find a better "hashing finalization" solution.
 
+	lcg ^= msgw; // Mix in message entropy into the system.
 	Seed += lcg; // Internal entropy mixing.
-	Seed *= ~lcg - lcg; // Multiply random by random, assuring that no multiplication by zero takes place.
+	Seed *= lcg - ~lcg; // Multiply random by random, assuring that no multiplication by zero takes place.
 	lcg += ~Seed; // Internal entropy mixing.
+	const uint64_t hs = Seed >> 32; // Obtain the higher part of Seed.
+	const uint32_t out = (uint32_t) ( Seed ^ hs ); // Produce "compressed" output.
 	uint32_t* const hc = (uint32_t*) &Hash[ hpos ]; // Take the address of the hash word.
-	const uint64_t ph = *hc ^ Seed >> 32; // Mix hash word with the internal entropy (truncated).
+	const uint64_t ph = *hc ^ hs; // Mix hash word with the internal entropy (truncated).
 	Seed ^= ph; // Mix in the hash word. Entropy feedback.
 	*hc = (uint32_t) ph; // Store the updated hash word.
-	lcg ^= msgw; // Mix in message entropy into the system.
 
 (This core function can be arbitrarily scaled to any even-size variables:
-6-, 8-, 10-, 12-, 16-, 32-, 64-, 128-bit variable sizes were tested, with
-similar statistical results).
-
-(For best security, the lower part of the `lcg` variable should be used as
-function's output, and the `lcg ^= msgw` instruction should be placed at the
-beginning of the core function: this will effectively isolate the system, as
-`lcg` and `Seed` are statistically uncorrelated; it is also advisable for
-best security to mix entropy input to the higher part of `lcg`, to avoid
-discerning the value of the `Seed` at all times).
+2-, 4-, 8-, 16-, 32-, 64-bit variable sizes were tested, with similar
+statistical results).
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
