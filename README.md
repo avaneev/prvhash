@@ -103,15 +103,15 @@ offers an extremely increased security and hashing speed. The amount of
 entropy mixing going on in this implementation is substantial.
 
 The default `prvhash42s.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `63cbf8d192b488cc`.
+the bag` is `d29cb7845c06a8c8`.
 
 The default `prvhash42s.h`-based 256-bit hash of the string
 `Only a toilet bowl does not leak` is
-`db0ec0be977bed7a5762223af1f52ae2a9ccc8999ce8ed5578dfd830f403fb15`.
+`45caeb8ea1c604e0577a5d5caca6670f151802c3e1b8125b164502faf5ac1995`.
 
 The default prvhash42s 256-bit hash of the string
 `Only a toilet bowl does not leal` is
-`788b6a8391890689dedbd98557d0ddb7dbcb52068346dbda73fc5d01f5f1c5c6`.
+`c80b9e4be584c079a5d05f7da03edc162f63d328ec87972541307a3b2ec75771`.
 
 This demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect).
 On a set of 216553 English words, pair-wise hash comparisons give average
