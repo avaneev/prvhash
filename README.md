@@ -183,6 +183,14 @@ consider an `A*(B+C)` equation, or more specifically, `(A+(B^C))*(B^C)`; an
 adversary can control `C`, but does not know the values of `A` and `B`, thus
 this adversary cannot predict the outcome.
 
+P.S. The reason the InitVec in the `prvhash42` hash function have both value
+constraints, and an initial state, is that otherwise the function would
+require at least 4 "conditioning" preliminary rounds (core function calls), to
+neutralize any oddities (including zero values) in InitVec; that would reduce
+the performance of the hash function dramatically for table hash use. Note
+that the `prvhash42s` starts from the "full zero" state and then performs
+acceptably.
+
 ## Other ##
 
 [Follow the author on Twitter](https://twitter.com/AlekseyVaneev)

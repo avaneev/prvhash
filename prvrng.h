@@ -32,10 +32,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.25
+ * @version 2.26
  */
 
-//$ nocpp
 //$ lib "win*|AdvAPI32"
 
 #ifndef PRVRNG_INCLUDED
@@ -43,6 +42,7 @@
 
 #include <stdio.h>
 #include "prvhash42core.h"
+#include "prvhash42ec.h"
 
 #if defined( _WIN32 ) || defined( _WIN64 )
 	#include <windows.h>
@@ -76,79 +76,29 @@ typedef struct
 } PRVRNG_CTX;
 
 /**
- * Internal function returns a "true" entropy 16-bit word. This is simulated
+ * Internal function returns a "true" entropy value. This is simulated
  * by obtaining a byte from /dev/random or Windows' CryptGenRandom().
  *
  * @param ctx Pointer to the context structure.
+ * @param c The number of bytes to return, 1 to 8.
  */
 
-inline uint16_t prvrng_gen_entropy16( PRVRNG_CTX* const ctx )
+inline uint64_t prvrng_gen_entropy( PRVRNG_CTX* const ctx, const size_t c )
 {
-	uint16_t val = 0;
+	uint8_t val[ 8 ];
+	memset( val, 0, sizeof( val ));
 
 	#if defined( PRVRNG_UNIX )
 
-		fread( &val, 1, 2, ctx -> f );
+		fread( val, 1, c, ctx -> f );
 
 	#else // defined( PRVRNG_UNIX )
 
-		CryptGenRandom( ctx -> prov, 2, (uint8_t*) &val );
+		CryptGenRandom( ctx -> prov, (DWORD) c, val );
 
 	#endif // defined( PRVRNG_UNIX )
 
-	return( val );
-}
-
-/**
- * This function calculates bit count of a 16-bit number, in a platform
- * independent way.
- *
- * @param v Value.
- */
-
-inline int prvrng_popcnt_u16( const uint16_t v )
-{
-	return(( v & 1 ) + (( v >> 1 ) & 1 ) + (( v >> 2 ) & 1 ) +
-		(( v >> 3 ) & 1 ) + (( v >> 4 ) & 1 ) + (( v >> 5 ) & 1 ) +
-		(( v >> 6 ) & 1 ) + (( v >> 7 ) & 1 ) + (( v >> 8 ) & 1 ) +
-		(( v >> 9 ) & 1 ) + (( v >> 10 ) & 1 ) + (( v >> 11 ) & 1 ) +
-		(( v >> 12 ) & 1 ) + (( v >> 13 ) & 1 ) + (( v >> 14 ) & 1 ) +
-		( v >> 15 ));
-}
-
-/**
- * Function generates an N-bit entropy value and assures this value is
- * composed of "c" 16-bit values that each have 4 to 12 bits set. This
- * function is required to generate a stable initial state of the hash
- * function. This constraint is usually quickly satisfied.
- *
- * @param ctx Pointer to the context structure.
- * @param c The number of 16-bit values to produce (4 for 64-bit value,
- * 2 for 32-bit value).
- */
-
-inline uint64_t prvrng_gen_entropy_c16( PRVRNG_CTX* const ctx, const int c )
-{
-	uint64_t val = 0;
-	int j;
-
-	for( j = 0; j < c; j++ )
-	{
-		while( true )
-		{
-			const uint16_t tv = prvrng_gen_entropy16( ctx );
-			const int bcnt = prvrng_popcnt_u16( tv );
-
-			if( bcnt >= 4 && bcnt <= 12 )
-			{
-				val <<= 16;
-				val |= tv;
-				break;
-			}
-		}
-	}
-
-	return( val );
+	return( prvhash42_u64ec( val ));
 }
 
 /**
@@ -163,7 +113,7 @@ inline uint8_t prvrng_gen64p2( PRVRNG_CTX* const ctx )
 	{
 		if( ctx -> EntCtr == 0 )
 		{
-			const uint16_t v = prvrng_gen_entropy16( ctx );
+			const uint16_t v = (uint16_t) prvrng_gen_entropy( ctx, 2 );
 			ctx -> EntCtr = (( v & 0xFF ) + 1 ) << 2;
 			ctx -> lcg[ 0 ] ^= ( v >> 8 ) + 1;
 		}
@@ -230,19 +180,39 @@ inline int prvrng_init64p2( PRVRNG_CTX* const ctx )
 
 	for( i = 0; i < PRVRNG_PAR_COUNT; i++ )
 	{
-		ctx -> Seed[ i ] = prvrng_gen_entropy_c16( ctx, 4 );
-		ctx -> lcg[ i ] = prvrng_gen_entropy_c16( ctx, 4 );
+		ctx -> Seed[ i ] = prvrng_gen_entropy( ctx, 8 );
+		ctx -> lcg[ i ] = prvrng_gen_entropy( ctx, 8 );
 	}
 
 	for( i = 0; i < PRVRNG_HASH_WORD_COUNT; i++ )
 	{
-		ctx -> Hash[ i ] = (uint32_t) prvrng_gen_entropy_c16( ctx, 2 );
+		ctx -> Hash[ i ] = (uint32_t) prvrng_gen_entropy( ctx, 4 );
 	}
 
 	ctx -> HashPos = 0;
 	ctx -> EntCtr = 0;
 	ctx -> OutLeft = 0;
 	ctx -> LastOut = 0;
+
+	int k;
+
+	for( k = 0; k < 5; k++ )
+	{
+		uint32_t& Hash = ctx -> Hash[ ctx -> HashPos ];
+		int i;
+
+		for( i = 0; i < PRVRNG_PAR_COUNT; i++ )
+		{
+			prvhash42_core64( ctx -> Seed[ i ], ctx -> lcg[ i ], Hash );
+		}
+
+		ctx -> HashPos++;
+
+		if( ctx -> HashPos == PRVRNG_HASH_WORD_COUNT )
+		{
+			ctx -> HashPos = 0;
+		}
+	}
 
 	return( 1 );
 }

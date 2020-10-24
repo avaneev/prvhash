@@ -33,10 +33,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  *
- * @version 2.25
+ * @version 2.26
  */
-
-//$ nocpp
 
 #ifndef PRVHASH42S_INCLUDED
 #define PRVHASH42S_INCLUDED
@@ -85,10 +83,7 @@ typedef struct {
  * additional entropy source. They should be endianness-corrected.
  * @param InitVec If non-NULL, an "initialization vector" for internal "Seed"
  * and "lcg" variables. Full 64-byte uniformly-random value should be supplied
- * in this case. Since it is imperative that the initialization vector is
- * non-zero, the best strategies to generate it are: 1) compose the vector
- * from 16-bit random values that have 4 to 12 random bits set; 2) compose the
- * vector from 64-bit random values that have 28-36 random bits set.
+ * in this case.
  */
 
 inline void prvhash42s_init( PRVHASH42S_CTX* ctx, uint8_t* const Hash,
@@ -101,21 +96,21 @@ inline void prvhash42s_init( PRVHASH42S_CTX* ctx, uint8_t* const Hash,
 	{
 		memset( Hash, 0, HashLen );
 
-		ctx -> Seed[ 0 ] = 8555152737029954116ULL;
-		ctx -> lcg[ 0 ] = 5442746089214809054ULL;
-		ctx -> Seed[ 1 ] = 17108040019451657949ULL;
-		ctx -> lcg[ 1 ] = 6989305114985084359ULL;
-		ctx -> Seed[ 2 ] = 14192353418179594200ULL;
-		ctx -> lcg[ 2 ] = 2685819677787654746ULL;
-		ctx -> Seed[ 3 ] = 4470995064634549837ULL;
-		ctx -> lcg[ 3 ] = 13238009625957838544ULL;
-
-		if( SeedXOR != 0 )
+		if( SeedXOR == 0 )
 		{
-			ctx -> Seed[ 0 ] ^= SeedXOR[ 0 ];
-			ctx -> Seed[ 1 ] ^= SeedXOR[ 1 ];
-			ctx -> Seed[ 2 ] ^= SeedXOR[ 2 ];
-			ctx -> Seed[ 3 ] ^= SeedXOR[ 3 ];
+			for( i = 0; i < 4; i++ )
+			{
+				ctx -> Seed[ i ] = 0;
+				ctx -> lcg[ i ] = 0;
+			}
+		}
+		else
+		{
+			for( i = 0; i < 4; i++ )
+			{
+				ctx -> Seed[ i ] = SeedXOR[ i ];
+				ctx -> lcg[ i ] = 0;
+			}
 		}
 	}
 	else
@@ -134,6 +129,24 @@ inline void prvhash42s_init( PRVHASH42S_CTX* ctx, uint8_t* const Hash,
 	ctx -> HashLen = HashLen;
 	ctx -> HashPos = 0;
 	ctx -> fb = 0;
+	int k;
+
+	for( k = 0; k < 7; k++ )
+	{
+		uint32_t& ph = *(uint32_t*) ( ctx -> Hash + ctx -> HashPos );
+
+		prvhash42_core64( ctx -> Seed[ 0 ], ctx -> lcg[ 0 ], ph );
+		prvhash42_core64( ctx -> Seed[ 1 ], ctx -> lcg[ 1 ], ph );
+		prvhash42_core64( ctx -> Seed[ 2 ], ctx -> lcg[ 2 ], ph );
+		prvhash42_core64( ctx -> Seed[ 3 ], ctx -> lcg[ 3 ], ph );
+
+		ctx -> HashPos += 4;
+
+		if( ctx -> HashPos == ctx -> HashLen )
+		{
+			ctx -> HashPos = 0;
+		}
+	}
 }
 
 /**
