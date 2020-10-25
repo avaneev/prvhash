@@ -288,7 +288,7 @@ inline void prvhash42s_final( PRVHASH42S_CTX* ctx )
 
 	prvhash42_ec32( ctx -> Hash, ctx -> HashLen );
 
-	memset( ctx, 0, sizeof( ctx ));
+	memset( ctx, 0, sizeof( PRVHASH42S_CTX ));
 }
 
 /**
