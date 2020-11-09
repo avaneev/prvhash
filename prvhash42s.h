@@ -1,5 +1,5 @@
 /**
- * prvhash42s.h version 2.27
+ * prvhash42s.h version 2.28
  *
  * The inclusion file for the "prvhash42s" hash function. Efficient on large
  * data blocks, more secure, streamed. Implements a parallel variant of the
@@ -33,7 +33,6 @@
 #ifndef PRVHASH42S_INCLUDED
 #define PRVHASH42S_INCLUDED
 
-#include <string.h>
 #include "prvhash42core.h"
 #include "prvhash42ec.h"
 

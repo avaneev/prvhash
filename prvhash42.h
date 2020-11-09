@@ -1,5 +1,5 @@
 /**
- * prvhash42.h version 2.27
+ * prvhash42.h version 2.28
  *
  * The inclusion file for the "prvhash42" hash function.
  *
@@ -31,7 +31,6 @@
 #ifndef PRVHASH42_INCLUDED
 #define PRVHASH42_INCLUDED
 
-#include <string.h>
 #include "prvhash42core.h"
 #include "prvhash42ec.h"
 

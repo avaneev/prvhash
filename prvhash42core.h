@@ -1,5 +1,5 @@
 /**
- * prvhash42core.h version 2.27
+ * prvhash42core.h version 2.28
  *
  * The inclusion file for the "prvhash42_core64", "prvhash42_core32",
  * "prvhash42_core16", "prvhash42_core8", "prvhash42_core4",
