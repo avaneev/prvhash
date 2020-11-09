@@ -39,6 +39,7 @@
 #define PRVHASH42EC_INCLUDED
 
 #include <stdint.h>
+#include <string.h>
 
 #if defined( _WIN32 ) || defined( __LITTLE_ENDIAN__ ) || ( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ )
 	#define PRVHASH42_LITTLE_ENDIAN 1
