@@ -61,9 +61,9 @@ where `N` is the hash length in bits (e.g. `PRH42-256`).
 PRVHASH can be also used as a very efficient general-purpose PRNG with an
 external entropy source injections (like how the `/dev/urandom` works on
 Unix): this was tested, and works well when 8-bit true entropy injections are
-done inbetween 8 to 2048 generated random bytes (delay is also obtained via
-entropy source). An example generator is implemented in the `prvrng.h` file:
-simply call the `prvrng_test64p2()` function.
+done inbetween 4 to 1024 generated random bytes (delay is also obtained via
+the entropy source). An example generator is implemented in the `prvrng.h`
+file: simply call the `prvrng_test64p2()` function.
 
 `prvrng_gen64p2()`-based generator passes [`PractRand`](http://pracrand.sourceforge.net/)
 32 TB threshold, without or with only a few "unusual" evaluations. Which
@@ -133,7 +133,7 @@ Here is the author's vision on how the core hash function works. In actuality,
 coming up with this solution was accompanied with a lot of trial and error.
 It was especially hard to find a better "hashing finalization" solution.
 
-	lcg ^= msgw; // Mix in message entropy into the system.
+	lcg ^= msgw; // Mix in message entropy into the system (for security, only lower half should be used).
 	Seed += lcg; // Internal entropy mixing.
 	Seed *= lcg - ~lcg; // Multiply random by random, assuring that no multiplication by zero takes place.
 	lcg += ~Seed; // Internal entropy mixing.
