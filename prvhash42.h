@@ -1,5 +1,5 @@
 /**
- * prvhash42.h version 2.28
+ * prvhash42.h version 2.29
  *
  * The inclusion file for the "prvhash42" hash function.
  *
@@ -136,4 +136,4 @@ inline void prvhash42( const uint8_t* Msg, const int MsgLen,
 	prvhash42_ec32( Hash, HashLen );
 }
 
-#endif // PRVHASH42_INCLUDED1
+#endif // PRVHASH42_INCLUDED

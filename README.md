@@ -66,8 +66,7 @@ the entropy source). An example generator is implemented in the `prvrng.h`
 file: simply call the `prvrng_test64p2()` function.
 
 `prvrng_gen64p2()`-based generator passes [`PractRand`](http://pracrand.sourceforge.net/)
-32 TB threshold, without or with only a few "unusual" evaluations. Which
-suggests it's the working universal TRNG.
+32 TB threshold. Which suggests it's the working universal TRNG.
 
 Note that due to the structure of the core hash function the probability of
 PRNG completely "stopping", or losing internal entropy, is absent.
@@ -103,15 +102,15 @@ offers an extremely increased security and hashing speed. The amount of
 entropy mixing going on in this implementation is substantial.
 
 The default `prvhash42s.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `d29cb7845c06a8c8`.
+the bag` is `dc404b9669c712c2`.
 
 The default `prvhash42s.h`-based 256-bit hash of the string
 `Only a toilet bowl does not leak` is
-`45caeb8ea1c604e0577a5d5caca6670f151802c3e1b8125b164502faf5ac1995`.
+`6fafde7561116d185f99fc70498a43192dcf2baed94047b1f27aa380f14fe025`.
 
 The default prvhash42s 256-bit hash of the string
 `Only a toilet bowl does not leal` is
-`c80b9e4be584c079a5d05f7da03edc162f63d328ec87972541307a3b2ec75771`.
+`a537575d2796d691f42e968706d4cd112616f974e5efbef68e4ec8c920d322a5`.
 
 This demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect).
 On a set of 216553 English words, pair-wise hash comparisons give average
@@ -188,8 +187,8 @@ constraints, and an initial state, is that otherwise the function would
 require at least 4 "conditioning" preliminary rounds (core function calls), to
 neutralize any oddities (including zero values) in InitVec; that would reduce
 the performance of the hash function dramatically for table hash use. Note
-that the `prvhash42s` starts from the "full zero" state and then performs
-acceptably.
+that the `prvhash42s` function starts from the "full zero" state and then
+performs acceptably.
 
 ## Other ##
 

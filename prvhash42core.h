@@ -1,5 +1,5 @@
 /**
- * prvhash42core.h version 2.28
+ * prvhash42core.h version 2.29
  *
  * The inclusion file for the "prvhash42_core64", "prvhash42_core32",
  * "prvhash42_core16", "prvhash42_core8", "prvhash42_core4",
@@ -61,13 +61,13 @@ inline uint32_t prvhash42_core64( uint64_t& Seed, uint64_t& lcg,
 	Seed += lcg;
 	Seed *= lcg - xr;
 	lcg += ~Seed;
-	const uint64_t hs = Seed >> 32;
-	const uint64_t out = Seed ^ hs;
+	const uint64_t hs = Seed >> 32ULL;
+	const uint32_t out = (uint32_t) ( Seed ^ hs );
 	const uint64_t ph = Hash ^ hs;
 	Seed ^= ph;
 	Hash = (uint32_t) ph;
 
-	return( (uint32_t) out );
+	return( out );
 }
 
 inline uint16_t prvhash42_core32( uint32_t& Seed, uint32_t& lcg,
@@ -78,12 +78,12 @@ inline uint16_t prvhash42_core32( uint32_t& Seed, uint32_t& lcg,
 	Seed *= lcg - xr;
 	lcg += ~Seed;
 	const uint32_t hs = Seed >> 16;
-	const uint32_t out = Seed ^ hs;
+	const uint16_t out = (uint16_t) ( Seed ^ hs );
 	const uint32_t ph = Hash ^ hs;
 	Seed ^= ph;
 	Hash = (uint16_t) ph;
 
-	return( (uint16_t) out );
+	return( out );
 }
 
 inline uint8_t prvhash42_core16( uint16_t& Seed, uint16_t& lcg,
@@ -94,12 +94,12 @@ inline uint8_t prvhash42_core16( uint16_t& Seed, uint16_t& lcg,
 	Seed *= lcg - xr;
 	lcg += ~Seed;
 	const uint16_t hs = Seed >> 8;
-	const uint16_t out = Seed ^ hs;
+	const uint8_t out = (uint8_t) ( Seed ^ hs );
 	const uint16_t ph = Hash ^ hs;
 	Seed ^= ph;
 	Hash = (uint8_t) ph;
 
-	return( (uint8_t) out );
+	return( out );
 }
 
 inline uint8_t prvhash42_core8( uint8_t& Seed, uint8_t& lcg,
@@ -109,13 +109,13 @@ inline uint8_t prvhash42_core8( uint8_t& Seed, uint8_t& lcg,
 	Seed += lcg;
 	Seed *= lcg - xr;
 	lcg += ~Seed;
-	const uint8_t hs = Seed >> 4;
-	const uint8_t out = Seed ^ hs;
+	const uint8_t hs = (uint8_t) ( Seed >> 4 );
+	const uint8_t out = ( Seed ^ hs ) & 15;
 	const uint8_t ph = ( Hash ^ hs ) & 15;
 	Seed ^= ph;
 	Hash = ph;
 
-	return( out & 15 );
+	return( out );
 }
 
 inline uint8_t prvhash42_core4( uint8_t& Seed, uint8_t& lcg,
@@ -128,13 +128,13 @@ inline uint8_t prvhash42_core4( uint8_t& Seed, uint8_t& lcg,
 	Seed &= 15;
 	lcg += ~Seed;
 	lcg &= 15;
-	const uint8_t hs = Seed >> 2;
-	const uint8_t out = Seed ^ hs;
+	const uint8_t hs = (uint8_t) ( Seed >> 2 );
+	const uint8_t out = ( Seed ^ hs ) & 3;
 	const uint8_t ph = ( Hash ^ hs ) & 3;
 	Seed ^= ph;
 	Hash = ph;
 
-	return( out & 3 );
+	return( out );
 }
 
 inline uint8_t prvhash42_core2( uint8_t& Seed, uint8_t& lcg,
@@ -147,13 +147,13 @@ inline uint8_t prvhash42_core2( uint8_t& Seed, uint8_t& lcg,
 	Seed &= 3;
 	lcg += ~Seed;
 	lcg &= 3;
-	const uint8_t hs = Seed >> 1;
-	const uint8_t out = Seed ^ hs;
+	const uint8_t hs = (uint8_t) ( Seed >> 1 );
+	const uint8_t out = ( Seed ^ hs ) & 1;
 	const uint8_t ph = ( Hash ^ hs ) & 1;
 	Seed ^= ph;
 	Hash = ph;
 
-	return( out & 1 );
+	return( out );
 }
 
-#endif // PRVHASH42CORE_INCLUDED1
+#endif // PRVHASH42CORE_INCLUDED

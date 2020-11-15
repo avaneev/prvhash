@@ -114,13 +114,13 @@ inline uint8_t prvrng_gen64p2( PRVRNG_CTX* const ctx )
 		uint32_t& Hash = ctx -> Hash[ ctx -> HashPos ];
 		int i;
 
-		for( i = 0; i < PRVRNG_PAR_COUNT - 1; i++ )
-		{
-			prvhash42_core64( ctx -> Seed[ i ], ctx -> lcg[ i ], Hash );
-		}
+		ctx -> LastOut = 0;
 
-		ctx -> LastOut = prvhash42_core64( ctx -> Seed[ i ],
-			ctx -> lcg[ i ], Hash );
+		for( i = 0; i < PRVRNG_PAR_COUNT; i++ )
+		{
+			ctx -> LastOut ^=
+				prvhash42_core64( ctx -> Seed[ i ], ctx -> lcg[ i ], Hash );
+		}
 
 		ctx -> HashPos++;
 
@@ -253,4 +253,4 @@ inline void prvrng_test64p2()
 	prvrng_final64p2( &ctx );
 }
 
-#endif // PRVRNG_INCLUDED1
+#endif // PRVRNG_INCLUDED

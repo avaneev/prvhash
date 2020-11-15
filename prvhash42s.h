@@ -1,5 +1,5 @@
 /**
- * prvhash42s.h version 2.28
+ * prvhash42s.h version 2.29
  *
  * The inclusion file for the "prvhash42s" hash function. Efficient on large
  * data blocks, more secure, streamed. Implements a parallel variant of the
@@ -124,7 +124,7 @@ inline void prvhash42s_init( PRVHASH42S_CTX* ctx, uint8_t* const Hash,
 	ctx -> fb = 0;
 	int k;
 
-	for( k = 0; k < 7; k++ )
+	for( k = 0; k < 6; k++ )
 	{
 		uint32_t& ph = *(uint32_t*) ( ctx -> Hash + ctx -> HashPos );
 
@@ -265,11 +265,13 @@ inline void prvhash42s_final( PRVHASH42S_CTX* ctx )
 		ctx -> lcg[ 3 ] ^= fbm;
 
 		uint32_t& ph = *(uint32_t*) ( ctx -> Hash + HashPos );
+		uint32_t h = 0;
 
-		prvhash42_core64( ctx -> Seed[ 0 ], ctx -> lcg[ 0 ], ph );
-		prvhash42_core64( ctx -> Seed[ 1 ], ctx -> lcg[ 1 ], ph );
-		prvhash42_core64( ctx -> Seed[ 2 ], ctx -> lcg[ 2 ], ph );
-		ph = prvhash42_core64( ctx -> Seed[ 3 ], ctx -> lcg[ 3 ], ph );
+		h ^= prvhash42_core64( ctx -> Seed[ 0 ], ctx -> lcg[ 0 ], ph );
+		h ^= prvhash42_core64( ctx -> Seed[ 1 ], ctx -> lcg[ 1 ], ph );
+		h ^= prvhash42_core64( ctx -> Seed[ 2 ], ctx -> lcg[ 2 ], ph );
+		h ^= prvhash42_core64( ctx -> Seed[ 3 ], ctx -> lcg[ 3 ], ph );
+		ph = h;
 
 		HashPos += 4;
 
@@ -308,4 +310,4 @@ inline void prvhash42s_oneshot( const uint8_t* const Msg, const size_t MsgLen,
 	prvhash42s_final( &ctx );
 }
 
-#endif // PRVHASH42S_INCLUDED1
+#endif // PRVHASH42S_INCLUDED
