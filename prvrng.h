@@ -1,5 +1,5 @@
 /**
- * prvrng.h version 2.28
+ * prvrng.h version 2.29
  *
  * The inclusion file for the "prvrng" entropy pseudo-random number generator.
  *
@@ -49,7 +49,7 @@
  */
 
 #define PRVRNG_PAR_COUNT 2 // PRNG parallelism.
-#define PRVRNG_HASH_WORD_COUNT 16 // Hashwords in a hasharray.
+#define PRVRNG_HASH_WORD_COUNT 32 // Hashwords in a hasharray.
 
 typedef struct
 {

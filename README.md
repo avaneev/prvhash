@@ -93,6 +93,15 @@ Since both internal variables (`Seed` and `lcg`) do not interact with the
 output directly, the PRNG has a high level of security: it is not enough to
 know the output of PRNG to predict its future values.
 
+If you have little confidence in OS-provided entropy (via `CryptGenRandom` or
+`/dev/random/`), you may consider augmenting the `ctx -> lcg[ 0 ]` variable
+yourself, before generating the required random number sequence. A good
+independent source of entropy is user mouse event timing and positions: you
+may simply apply something like `ctx -> lcg[ 0 ] ^= event_time_delta_micro;`
+successively after generating at least 4 random bytes, or even combine the
+time delta with mouse X-Y positions (via `XOR` or round-robin manner). For
+best security, only the lower half of `lcg` should be augmented.
+
 ## Streamed Hashing ##
 
 The file `prvhash42s.h` implements a relatively fast streamed hashing
