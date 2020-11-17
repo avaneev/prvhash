@@ -100,7 +100,11 @@ independent source of entropy is user mouse event timing and positions: you
 may simply apply something like `ctx -> lcg[ 0 ] ^= event_time_delta_micro;`
 successively after generating at least 4 random bytes, or even combine the
 time delta with mouse X-Y positions (via `XOR` or round-robin manner). For
-best security, only the lower half of `lcg` should be augmented.
+best security, only the lower half of `lcg` should be augmented. The best
+tactic is to augment `lcg` after generating a variable, not fixed, number of
+random bytes, depending on mouse event time or position deltas: this is
+efficient and allows one to disseminate sparse entropy represented by mouse
+events over full system size.
 
 ## Streamed Hashing ##
 
