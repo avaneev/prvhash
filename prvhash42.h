@@ -1,5 +1,5 @@
 /**
- * prvhash42.h version 2.29
+ * prvhash42.h version 2.30
  *
  * The inclusion file for the "prvhash42" hash function.
  *
@@ -101,7 +101,7 @@ inline void prvhash42( const uint8_t* Msg, const int MsgLen,
 			lcg ^= prvhash42_lp32_1( Msg, MsgEnd, fb ) |
 				(uint64_t) prvhash42_lp32( Msg + 4, MsgEnd, fb ) << 32;
 
-			prvhash42_core64( Seed, lcg, *(uint32_t*) ( Hash + hpos ));
+			prvhash42_core64( &Seed, &lcg, (uint32_t*) ( Hash + hpos ));
 			hpos += 4;
 
 			if( hpos == HashLen )
@@ -114,7 +114,7 @@ inline void prvhash42( const uint8_t* Msg, const int MsgLen,
 	}
 
 	lcg ^= fbm;
-	prvhash42_core64( Seed, lcg, *(uint32_t*) ( Hash + hpos ));
+	prvhash42_core64( &Seed, &lcg, (uint32_t*) ( Hash + hpos ));
 
 	const int hle = (( MsgLen & 7 ) == 0 ? HashLen + 4 : HashLen );
 	int k;
@@ -130,7 +130,7 @@ inline void prvhash42( const uint8_t* Msg, const int MsgLen,
 
 		lcg ^= fbm;
 		uint32_t* const hc = (uint32_t*) ( Hash + hpos );
-		*hc = prvhash42_core64( Seed, lcg, *hc );
+		*hc = prvhash42_core64( &Seed, &lcg, hc );
 	}
 
 	prvhash42_ec32( Hash, HashLen );

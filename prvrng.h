@@ -1,5 +1,5 @@
 /**
- * prvrng.h version 2.29
+ * prvrng.h version 2.30
  *
  * The inclusion file for the "prvrng" entropy pseudo-random number generator.
  *
@@ -111,7 +111,7 @@ inline uint8_t prvrng_gen64p2( PRVRNG_CTX* const ctx )
 			ctx -> lcg[ 0 ] ^= ( v >> 8 ) + 1;
 		}
 
-		uint32_t& Hash = ctx -> Hash[ ctx -> HashPos ];
+		uint32_t* const Hash = ctx -> Hash + ctx -> HashPos;
 		int i;
 
 		ctx -> LastOut = 0;
@@ -119,7 +119,7 @@ inline uint8_t prvrng_gen64p2( PRVRNG_CTX* const ctx )
 		for( i = 0; i < PRVRNG_PAR_COUNT; i++ )
 		{
 			ctx -> LastOut ^=
-				prvhash42_core64( ctx -> Seed[ i ], ctx -> lcg[ i ], Hash );
+				prvhash42_core64( &ctx -> Seed[ i ], &ctx -> lcg[ i ], Hash );
 		}
 
 		ctx -> HashPos++;
@@ -191,12 +191,12 @@ inline int prvrng_init64p2( PRVRNG_CTX* const ctx )
 
 	for( k = 0; k < 5; k++ )
 	{
-		uint32_t& Hash = ctx -> Hash[ ctx -> HashPos ];
+		uint32_t* const Hash = ctx -> Hash + ctx -> HashPos;
 		int i;
 
 		for( i = 0; i < PRVRNG_PAR_COUNT; i++ )
 		{
-			prvhash42_core64( ctx -> Seed[ i ], ctx -> lcg[ i ], Hash );
+			prvhash42_core64( &ctx -> Seed[ i ], &ctx -> lcg[ i ], Hash );
 		}
 
 		ctx -> HashPos++;

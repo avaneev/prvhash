@@ -1,5 +1,5 @@
 /**
- * prvhash42s.h version 2.29
+ * prvhash42s.h version 2.30
  *
  * The inclusion file for the "prvhash42s" hash function. Efficient on large
  * data blocks, more secure, streamed. Implements a parallel variant of the
@@ -126,12 +126,12 @@ inline void prvhash42s_init( PRVHASH42S_CTX* ctx, uint8_t* const Hash,
 
 	for( k = 0; k < 6; k++ )
 	{
-		uint32_t& ph = *(uint32_t*) ( ctx -> Hash + ctx -> HashPos );
+		uint32_t* const ph = (uint32_t*) ( ctx -> Hash + ctx -> HashPos );
 
-		prvhash42_core64( ctx -> Seed[ 0 ], ctx -> lcg[ 0 ], ph );
-		prvhash42_core64( ctx -> Seed[ 1 ], ctx -> lcg[ 1 ], ph );
-		prvhash42_core64( ctx -> Seed[ 2 ], ctx -> lcg[ 2 ], ph );
-		prvhash42_core64( ctx -> Seed[ 3 ], ctx -> lcg[ 3 ], ph );
+		prvhash42_core64( &ctx -> Seed[ 0 ], &ctx -> lcg[ 0 ], ph );
+		prvhash42_core64( &ctx -> Seed[ 1 ], &ctx -> lcg[ 1 ], ph );
+		prvhash42_core64( &ctx -> Seed[ 2 ], &ctx -> lcg[ 2 ], ph );
+		prvhash42_core64( &ctx -> Seed[ 3 ], &ctx -> lcg[ 3 ], ph );
 
 		ctx -> HashPos += 4;
 
@@ -206,14 +206,11 @@ inline void prvhash42s_update( PRVHASH42S_CTX* ctx, const uint8_t* Msg,
 			Msg += PRVHASH42S_LEN;
 		}
 
-		uint32_t ph = *hc;
+		prvhash42_core64( &Seed1, &lcg1, hc );
+		prvhash42_core64( &Seed2, &lcg2, hc );
+		prvhash42_core64( &Seed3, &lcg3, hc );
+		prvhash42_core64( &Seed4, &lcg4, hc );
 
-		prvhash42_core64( Seed1, lcg1, ph );
-		prvhash42_core64( Seed2, lcg2, ph );
-		prvhash42_core64( Seed3, lcg3, ph );
-		prvhash42_core64( Seed4, lcg4, ph );
-
-		*hc = ph;
 		hc++;
 
 		if( hc == HashEnd )
@@ -264,14 +261,15 @@ inline void prvhash42s_final( PRVHASH42S_CTX* ctx )
 		ctx -> lcg[ 2 ] ^= fbm;
 		ctx -> lcg[ 3 ] ^= fbm;
 
-		uint32_t& ph = *(uint32_t*) ( ctx -> Hash + HashPos );
+		uint32_t* const ph = (uint32_t*) ( ctx -> Hash + HashPos );
 		uint32_t h = 0;
 
-		h ^= prvhash42_core64( ctx -> Seed[ 0 ], ctx -> lcg[ 0 ], ph );
-		h ^= prvhash42_core64( ctx -> Seed[ 1 ], ctx -> lcg[ 1 ], ph );
-		h ^= prvhash42_core64( ctx -> Seed[ 2 ], ctx -> lcg[ 2 ], ph );
-		h ^= prvhash42_core64( ctx -> Seed[ 3 ], ctx -> lcg[ 3 ], ph );
-		ph = h;
+		h ^= prvhash42_core64( &ctx -> Seed[ 0 ], &ctx -> lcg[ 0 ], ph );
+		h ^= prvhash42_core64( &ctx -> Seed[ 1 ], &ctx -> lcg[ 1 ], ph );
+		h ^= prvhash42_core64( &ctx -> Seed[ 2 ], &ctx -> lcg[ 2 ], ph );
+		h ^= prvhash42_core64( &ctx -> Seed[ 3 ], &ctx -> lcg[ 3 ], ph );
+
+		*ph = h;
 
 		HashPos += 4;
 
