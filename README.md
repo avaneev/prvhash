@@ -36,12 +36,20 @@ seeded (see the suggestions in `prvhash42.h`), adding useful initial entropy
 32-, 64-, 128-, 160-, 256- and 512-bit PRVHASH hashes pass all [SMHasher](https://github.com/rurban/smhasher)
 tests. Other hash lengths were not thoroughly tested, but extrapolations can
 be made. PRVHASH possesses most of the cryptographic properties, but this
-aspect has yet to be better proven. In author's opinion, this hash function is
-provably [irreversible](https://en.wikipedia.org/wiki/One-way_function)
+aspect has yet to be better proven.
+
+In author's opinion, this hash function is provably [irreversible](https://en.wikipedia.org/wiki/One-way_function)
 as it does not use fixed prime numbers, its output depends on all prior input,
 the function has non-linearities (loss of state information) induced by bit
 truncations, and because the message enters the system only as a mix with the
-system's internal entropy without permutations of any sort.
+system's internal entropy without permutations of any sort. This reasoning
+applies to the case when internal state of the hashing system is known.
+However, if the core hash function is a black-box, and only its output (`out`)
+is known, it reveals no information about its prior or later state: all
+elements of the core hash function (`Seed`, `lcg`, `out`, `Hash`) are
+mutually-uncorrelated and wholly-unequal for the PRNG period. In this case,
+the core hash function has the security level that is equal to its full bit
+size.
 
 Please see the `prvhash42.h` file for the details of the implementation (the
 `prvhash.h` and `prvhash4.h` are outdated versions). Note that `42` refers to
@@ -82,7 +90,13 @@ will be limited by the size of `lcg` and `Seed` variables, and the number of
 hash words in the system. A way to increase the structural limit is to use a
 parallel PRNG structure demonstrated in the `prvhash42s.h` file, which
 additionally increases the security exponentially. Also any non-constant
-entropy input usually increases the period of randomness.
+entropy input usually increases the period of randomness, which, when
+extrapolated to hashing, means that the period's exponent increases by
+message's entropy in bits.
+
+Moreover, the PRVHASH systems can be freely daisy-chained by feeding their
+outputs to `lcg` inputs, adding guaranteed security firewalls, and increasing
+the PRNG period of the final output accordingly.
 
 While `lcg`, `Seed`, and `Hash` variables are best initialized with good
 entropy source (however, structurally, they can accept just about any entropy
@@ -91,7 +105,8 @@ be considered as having a suitable sparse entropy.
 
 Since both internal variables (`Seed` and `lcg`) do not interact with the
 output directly, the PRNG has a high level of security: it is not enough to
-know the output of PRNG to predict its future values.
+know the output of PRNG to predict its future values, or discover its prior
+values.
 
 If you have little confidence in OS-provided entropy (via `CryptGenRandom` or
 `/dev/random/`), you may consider augmenting the `ctx -> lcg[ 0 ]` variable
