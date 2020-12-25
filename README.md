@@ -218,6 +218,79 @@ the performance of the hash function dramatically for table hash use. Note
 that the `prvhash42s` function starts from the "full zero" state and then
 performs acceptably.
 
+## PRNG Period Assessment ##
+
+The following "minimal" implementation for PractRand class can be used to
+independently assess randomness period properties of PRVHASH. By varying
+the `PH_HASH_COUNT` and `PH_PAR_COUNT` values it is possible to test various
+PRNG system sizes. By adjusting other values it is possible to test PRVHASH
+scalability across different state variable sizes. By additionally
+uncommenting the `Ctr++` instruction it is possible to assess the PRNG period
+increase due to sparse entropy input.
+
+```
+#include "prvhash42core.h"
+#include <string.h>
+
+#define PH_PAR_COUNT 1 // PRVHASH parallelism.
+#define PH_HASH_COUNT 5 // Hash array word count.
+#define PH_HASH_TYPE uint8_t // Hash word physical storage type.
+#define PH_HASH_WORD_BITS 4 // Hash word size in bits.
+#define PH_FN prvhash42_core8 // Core hash function name.
+#define PH_STATE_TYPE uint8_t // State variable physical type.
+#define PH_RAW_ROUNDS (32/PH_HASH_WORD_BITS) // PRVHASH rounds per 1 raw output.
+
+class DummyRNG : public PractRand::RNGs::vRNG32 {
+public:
+    PH_STATE_TYPE Seed[ PH_PAR_COUNT ];
+    PH_STATE_TYPE lcg[ PH_PAR_COUNT ];
+    PH_HASH_TYPE Hash[ PH_HASH_COUNT ];
+    int HashPos;
+    PH_STATE_TYPE Ctr;
+
+    DummyRNG() {
+        memset( Seed, 0, sizeof( Seed ));
+        memset( lcg, 0, sizeof( lcg ));
+        memset( Hash, 0, sizeof( Hash ));
+        HashPos = 0;
+        Ctr = 0;
+    }
+
+    Uint32 raw32() {
+        uint32_t OutValue = 0;
+        int k, j;
+
+        for( k = 0; k < PH_RAW_ROUNDS; k++ )
+        {
+//            Ctr++; Ctr &= 31; lcg[ 0 ] ^= Ctr;
+
+            uint32_t h = 0;
+
+            for( j = 0; j < PH_PAR_COUNT; j++ )
+            {
+                h ^= PH_FN( Seed + j, lcg + j, Hash + HashPos );
+            }
+
+            OutValue <<= PH_HASH_WORD_BITS;
+            OutValue |= h;
+
+            HashPos++;
+
+            if( HashPos == PH_HASH_COUNT )
+            {
+                HashPos = 0;
+            }
+        }
+
+        return( OutValue );
+    }
+
+    void walk_state(PractRand::StateWalkingObject *walker) {}
+    void seed(Uint64 sv) { Seed[ 0 ] ^= sv; }
+    std::string get_name() const { return "PRVHASH"; }
+};
+```
+
 ## Other ##
 
 [Follow the author on Twitter](https://twitter.com/AlekseyVaneev)
