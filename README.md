@@ -291,6 +291,35 @@ public:
 };
 ```
 
+## PRVHASH Cryptanalysis Basics ##
+
+As was noted previously, when the internal momentary state of PRVHASH is
+known, its reversal poses a serious computation problem since the message
+that enters the system becomes indistringushable from system's own random
+state. Moreover, each reversal round's complexity increases exponentially,
+depending on the used PRVHASH parallelism (the `lcg - ~lcg` instruction
+assures this: it naturally reduces bit size of `lcg` by 1 and thus induces
+uncertainty about system's state).
+
+When the system state is not known, and when PRVHASH acts as a black-box,
+one has to consider core hash function's statistical properties. Every half
+of `Seed` and `lcg` variables, and `Hash` value itself, are uniformly random
+at all times: they are uncorrelated to each other at all times, and are also
+wholly-unequal for the PRNG period (they are not just time-delayed versions
+of each other). When the message enters the system as `lcg ^= msgw`, it works
+like mixing a message with one-time-pad used in symmetric cryptography. This
+operation completely hides the message in `lcg`'s entropy. Beside that, the
+output of PRVHASH uses "compression" operation over the `Seed` variable:
+statistically, this means mixing two unrelated random variables. This
+effectively hides the current state of the `Seed` variable, while a subsequent
+mix of the `Seed` with the `Hash` invalidates the "compressed output" value
+for use as a predictor of system's further state.
+
+To sum up, the author is unable to find cryptographial security flaws in
+PRVHASH. The author will be happy to offer a negotiable grant to any
+cryptanalyst willing to "break" the PRVHASH, or independently publish its
+cryptanalysis. You can contact the author via aleksey.vaneev@gmail.com
+
 ## Other ##
 
 [Follow the author on Twitter](https://twitter.com/AlekseyVaneev)
