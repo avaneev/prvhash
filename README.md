@@ -23,7 +23,7 @@ from 1024-, 2048-, or 4096-bit resulting hash is as collision resistant as
 just a 32-bit hash. It is a fixed execution time hash function that depends
 only on message length. A streamed hashing implementation is available.
 
-PRVHASH is solely based on the butterfly effect, strongly inspired by [LCG](https://en.wikipedia.org/wiki/Linear_congruential_generator)
+PRVHASH is solely based on the butterfly effect, inspired by [LCG](https://en.wikipedia.org/wiki/Linear_congruential_generator)
 pseudo-random number generators. The generated hashes have good avalanche
 properties. For best results, when creating (H)MACs, a random seed should be
 supplied to the hash function, but this is not a requirement. When each
@@ -47,7 +47,7 @@ applies to the case when internal state of the hashing system is known.
 However, if the core hash function is a black-box, and only its output (`out`)
 is known, it reveals no information about its prior or later state: all
 elements of the core hash function (`Seed`, `lcg`, `out`, `Hash`) are
-mutually-uncorrelated and wholly-unequal for the PRNG period. In this case,
+mutually-uncorrelated and wholly-unequal during the PRNG period. In this case,
 the core hash function has the security level that is equal to its full bit
 size.
 
@@ -86,13 +86,13 @@ smaller set of unique sequences. There are structural limits in this PRNG
 system which can be reached if there is only a small number of hash words in
 the system. PRNG will continously produce non-repeating random sequences given
 external entropy injections, but their statistical quality on a larger frames
-will be limited by the size of `lcg` and `Seed` variables, and the number of
-hash words in the system. A way to increase the structural limit is to use a
-parallel PRNG structure demonstrated in the `prvhash42s.h` file, which
-additionally increases the security exponentially. Also any non-constant
-entropy input usually increases the period of randomness, which, when
-extrapolated to hashing, means that the period's exponent increases by
-message's entropy in bits.
+will be limited by the size of `lcg` and `Seed` variables, the number of hash
+words in the system, and the quality of the external entropy. A way to
+increase the structural limit is to use a parallel PRNG structure demonstrated
+in the `prvhash42s.h` file, which additionally increases the security
+exponentially. Also any non-constant entropy input usually increases the
+period of randomness, which, when extrapolated to hashing, means that the
+period's exponent increases by message's entropy in bits, approximately.
 
 Moreover, the PRVHASH systems can be freely daisy-chained by feeding their
 outputs to `lcg` inputs, adding guaranteed security firewalls, and increasing
@@ -114,11 +114,11 @@ yourself, before generating the required random number sequence. A good
 independent source of entropy is user mouse event timing and positions: you
 may simply apply something like `ctx -> lcg[ 0 ] ^= event_time_delta_micro;`
 successively after generating at least 4 random bytes, or even combine the
-time delta with mouse X-Y positions (via `XOR` or round-robin manner). For
-best security, only the lower half of `lcg` should be augmented. The best
-tactic is to augment `lcg` after generating a variable, not fixed, number of
-random bytes, depending on mouse event time or position deltas: this is
-efficient and allows one to disseminate sparse entropy represented by mouse
+mouse event time delta with mouse X-Y positions (via `XOR` or round-robin
+manner). For best security, only the lower half of `lcg` should be augmented.
+The best tactic is to augment `lcg` after generating a variable, not fixed,
+number of random bytes, depending on mouse event time or position deltas: this
+is efficient and allows one to disseminate sparse entropy represented by mouse
 events over full system size.
 
 ## Streamed Hashing ##
@@ -294,31 +294,31 @@ public:
 ## PRVHASH Cryptanalysis Basics ##
 
 As was noted previously, when the internal momentary state of PRVHASH is
-known, its reversal poses a serious computation problem since the message
-that enters the system becomes indistringushable from system's own random
+known, its reversal poses a serious computational problem since the message
+that enters the system becomes indistinguishable from system's own random
 state. Moreover, each reversal round's complexity increases exponentially,
 depending on the used PRVHASH parallelism (the `lcg - ~lcg` instruction
 assures this: it naturally reduces bit size of `lcg` by 1 and thus induces
 uncertainty about system's state).
 
-When the system state is not known, and when PRVHASH acts as a black-box,
-one has to consider core hash function's statistical properties. Every half
-of `Seed` and `lcg` variables, and `Hash` value itself, are uniformly random
-at all times: they are uncorrelated to each other at all times, and are also
-wholly-unequal for the PRNG period (they are not just time-delayed versions
-of each other). When the message enters the system as `lcg ^= msgw`, it works
-like mixing a message with one-time-pad used in symmetric cryptography. This
-operation completely hides the message in `lcg`'s entropy. Beside that, the
+When the system state is not known, when PRVHASH acts as a black-box, one has
+to consider core hash function's statistical properties. Both halves of the
+`Seed` and `lcg` variables, and the `Hash` value itself, are uniformly random:
+they are uncorrelated to each other at all times, and are also wholly-unequal
+during the PRNG period (they are not just time-delayed versions of each
+other). When the message enters the system as `lcg ^= msgw`, it works like
+mixing a message with an one-time-pad used in symmetric cryptography. This
+operation completely hides the message in `lcg`'s entropy. Beside that the
 output of PRVHASH uses "compression" operation over the `Seed` variable:
-statistically, this means mixing two unrelated random variables. This
+statistically, this means the mixing of two unrelated random variables. This
 effectively hides the current state of the `Seed` variable, while a subsequent
-mix of the `Seed` with the `Hash` invalidates the "compressed output" value
-for use as a predictor of system's further state.
+mixing of the `Seed` with the `Hash` value invalidates the "compressed output"
+value for use as a predictor of system's further state.
 
-To sum up, the author is unable to find cryptographial security flaws in
+To sum up, the author is unable to find cryptographical security flaws in
 PRVHASH. The author will be happy to offer a negotiable grant to any
-cryptanalyst willing to "break" the PRVHASH, or independently publish its
-cryptanalysis. You can contact the author via aleksey.vaneev@gmail.com
+cryptanalyst willing to "break" PRVHASH, or publish its cryptanalysis. You can
+contact the author via aleksey.vaneev@gmail.com
 
 ## Other ##
 
