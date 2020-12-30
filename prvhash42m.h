@@ -37,18 +37,17 @@
 
 /**
  * PRVHASH hash function (64-bit variables with 32-bit hash word). Produces
- * 32-bit hash of the specified message. This function does not apply
- * endianness correction. This is a "minimal" implementation that uses
- * PRVHASH's property of PRNG period extension due to entropy input. Designed
- * for table hash use.
+ * and returns 32-bit hash of the specified message. This is a "minimal"
+ * implementation that uses PRVHASH's property of PRNG period extension due to
+ * entropy input. Designed for 32-bit table hash use, but can be practically
+ * extended to any hash bit size like other PRVHASH variants.
  *
  * @param Msg The message to produce hash from. The alignment of the message
  * is unimportant.
  * @param MsgLen Message's length, in bytes.
  * @param SeedXOR Optional value, to XOR the default seed with. To use the
  * default seed, set to 0. The SeedXOR value can have any bit length, and is
- * used only as an additional entropy source. It should be
- * endianness-corrected.
+ * used only as an additional entropy source.
  */
 
 inline uint32_t prvhash42m_32( const uint8_t* Msg, const int MsgLen,
