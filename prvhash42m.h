@@ -61,7 +61,7 @@ inline uint32_t prvhash42m_32( const uint8_t* Msg, const int MsgLen,
 	const uint8_t* const MsgEnd = Msg + MsgLen;
 	int sc = (( MsgLen & 7 ) == 0 ? 2 : 1 );
 
-	while( true )
+	while( 1 )
 	{
 		if( Msg < MsgEnd )
 		{
