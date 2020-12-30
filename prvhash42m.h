@@ -1,8 +1,8 @@
 /**
  * prvhash42m.h version 2.30
  *
- * The inclusion file for the "prvhash42m" hash function, specially designed
- * for table hash use (due to small size).
+ * The inclusion file for the "prvhash42m_32" hash function, specially
+ * designed for table hash use (due to small size).
  *
  * Description is available at https://github.com/avaneev/prvhash
  *
@@ -37,26 +37,22 @@
 
 /**
  * PRVHASH hash function (64-bit variables with 32-bit hash word). Produces
- * hash of the specified message. This function does not apply endianness
- * correction. This is a "minimal" implementation that uses PRVHASH's property
- * of PRNG period extension due to entropy input. Designed for table hash use.
+ * 32-bit hash of the specified message. This function does not apply
+ * endianness correction. This is a "minimal" implementation that uses
+ * PRVHASH's property of PRNG period extension due to entropy input. Designed
+ * for table hash use.
  *
  * @param Msg The message to produce hash from. The alignment of the message
  * is unimportant.
  * @param MsgLen Message's length, in bytes.
- * @param[in,out] Hash The resulting hash. The length of this buffer should be
- * equal to HashLen. On systems where this is relevant, this address should be
- * aligned to 32 bits.
- * @param HashLen The required hash length, in bytes, should be >= 4, in
- * increments of 4.
  * @param SeedXOR Optional value, to XOR the default seed with. To use the
  * default seed, set to 0. The SeedXOR value can have any bit length, and is
  * used only as an additional entropy source. It should be
  * endianness-corrected.
  */
 
-inline void prvhash42m( const uint8_t* Msg, const int MsgLen,
-	uint8_t* Hash, int HashLen, const uint64_t SeedXOR )
+inline uint32_t prvhash42m_32( const uint8_t* Msg, const int MsgLen,
+	const uint64_t SeedXOR )
 {
 	uint64_t Seed = 12905183526369792234ULL ^ SeedXOR;
 	uint64_t lcg = 6447574768757703757ULL;
@@ -94,15 +90,7 @@ inline void prvhash42m( const uint8_t* Msg, const int MsgLen,
 
 		if( sc < 0 )
 		{
-			*(uint32_t*) Hash = h;
-
-			if( HashLen <= 4 )
-			{
-				break;
-			}
-
-			Hash += 4;
-			HashLen -= 4;
+			return( h );
 		}
 	}
 }
