@@ -57,7 +57,14 @@ inline uint32_t prvhash42m_32( const uint8_t* Msg, const int MsgLen,
 	uint64_t lcg = 6447574768757703757ULL;
 	uint32_t HashVal = 0;
 
-	const uint64_t fbm = 0ULL - (uint64_t) (( ~Msg[ MsgLen - 1 ] >> 7 ) & 1 );
+	uint64_t fbm = 0;
+
+	if( MsgLen > 0 )
+	{
+		fbm -= (uint64_t) (( ~Msg[ MsgLen - 1 ] >> 7 ) & 1 );
+	}
+
+	const uint8_t fb = (uint8_t) fbm;
 	const uint8_t* const MsgEnd = Msg + MsgLen;
 	int sc = (( MsgLen & 7 ) == 0 ? 2 : 1 );
 
@@ -65,17 +72,8 @@ inline uint32_t prvhash42m_32( const uint8_t* Msg, const int MsgLen,
 	{
 		if( Msg < MsgEnd )
 		{
-			if( Msg < MsgEnd - 7 )
-			{
-				lcg ^= prvhash42_u64ec( Msg );
-			}
-			else
-			{
-				const uint8_t fb = (uint8_t) fbm;
-
-				lcg ^= prvhash42_lp32_1( Msg, MsgEnd, fb ) |
-					(uint64_t) prvhash42_lp32( Msg + 4, MsgEnd, fb ) << 32;
-			}
+			lcg ^= prvhash42_lp32_1( Msg, MsgEnd, fb ) |
+				(uint64_t) prvhash42_lp32( Msg + 4, MsgEnd, fb ) << 32;
 
 			Msg += 8;
 		}
