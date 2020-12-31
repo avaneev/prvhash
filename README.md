@@ -182,6 +182,8 @@ unrelated state unpredictably. So, it can be said that the function "jumps"
 within a space of a huge number of pseudo-random sub-sequences. Hash
 length affects the size of this "space of sub-sequences", permitting the
 function to produce quality hashes for any required hash length.
+Statistically, these "jumps" are very close to random repositioning within
+PRNG period.
 
 How does it work? First of all, this PRNG system, represented by the core hash
 function, does not work with numbers in a common sense: it works with [entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)),
