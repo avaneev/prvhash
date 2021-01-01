@@ -93,6 +93,8 @@ in the `prvhash42s.h` file, which additionally increases the security
 exponentially. Also any non-constant entropy input usually increases the
 period of randomness, which, when extrapolated to hashing, means that the
 period's exponent increases by message's entropy in bits, approximately.
+The maximal PRNG period's `2^N` exponent approximately equals to full PRNG
+system size in bits.
 
 Moreover, the PRVHASH systems can be freely daisy-chained by feeding their
 outputs to `lcg` inputs, adding guaranteed security firewalls, and increasing
@@ -225,6 +227,17 @@ neutralize any oddities (including zero values) in InitVec; that would reduce
 the performance of the hash function dramatically for table hash use. Note
 that the `prvhash42s` function starts from the "full zero" state and then
 performs acceptably.
+
+## Method's Philosophy ##
+
+Any external entropy (message) that enters this PRNG system acts as a
+high-frequency and high-quality reseeding which changes the random number
+generator "position" within the PRNG period, randomly. In practice, this means
+that two messages that are different in even 1 bit produce "final" random
+number sequences that are completely unrelated to each other. Since the hash
+length affects the PRNG period of the system, the same logic applies to hashes
+of any length, meeting collision and preimage resistance specifications for
+all lengths.
 
 ## PRNG Period Assessment ##
 
