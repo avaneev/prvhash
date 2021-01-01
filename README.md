@@ -187,7 +187,9 @@ PRNG period: adjusting of even 1 bit of `lcg` equates, on average, to 1/3
 PRNG period random jump. The actual performace is a lot more complicated as
 this PRNG system is able to converge into unrelated random number sequences
 of varying length, so the "jump" changes both the position and "index" of such
-sequence.
+sequence. This property of PRVHASH assures that different initial states
+of its state variables (`Seed` or `lcg`) produce practically unrelated random
+number sequences, permitting to use PRVHASH for PRNG-based simulations.
 
 How does it work? First of all, this PRNG system, represented by the core hash
 function, does not work with numbers in a common sense: it works with [entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)),
