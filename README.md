@@ -183,8 +183,11 @@ within a space of a huge number of pseudo-random sub-sequences. Hash
 length affects the size of this "space of sub-sequences", permitting the
 function to produce quality hashes for any required hash length.
 Statistically, these "jumps" are very close to random repositioning within
-PRNG period, with adjusting of even 1 bit of `lcg` equating to 1/3 PRNG period
-random jump on average.
+PRNG period: adjusting of even 1 bit of `lcg` equates, on average, to 1/3
+PRNG period random jump. The actual performace is a lot more complicated as
+this PRNG system is able to converge into unrelated random number sequences
+of varying length, so the "jump" changes both the position and "index" of such
+sequence.
 
 How does it work? First of all, this PRNG system, represented by the core hash
 function, does not work with numbers in a common sense: it works with [entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)),
