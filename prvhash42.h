@@ -1,5 +1,5 @@
 /**
- * prvhash42.h version 2.30
+ * prvhash42.h version 2.31
  *
  * The inclusion file for the "prvhash42" hash function.
  *
@@ -98,8 +98,7 @@ inline void prvhash42( const uint8_t* Msg, const int MsgLen,
 
 		while( Msg < MsgEnd )
 		{
-			lcg ^= prvhash42_lp32_1( Msg, MsgEnd, fb ) |
-				(uint64_t) prvhash42_lp32( Msg + 4, MsgEnd, fb ) << 32;
+			lcg ^= prvhash42_lp64_1( Msg, MsgEnd, fb );
 
 			prvhash42_core64( &Seed, &lcg, (uint32_t*) ( Hash + hpos ));
 			hpos += 4;

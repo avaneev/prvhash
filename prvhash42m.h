@@ -1,5 +1,5 @@
 /**
- * prvhash42m.h version 2.30
+ * prvhash42m.h version 2.31
  *
  * The inclusion file for the "prvhash42m_32" hash function, specially
  * designed for table hash use (due to small size).
@@ -39,8 +39,7 @@
  * PRVHASH hash function (64-bit variables with 32-bit hash word). Produces
  * and returns 32-bit hash of the specified message. This is a "minimal"
  * implementation that uses PRVHASH's property of PRNG period extension due to
- * entropy input. Designed for 32-bit table hash use, but can be practically
- * extended to any hash bit size like other PRVHASH variants.
+ * entropy input. Designed for 32-bit table hash use.
  *
  * @param Msg The message to produce hash from. The alignment of the message
  * is unimportant.
@@ -66,15 +65,13 @@ inline uint32_t prvhash42m_32( const uint8_t* Msg, const int MsgLen,
 
 	const uint8_t fb = (uint8_t) fbm;
 	const uint8_t* const MsgEnd = Msg + MsgLen;
-	int sc = (( MsgLen & 7 ) == 0 ? 2 : 1 );
+	int sc = 1 + (( MsgLen & 7 ) == 0 );
 
 	while( 1 )
 	{
 		if( Msg < MsgEnd )
 		{
-			lcg ^= prvhash42_lp32_1( Msg, MsgEnd, fb ) |
-				(uint64_t) prvhash42_lp32( Msg + 4, MsgEnd, fb ) << 32;
-
+			lcg ^= prvhash42_lp64_1( Msg, MsgEnd, fb );
 			Msg += 8;
 		}
 		else

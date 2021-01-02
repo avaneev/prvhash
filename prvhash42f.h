@@ -1,5 +1,5 @@
 /**
- * prvhash42f.h version 2.30
+ * prvhash42f.h version 2.31
  *
  * The inclusion file for the "prvhash42f" hash function, specially
  * designed for competitive performance.
