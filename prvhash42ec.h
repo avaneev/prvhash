@@ -156,8 +156,8 @@ inline void prvhash42_ec32( uint8_t* const Hash, const int HashLen )
 #endif // PRVHASH42_LITTLE_ENDIAN
 
 /**
- * Function loads 32-bit message word and pads it with "final byte" if read
- * occurs beyond message end.
+ * Function loads 32-bit message word and pads it with the "final byte" if
+ * reading occurs beyond message end.
  *
  * @param Msg Message pointer, alignment is unimportant.
  * @param MsgEnd Message's end pointer.
@@ -182,9 +182,9 @@ inline uint32_t prvhash42_lp32( const uint8_t* Msg,
 }
 
 /**
- * Function loads 32-bit message word and pads it with "final byte" if read
- * occurs beyond message end. This variant of the function assumes that
- * Msg < MsgEnd.
+ * Function loads 32-bit message word and pads it with the "final byte" if
+ * reading occurs beyond message end. This variant of the function assumes
+ * that Msg < MsgEnd.
  *
  * @param Msg Message pointer, alignment is unimportant.
  * @param MsgEnd Message's end pointer.
@@ -206,6 +206,39 @@ inline uint32_t prvhash42_lp32_1( const uint8_t* Msg,
 	r |= (uint32_t) ( Msg < MsgEnd ? *Msg : fb ) << 16;
 
 	return( r );
+}
+
+/**
+ * Function loads 64-bit message word and pads it with the "final byte" if
+ * reading occurs beyond message end.
+ *
+ * @param Msg Message pointer, alignment is unimportant.
+ * @param MsgEnd Message's end pointer.
+ * @param fb Final byte used for padding.
+ */
+
+inline uint64_t prvhash42_lp64( const uint8_t* Msg,
+	const uint8_t* const MsgEnd, const uint8_t fb )
+{
+	return( prvhash42_lp32( Msg, MsgEnd, fb ) |
+		(uint64_t) prvhash42_lp32( Msg + 4, MsgEnd, fb ) << 32 );
+}
+
+/**
+ * Function loads 64-bit message word and pads it with the "final byte" if
+ * reading occurs beyond message end. This variant of the function assumes
+ * that Msg < MsgEnd.
+ *
+ * @param Msg Message pointer, alignment is unimportant.
+ * @param MsgEnd Message's end pointer.
+ * @param fb Final byte used for padding.
+ */
+
+inline uint64_t prvhash42_lp64_1( const uint8_t* Msg,
+	const uint8_t* const MsgEnd, const uint8_t fb )
+{
+	return( prvhash42_lp32_1( Msg, MsgEnd, fb ) |
+		(uint64_t) prvhash42_lp32( Msg + 4, MsgEnd, fb ) << 32 );
 }
 
 #endif // PRVHASH42EC_INCLUDED
