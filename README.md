@@ -177,6 +177,10 @@ It was especially hard to find a better "hashing finalization" solution.
 2-, 4-, 8-, 16-, 32-, 64-bit variable sizes were tested, with similar
 statistical results).
 
+(It is practically possible to mix in independent message entropy into the
+`Seed` variable as well: this works for PRNG period extension; for hashing
+this works only in parallel structures).
+
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
 external entropy (message) is introduced, the function "shifts" into an
@@ -190,8 +194,8 @@ PRNG period random jump. The actual performace is a lot more complicated as
 this PRNG system is able to converge into unrelated random number sequences
 of varying length, so the "jump" changes both the position and "index" of such
 sequence. This property of PRVHASH assures that different initial states
-of its state variables (`Seed` or `lcg`) produce practically unrelated random
-number sequences, permitting to use PRVHASH for PRNG-based simulations.
+of its `lcg` state variable produce practically unrelated random number
+sequences, permitting to use PRVHASH for PRNG-based simulations.
 
 How does it work? First of all, this PRNG system, represented by the core hash
 function, does not work with numbers in a common sense: it works with [entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)),
