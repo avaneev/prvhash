@@ -49,44 +49,40 @@
  * used only as an additional entropy source.
  */
 
-inline uint32_t prvhash42m_32( const uint8_t* Msg, const int MsgLen,
+inline uint32_t prvhash42m_32( const uint8_t* Msg, const size_t MsgLen,
 	const uint64_t SeedXOR )
 {
+	if( MsgLen == 0 )
+	{
+		return( 0 );
+	}
+
 	uint64_t Seed = 12905183526369792234ULL ^ SeedXOR;
 	uint64_t lcg = 6447574768757703757ULL;
 	uint32_t HashVal = 0;
 
-	uint64_t fbm = 0;
-
-	if( MsgLen > 0 )
-	{
-		fbm -= (uint64_t) (( ~Msg[ MsgLen - 1 ] >> 7 ) & 1 );
-	}
-
+	const uint64_t fbm = 0ULL - (uint64_t) (( ~Msg[ MsgLen - 1 ] >> 7 ) & 1 );
 	const uint8_t fb = (uint8_t) fbm;
 	const uint8_t* const MsgEnd = Msg + MsgLen;
-	int sc = 1 + (( MsgLen & 7 ) == 0 );
 
-	while( 1 )
+	while( Msg < MsgEnd )
 	{
-		if( Msg < MsgEnd )
-		{
-			lcg ^= prvhash42_lp64_1( Msg, MsgEnd, fb );
-			Msg += 8;
-		}
-		else
-		{
-			lcg ^= fbm;
-			sc--;
-		}
-
-		const uint32_t h = prvhash42_core64( &Seed, &lcg, &HashVal );
-
-		if( sc < 0 )
-		{
-			return( h );
-		}
+		lcg ^= prvhash42_lp64_1( Msg, MsgEnd, fb );
+		prvhash42_core64( &Seed, &lcg, &HashVal );
+		Msg += 8;
 	}
+
+	int sc = 2 + (( MsgLen & 7 ) == 0 );
+	uint32_t h;
+
+	while( sc > 0 )
+	{
+		lcg ^= fbm;
+		h = prvhash42_core64( &Seed, &lcg, &HashVal );
+		sc--;
+	}
+
+	return( h );
 }
 
 #endif // PRVHASH42M_INCLUDED
