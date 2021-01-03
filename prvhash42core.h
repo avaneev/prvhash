@@ -99,13 +99,13 @@ inline uint8_t prvhash42_core16( uint16_t* const Seed0, uint16_t* const lcg0,
 {
 	uint16_t Seed = *Seed0; uint16_t lcg = *lcg0; uint8_t Hash = *Hash0;
 
-	const uint16_t xr = ~lcg;
+	const uint16_t xr = (uint16_t) ~lcg;
 	Seed += lcg;
-	Seed *= lcg - xr;
-	lcg += ~Seed;
-	const uint16_t hs = Seed >> 8;
+	Seed *= (uint16_t) ( lcg - xr );
+	lcg += (uint16_t) ~Seed;
+	const uint16_t hs = (uint16_t) ( Seed >> 8 );
 	const uint8_t out = (uint8_t) ( Seed ^ hs );
-	const uint16_t ph = Hash ^ hs;
+	const uint16_t ph = (uint16_t) ( Hash ^ hs );
 	Seed ^= ph;
 	Hash = (uint8_t) ph;
 
@@ -119,13 +119,13 @@ inline uint8_t prvhash42_core8( uint8_t* const Seed0, uint8_t* const lcg0,
 {
 	uint8_t Seed = *Seed0; uint8_t lcg = *lcg0; uint8_t Hash = *Hash0;
 
-	const uint8_t xr = ~lcg;
+	const uint8_t xr = (uint8_t) ~lcg;
 	Seed += lcg;
-	Seed *= lcg - xr;
-	lcg += ~Seed;
+	Seed *= (uint8_t) ( lcg - xr );
+	lcg += (uint8_t) ~Seed;
 	const uint8_t hs = (uint8_t) ( Seed >> 4 );
-	const uint8_t out = ( Seed ^ hs ) & 15;
-	const uint8_t ph = ( Hash ^ hs ) & 15;
+	const uint8_t out = (uint8_t) (( Seed ^ hs ) & 15 );
+	const uint8_t ph = (uint8_t) (( Hash ^ hs ) & 15 );
 	Seed ^= ph;
 	Hash = ph;
 
@@ -139,16 +139,16 @@ inline uint8_t prvhash42_core4( uint8_t* const Seed0, uint8_t* const lcg0,
 {
 	uint8_t Seed = *Seed0; uint8_t lcg = *lcg0; uint8_t Hash = *Hash0;
 
-	const uint8_t xr = ~lcg & 15;
+	const uint8_t xr = (uint8_t) ( ~lcg & 15 );
 	Seed += lcg;
 	Seed &= 15;
-	Seed *= ( lcg - xr ) & 15;
+	Seed *= (uint8_t) (( lcg - xr ) & 15 );
 	Seed &= 15;
-	lcg += ~Seed;
+	lcg += (uint8_t) ~Seed;
 	lcg &= 15;
 	const uint8_t hs = (uint8_t) ( Seed >> 2 );
-	const uint8_t out = ( Seed ^ hs ) & 3;
-	const uint8_t ph = ( Hash ^ hs ) & 3;
+	const uint8_t out = (uint8_t) (( Seed ^ hs ) & 3 );
+	const uint8_t ph = (uint8_t) (( Hash ^ hs ) & 3 );
 	Seed ^= ph;
 	Hash = ph;
 
@@ -162,16 +162,16 @@ inline uint8_t prvhash42_core2( uint8_t* const Seed0, uint8_t* const lcg0,
 {
 	uint8_t Seed = *Seed0; uint8_t lcg = *lcg0; uint8_t Hash = *Hash0;
 
-	const uint8_t xr = ~lcg & 3;
+	const uint8_t xr = (uint8_t) ( ~lcg & 3 );
 	Seed += lcg;
 	Seed &= 3;
-	Seed *= ( lcg - xr ) & 3;
+	Seed *= (uint8_t) (( lcg - xr ) & 3 );
 	Seed &= 3;
-	lcg += ~Seed;
+	lcg += (uint8_t) ~Seed;
 	lcg &= 3;
 	const uint8_t hs = (uint8_t) ( Seed >> 1 );
-	const uint8_t out = ( Seed ^ hs ) & 1;
-	const uint8_t ph = ( Hash ^ hs ) & 1;
+	const uint8_t out = (uint8_t) (( Seed ^ hs ) & 1 );
+	const uint8_t ph = (uint8_t) (( Hash ^ hs ) & 1 );
 	Seed ^= ph;
 	Hash = ph;
 
