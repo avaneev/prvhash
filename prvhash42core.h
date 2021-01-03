@@ -63,7 +63,7 @@ inline uint32_t prvhash42_core64( uint64_t* const Seed0, uint64_t* const lcg0,
 	Seed += lcg;
 	Seed *= lcg - xr;
 	lcg += ~Seed;
-	const uint64_t hs = Seed >> 32ULL;
+	const uint64_t hs = Seed >> 32;
 	const uint32_t out = (uint32_t) ( Seed ^ hs );
 	const uint64_t ph = Hash ^ hs;
 	Seed ^= ph;
