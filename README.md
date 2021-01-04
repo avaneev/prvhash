@@ -177,9 +177,8 @@ It was especially hard to find a better "hashing finalization" solution.
 2-, 4-, 8-, 16-, 32-, 64-bit variable sizes were tested, with similar
 statistical results).
 
-(It is practically possible to mix in independent message entropy into the
-`Seed` variable as well: this works for PRNG period extension; for hashing
-this works only in parallel structures).
+The first three instructions represent an "ideal" shuffler: it can be said
+that for given the `lcg` and `Seed` values it remaps `msgw` uniquely.
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
