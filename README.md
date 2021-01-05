@@ -179,6 +179,13 @@ statistical results).
 
 The first three instructions represent an "ideal" shuffler: it can be said
 that for given the `lcg` and `Seed` values it remaps `msgw` uniquely.
+Coupled with `lcg += ~Seed` and `Seed ^= Seed >> 32` instructions the whole
+construction represents a "bivariable shuffler" which transforms `lcg` and
+`Seed` variables into another pair of variables with asymptotically 50% bit
+difference. The asymptota depends on the state variable size, is equal to
+49.09% for 6-bit, 49.63% for 8-bit, 49.85% for 10-bit, 49.94% for 12-bit, etc
+variables. Which means this system has a rather poor characteristics for 8-bit
+state variables, but excellent characteristics for 64-bit variables.
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
