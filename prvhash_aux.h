@@ -1,8 +1,9 @@
 /**
- * @file prvhash42ec.h
+ * @file prvhash_aux.h
+ * @version 3.0
  *
- * @brief The inclusion file for the "prvhash42_ec" endianness-correction
- * functions.
+ * @brief The inclusion file for the auxiliary functions used by PRVHASH
+ * hashing functions.
  *
  * @mainpage
  *
@@ -12,7 +13,7 @@
  *
  * @section license License
  *
- * Copyright (c) 2020 Aleksey Vaneev
+ * Copyright (c) 2020-2021 Aleksey Vaneev
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -31,25 +32,23 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
- *
- * @version 2.31
  */
 
-#ifndef PRVHASH42EC_INCLUDED
-#define PRVHASH42EC_INCLUDED
+#ifndef PRVHASH_AUX_INCLUDED
+#define PRVHASH_AUX_INCLUDED
 
 #include <stdint.h>
 #include <string.h>
 
 #if defined( _WIN32 ) || defined( __LITTLE_ENDIAN__ ) || ( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ )
-	#define PRVHASH42_LITTLE_ENDIAN 1
+	#define PRVHASH_LITTLE_ENDIAN 1
 #elif defined( __BIG_ENDIAN__ ) || ( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ )
-	#define PRVHASH42_LITTLE_ENDIAN 0
-#else
-	#error PRVHASH42: cannot obtain endianness
-#endif
+	#define PRVHASH_LITTLE_ENDIAN 0
+#else // endianness check
+	#error PRVHASH: cannot obtain endianness
+#endif // endianness check
 
-#if PRVHASH42_LITTLE_ENDIAN
+#if PRVHASH_LITTLE_ENDIAN
 
 /**
  * An auxiliary function that returns an unsigned 64-bit value created out of
@@ -59,7 +58,7 @@
  * @param p 8-byte buffer. Alignment is unimportant.
  */
 
-inline uint64_t prvhash42_u64ec( const uint8_t* const p )
+inline uint64_t prvhash_lu64ec( const uint8_t* const p )
 {
 	uint64_t v;
 	memcpy( &v, p, 8 );
@@ -75,7 +74,7 @@ inline uint64_t prvhash42_u64ec( const uint8_t* const p )
  * @param p 4-byte buffer. Alignment is unimportant.
  */
 
-inline uint32_t prvhash42_u32ec( const uint8_t* const p )
+inline uint32_t prvhash_lu32ec( const uint8_t* const p )
 {
 	uint32_t v;
 	memcpy( &v, p, 4 );
@@ -83,11 +82,11 @@ inline uint32_t prvhash42_u32ec( const uint8_t* const p )
 	return( v );
 }
 
-#else // PRVHASH42_LITTLE_ENDIAN
+#else // PRVHASH_LITTLE_ENDIAN
 
 #if defined( __GNUC__ ) || defined( __INTEL_COMPILER ) || defined( __clang__ )
 
-inline uint64_t prvhash42_u64ec( const uint8_t* const p )
+inline uint64_t prvhash_lu64ec( const uint8_t* const p )
 {
 	uint64_t v;
 	memcpy( &v, p, 8 );
@@ -95,7 +94,7 @@ inline uint64_t prvhash42_u64ec( const uint8_t* const p )
 	return( __builtin_bswap64( v ));
 }
 
-inline uint32_t prvhash42_u32ec( const uint8_t* const p )
+inline uint32_t prvhash_lu32ec( const uint8_t* const p )
 {
 	uint32_t v;
 	memcpy( &v, p, 4 );
@@ -105,7 +104,7 @@ inline uint32_t prvhash42_u32ec( const uint8_t* const p )
 
 #elif defined( _MSC_VER )
 
-inline uint64_t prvhash42_u64ec( const uint8_t* const p )
+inline uint64_t prvhash_lu64ec( const uint8_t* const p )
 {
 	uint64_t v;
 	memcpy( &v, p, 8 );
@@ -113,7 +112,7 @@ inline uint64_t prvhash42_u64ec( const uint8_t* const p )
 	return( _byteswap_uint64( v ));
 }
 
-inline uint32_t prvhash42_u32ec( const uint8_t* const p )
+inline uint32_t prvhash_lu32ec( const uint8_t* const p )
 {
 	uint32_t v;
 	memcpy( &v, p, 4 );
@@ -123,37 +122,37 @@ inline uint32_t prvhash42_u32ec( const uint8_t* const p )
 
 #endif // defined( _MSC_VER )
 
-#endif // PRVHASH42_LITTLE_ENDIAN
+#endif // PRVHASH_LITTLE_ENDIAN
 
-#if PRVHASH42_LITTLE_ENDIAN
+#if PRVHASH_LITTLE_ENDIAN
 
 /**
  * This function corrects (inverses) endianness of the specified hash value,
- * based on 32-bit word.
+ * based on 64-bit word.
  *
  * @param[in,out] Hash The hash to correct endianness of. On systems where
- * this is relevant, this address should be aligned to 32 bits.
- * @param HashLen The required hash length, in bytes, should be >= 4, in
- * increments of 4. 
+ * this is relevant, this address should be aligned to 64 bits.
+ * @param HashLen The required hash length, in bytes, should be >= 8, in
+ * increments of 8. 
  */
 
-inline void prvhash42_ec32( uint8_t* const Hash, const int HashLen )
+inline void prvhash_ec64( uint8_t* const Hash, const size_t HashLen )
 {
 }
 
-#else // PRVHASH42_LITTLE_ENDIAN
+#else // PRVHASH_LITTLE_ENDIAN
 
-inline void prvhash42_ec32( uint8_t* const Hash, const int HashLen )
+inline void prvhash_ec64( uint8_t* const Hash, const size_t HashLen )
 {
-	int k;
+	size_t k;
 
-	for( k = 0; k < HashLen; k += 4 )
+	for( k = 0; k < HashLen; k += sizeof( uint64_t ))
 	{
-		*(uint32_t*) ( Hash + k ) = prvhash42_u32ec( Hash + k );
+		*(uint64_t*) ( Hash + k ) = prvhash_lu64ec( Hash + k );
 	}
 }
 
-#endif // PRVHASH42_LITTLE_ENDIAN
+#endif // PRVHASH_LITTLE_ENDIAN
 
 /**
  * Function loads 32-bit message word and pads it with the "final byte" if
@@ -164,12 +163,12 @@ inline void prvhash42_ec32( uint8_t* const Hash, const int HashLen )
  * @param fb Final byte used for padding.
  */
 
-inline uint32_t prvhash42_lp32( const uint8_t* Msg,
+inline uint32_t prvhash_lpu32( const uint8_t* Msg,
 	const uint8_t* const MsgEnd, const uint8_t fb )
 {
 	if( Msg < MsgEnd - 3 )
 	{
-		return( prvhash42_u32ec( Msg ));
+		return( prvhash_lu32ec( Msg ));
 	}
 
 	uint32_t r = ( Msg < MsgEnd ? *Msg : fb ) | (uint32_t) fb << 24;
@@ -191,12 +190,12 @@ inline uint32_t prvhash42_lp32( const uint8_t* Msg,
  * @param fb Final byte used for padding.
  */
 
-inline uint32_t prvhash42_lp32_1( const uint8_t* Msg,
+inline uint32_t prvhash_lpu32_1( const uint8_t* Msg,
 	const uint8_t* const MsgEnd, const uint8_t fb )
 {
 	if( Msg < MsgEnd - 3 )
 	{
-		return( prvhash42_u32ec( Msg ));
+		return( prvhash_lu32ec( Msg ));
 	}
 
 	uint32_t r = *Msg | (uint32_t) fb << 24;
@@ -217,11 +216,11 @@ inline uint32_t prvhash42_lp32_1( const uint8_t* Msg,
  * @param fb Final byte used for padding.
  */
 
-inline uint64_t prvhash42_lp64( const uint8_t* Msg,
+inline uint64_t prvhash_lpu64( const uint8_t* Msg,
 	const uint8_t* const MsgEnd, const uint8_t fb )
 {
-	return( prvhash42_lp32( Msg, MsgEnd, fb ) |
-		(uint64_t) prvhash42_lp32( Msg + 4, MsgEnd, fb ) << 32 );
+	return( prvhash_lpu32( Msg, MsgEnd, fb ) |
+		(uint64_t) prvhash_lpu32( Msg + 4, MsgEnd, fb ) << 32 );
 }
 
 /**
@@ -234,11 +233,11 @@ inline uint64_t prvhash42_lp64( const uint8_t* Msg,
  * @param fb Final byte used for padding.
  */
 
-inline uint64_t prvhash42_lp64_1( const uint8_t* Msg,
+inline uint64_t prvhash_lpu64_1( const uint8_t* Msg,
 	const uint8_t* const MsgEnd, const uint8_t fb )
 {
-	return( prvhash42_lp32_1( Msg, MsgEnd, fb ) |
-		(uint64_t) prvhash42_lp32( Msg + 4, MsgEnd, fb ) << 32 );
+	return( prvhash_lpu32_1( Msg, MsgEnd, fb ) |
+		(uint64_t) prvhash_lpu32( Msg + 4, MsgEnd, fb ) << 32 );
 }
 
-#endif // PRVHASH42EC_INCLUDED
+#endif // PRVHASH_AUX_INCLUDED

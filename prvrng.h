@@ -1,5 +1,5 @@
 /**
- * prvrng.h version 2.31
+ * prvrng.h version 3.0
  *
  * The inclusion file for the "prvrng" entropy pseudo-random number generator.
  *
@@ -7,7 +7,7 @@
  *
  * License
  *
- * Copyright (c) 2020 Aleksey Vaneev
+ * Copyright (c) 2020-2021 Aleksey Vaneev
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -34,22 +34,22 @@
 #define PRVRNG_INCLUDED
 
 #include <stdio.h>
-#include "prvhash42core.h"
-#include "prvhash42ec.h"
+#include "prvhash_core.h"
+#include "prvhash_aux.h"
 
-#if defined( _WIN32 ) || defined( _WIN64 )
+#if defined( _WIN32 )
 	#include <windows.h>
 	#include <wincrypt.h>
-#else // defined( _WIN32 ) || defined( _WIN64 )
+#else // defined( _WIN32 )
 	#define PRVRNG_UNIX 1
-#endif // defined( _WIN32 ) || defined( _WIN64 )
+#endif // defined( _WIN32 )
 
 /**
  * prvrng context structure.
  */
 
 #define PRVRNG_PAR_COUNT 2 // PRNG parallelism.
-#define PRVRNG_HASH_WORD_COUNT 32 // Hashwords in a hasharray.
+#define PRVRNG_HASH_COUNT 16 // Hashwords in a hasharray.
 
 typedef struct
 {
@@ -61,11 +61,11 @@ typedef struct
 
 	uint64_t Seed[ PRVRNG_PAR_COUNT ]; ///< Current Seed values.
 	uint64_t lcg[ PRVRNG_PAR_COUNT ]; ///< Current lcg values.
-	uint32_t Hash[ PRVRNG_HASH_WORD_COUNT ]; ///< Current hash values.
-	int HashPos; ///< Position within the Hash array.
+	uint64_t Hash[ PRVRNG_HASH_COUNT ]; ///< Current hash values.
+	size_t HashPos; ///< Position within the Hash array.
 	int EntCtr; ///< Bytes remaining before entropy is injected.
-	int OutLeft; ///< Bytes left in LastOut.
-	uint32_t LastOut; ///< Previously generated output.
+	size_t OutLeft; ///< Bytes left in LastOut.
+	uint64_t LastOut; ///< Previously generated output.
 } PRVRNG_CTX;
 
 /**
@@ -91,7 +91,7 @@ inline uint64_t prvrng_gen_entropy( PRVRNG_CTX* const ctx, const size_t c )
 
 	#endif // defined( PRVRNG_UNIX )
 
-	return( prvhash42_u64ec( val ));
+	return( prvhash_lu64ec( val ));
 }
 
 /**
@@ -111,25 +111,25 @@ inline uint8_t prvrng_gen64p2( PRVRNG_CTX* const ctx )
 			ctx -> lcg[ 0 ] ^= ( v >> 8 ) + 1;
 		}
 
-		uint32_t* const Hash = ctx -> Hash + ctx -> HashPos;
+		uint64_t* const Hash = ctx -> Hash + ctx -> HashPos;
 		int i;
 
-		ctx -> LastOut = 0;
-
-		for( i = 0; i < PRVRNG_PAR_COUNT; i++ )
+		for( i = 0; i < PRVRNG_PAR_COUNT - 1; i++ )
 		{
-			ctx -> LastOut ^=
-				prvhash42_core64( &ctx -> Seed[ i ], &ctx -> lcg[ i ], Hash );
+			prvhash_core64( &ctx -> Seed[ i ], &ctx -> lcg[ i ], Hash );
 		}
+
+		ctx -> LastOut =
+			prvhash_core64( &ctx -> Seed[ i ], &ctx -> lcg[ i ], Hash );
 
 		ctx -> HashPos++;
 
-		if( ctx -> HashPos == PRVRNG_HASH_WORD_COUNT )
+		if( ctx -> HashPos == PRVRNG_HASH_COUNT )
 		{
 			ctx -> HashPos = 0;
 		}
 
-		ctx -> OutLeft = 4;
+		ctx -> OutLeft = sizeof( ctx -> OutLeft );
 		ctx -> EntCtr--;
 	}
 
@@ -173,13 +173,13 @@ inline int prvrng_init64p2( PRVRNG_CTX* const ctx )
 
 	for( i = 0; i < PRVRNG_PAR_COUNT; i++ )
 	{
-		ctx -> Seed[ i ] = prvrng_gen_entropy( ctx, 8 );
-		ctx -> lcg[ i ] = prvrng_gen_entropy( ctx, 8 );
+		ctx -> Seed[ i ] = prvrng_gen_entropy( ctx, sizeof( uint64_t ));
+		ctx -> lcg[ i ] = prvrng_gen_entropy( ctx, sizeof( uint64_t ));
 	}
 
-	for( i = 0; i < PRVRNG_HASH_WORD_COUNT; i++ )
+	for( i = 0; i < PRVRNG_HASH_COUNT; i++ )
 	{
-		ctx -> Hash[ i ] = (uint32_t) prvrng_gen_entropy( ctx, 4 );
+		ctx -> Hash[ i ] = prvrng_gen_entropy( ctx, sizeof( uint64_t ));
 	}
 
 	ctx -> HashPos = 0;
@@ -189,21 +189,14 @@ inline int prvrng_init64p2( PRVRNG_CTX* const ctx )
 
 	int k;
 
-	for( k = 0; k < 5; k++ )
+	for( k = 0; k < PRVRNG_HASH_COUNT; k++ )
 	{
-		uint32_t* const Hash = ctx -> Hash + ctx -> HashPos;
+		uint64_t* const Hash = ctx -> Hash + k;
 		int i;
 
 		for( i = 0; i < PRVRNG_PAR_COUNT; i++ )
 		{
-			prvhash42_core64( &ctx -> Seed[ i ], &ctx -> lcg[ i ], Hash );
-		}
-
-		ctx -> HashPos++;
-
-		if( ctx -> HashPos == PRVRNG_HASH_WORD_COUNT )
-		{
-			ctx -> HashPos = 0;
+			prvhash_core64( &ctx -> Seed[ i ], &ctx -> lcg[ i ], Hash );
 		}
 	}
 

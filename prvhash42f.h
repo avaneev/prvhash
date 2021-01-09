@@ -1,14 +1,14 @@
 /**
- * prvhash42f.h version 2.31
+ * prvhash42f.h version 3.0
  *
  * The inclusion file for the "prvhash42f" hash function, specially
- * designed for competitive performance.
+ * designed for competitive performance. Experimental hash function.
  *
- * Description is available at https://github.com/avaneev/prvhash
+ * Project page: https://github.com/avaneev/prvhash
  *
  * License
  *
- * Copyright (c) 2020 Aleksey Vaneev
+ * Copyright (c) 2020-2021 Aleksey Vaneev
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -32,7 +32,7 @@
 #ifndef PRVHASH42F_INCLUDED
 #define PRVHASH42F_INCLUDED
 
-#include "prvhash42ec.h"
+#include "prvhash_aux.h"
 
 /**
  * "Modified" "fast" PRVHASH hash function (64-bit variables with 32-bit
@@ -78,36 +78,36 @@ inline void prvhash42f( const uint8_t* Msg, size_t MsgLen,
 
 		if( MsgLen > 31 )
 		{
-			v1 = prvhash42_u64ec( Msg );
-			v2 = prvhash42_u64ec( Msg + 8 );
-			v3 = prvhash42_u64ec( Msg + 16 );
-			v4 = prvhash42_u64ec( Msg + 24 );
+			v1 = prvhash_lu64ec( Msg );
+			v2 = prvhash_lu64ec( Msg + 8 );
+			v3 = prvhash_lu64ec( Msg + 16 );
+			v4 = prvhash_lu64ec( Msg + 24 );
 			MsgLen -= 32;
 			Msg += 32;
 		}
 		else
 		if( MsgLen > 23 )
 		{
-			v1 = prvhash42_u64ec( Msg );
-			v2 = prvhash42_u64ec( Msg + 8 );
-			v3 = prvhash42_u64ec( Msg + 16 );
-			v4 = prvhash42_lp64( Msg + 24, MsgEnd, (uint8_t) fbm );
+			v1 = prvhash_lu64ec( Msg );
+			v2 = prvhash_lu64ec( Msg + 8 );
+			v3 = prvhash_lu64ec( Msg + 16 );
+			v4 = prvhash_lpu64( Msg + 24, MsgEnd, (uint8_t) fbm );
 			MsgLen = 0;
 		}
 		else
 		if( MsgLen > 15 )
 		{
-			v1 = prvhash42_u64ec( Msg );
-			v2 = prvhash42_u64ec( Msg + 8 );
-			v3 = prvhash42_lp64( Msg + 16, MsgEnd, (uint8_t) fbm );
+			v1 = prvhash_lu64ec( Msg );
+			v2 = prvhash_lu64ec( Msg + 8 );
+			v3 = prvhash_lpu64( Msg + 16, MsgEnd, (uint8_t) fbm );
 			v4 = fbm;
 			MsgLen = 0;
 		}
 		else
 		if( MsgLen > 7 )
 		{
-			v1 = prvhash42_u64ec( Msg );
-			v2 = prvhash42_lp64( Msg + 8, MsgEnd, (uint8_t) fbm );
+			v1 = prvhash_lu64ec( Msg );
+			v2 = prvhash_lpu64( Msg + 8, MsgEnd, (uint8_t) fbm );
 			v3 = fbm;
 			v4 = fbm;
 			MsgLen = 0;
@@ -115,7 +115,7 @@ inline void prvhash42f( const uint8_t* Msg, size_t MsgLen,
 		else
 		if( MsgLen > 0 )
 		{
-			v1 = prvhash42_lp64_1( Msg, MsgEnd, (uint8_t) fbm );
+			v1 = prvhash_lpu64_1( Msg, MsgEnd, (uint8_t) fbm );
 			v2 = fbm;
 			v3 = fbm;
 			v4 = fbm;
