@@ -188,9 +188,13 @@ and transformed into output `Seed` and `Hash` value pairs, this system
 exhibits state collision statistics: on fully random `msgw` input it is
 adequate for 16-bit, and excellent for 64-bit variables (5.47^-18 percent
 chance, which far exceeds collision resistance requirements for 64-bit range
-of bits). On sparse `msgw` input, this system may exhibit local correlations
-between adjacent words if the initial state of the system has little or zero
-information.
+of bits). On very sparse `msgw` input (in the order of 1 bit per 80), this
+system may exhibit local correlations between adjacent bits if the initial
+state of the system has little or zero information. To further decrease state
+change collisions between `lcg` and `Seed` on entropy input, the byte-reversal
+should be implemented as bit-reversal: in this case the system reaches its
+optimal state, but this is unimplementable in an efficient manner on modern
+processors.
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
