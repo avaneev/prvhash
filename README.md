@@ -55,8 +55,8 @@ Please see the `prvhash64.h` file for the details of the implementation (the
 `prvhash.h`, `prvhash4.h`, `prvhash42.h` are outdated versions). Note that
 `64` refers to core hash function's variable size.
 
-The default `prvhash64.h`-based 64-bit hash of the same string is
-`27dedc65682b2493`.
+The default `prvhash64.h`-based 64-bit hash of the string `The cat is out of
+the bag` is `27dedc65682b2493`.
 
 A proposed short name for hashes created with `prvhash64.h` is `PRH64-N`,
 where `N` is the hash length in bits (e.g. `PRH64-256`).
