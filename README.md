@@ -368,11 +368,11 @@ contact the author via aleksey.vaneev@gmail.com
 ## PRVHASH16 ##
 
 PRVHASH16 demonstrates the quality of the core hash function. While the state
-variables are 16-bit, they are enough to perform hashing (except on sparse
-data): this hash function passes all SMHasher tests like 64-bit PRVHASH
-functions, for any hash length. This function is very slow, and is provided
-for demonstration purposes only, to assure that the core hash function works
-in principle, independent of state variable size.
+variables are 16-bit, they are enough to perform hashing: this hash function
+passes all SMHasher tests like 64-bit PRVHASH functions, for any hash length.
+This function is very slow, and is provided for demonstration purposes only,
+to assure that the core hash function works in principle, independent of state
+variable size.
 
 ## Other ##
 
