@@ -62,6 +62,11 @@ inline void prvhash16( const uint8_t* Msg, const size_t MsgLen,
 	state_t lcg = 0;
 	*(uint32_t*) Hash = 1290518352UL ^ SeedXOR;
 
+	if( HashLen >= 8 )
+	{
+		*(uint32_t*) ( Hash + 4 ) = 754388916UL;
+	}
+
 	Seed ^= (state_t) ( HashLen >> 1 );
 
 	const state_t* const HashEnd = (state_t*) ( Hash + HashLen );

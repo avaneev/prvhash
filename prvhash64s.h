@@ -49,7 +49,7 @@ typedef struct {
 	uint8_t Block[ PRVHASH64S_LEN ]; ///< Intermediate input data block.
 	size_t BlockFill; ///< The number of bytes filled in the Block.
 	uint8_t* Hash; ///< Pointer to the hash buffer.
-	size_t HashLen; ///< Hash buffer length, in bytes, >= 4, increments of 4.
+	size_t HashLen; ///< Hash buffer length, in bytes, >= 8, increments of 8.
 	size_t HashPos; ///< Hash buffer position.
 	uint8_t fb; ///< Final stream bit value, for hashing finalization.
 } PRVHASH64S_CTX;
@@ -81,7 +81,7 @@ typedef struct {
 
 inline void prvhash64s_init( PRVHASH64S_CTX* ctx, uint8_t* const Hash,
 	const size_t HashLen, const uint64_t SeedXOR[ PRVHASH64S_PAR ],
-	const uint8_t InitVec[ 16 * PRVHASH64S_PAR ])
+	const uint8_t InitVec[ PRVHASH64S_PAR * 16 ])
 {
 	int i;
 
@@ -110,10 +110,10 @@ inline void prvhash64s_init( PRVHASH64S_CTX* ctx, uint8_t* const Hash,
 	{
 		prvhash_ec64( Hash, HashLen );
 
-		for( i = 0; i < PRVHASH64S_PAR; i++ )
+		for( i = 0; i < PRVHASH64S_PAR * 16; i += 16 )
 		{
-			ctx -> Seed[ i ] = prvhash_lu64ec( InitVec + i * 16 );
-			ctx -> lcg[ i ] = prvhash_lu64ec( InitVec + i * 16 + 8 );
+			ctx -> Seed[ i ] = prvhash_lu64ec( InitVec + i );
+			ctx -> lcg[ i ] = prvhash_lu64ec( InitVec + i + 8 );
 		}
 	}
 
@@ -175,6 +175,10 @@ inline void prvhash64s_update( PRVHASH64S_CTX* ctx, const uint8_t* Msg,
 	{
 		const size_t CopyLen = PRVHASH64S_LEN - ctx -> BlockFill;
 		memcpy( ctx -> Block + ctx -> BlockFill, Msg, CopyLen );
+		ctx -> BlockFill = 0;
+
+		Msg += CopyLen;
+		MsgLen -= CopyLen;
 
 		ctx -> lcg[ 0 ] ^= prvhash_lu64ec( ctx -> Block + 0 );
 		ctx -> lcg[ 1 ] ^= prvhash_lu64ec( ctx -> Block + 8 );
@@ -185,10 +189,6 @@ inline void prvhash64s_update( PRVHASH64S_CTX* ctx, const uint8_t* Msg,
 		prvhash_core64( &ctx -> Seed[ 1 ], &ctx -> lcg[ 1 ], hc );
 		prvhash_core64( &ctx -> Seed[ 2 ], &ctx -> lcg[ 2 ], hc );
 		prvhash_core64( &ctx -> Seed[ 3 ], &ctx -> lcg[ 3 ], hc );
-
-		ctx -> BlockFill = 0;
-		Msg += CopyLen;
-		MsgLen -= CopyLen;
 
 		hc++;
 

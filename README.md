@@ -43,7 +43,7 @@ as it does not use fixed prime numbers, its output depends on all prior input,
 the function has non-linearities (loss of state information) induced by bit
 truncations, and because the message enters the system only as a mix with the
 system's internal entropy without permutations of any sort. This reasoning
-applies to the case when internal state of the hashing system is known.
+applies to the case when the internal state of the hashing system is known.
 However, if the core hash function is a black-box, and only its output (`out`)
 is known, it reveals no information about its prior or later state: all
 elements of the core hash function (`Seed`, `lcg`, `out`, `Hash`) are
@@ -66,7 +66,7 @@ where `N` is the hash length in bits (e.g. `PRH64-256`).
 PRVHASH can be also used as a very efficient general-purpose PRNG with an
 external entropy source injections (like how the `/dev/urandom` works on
 Unix): this was tested, and works well when 8-bit true entropy injections are
-done inbetween 8 to 1024 generated random bytes (delay is also obtained via
+done inbetween 8 to 2048 generated random bytes (delay is also obtained via
 the entropy source). An example generator is implemented in the `prvrng.h`
 file: simply call the `prvrng_test64p2()` function.
 
@@ -93,8 +93,7 @@ period of randomness, which, when extrapolated to hashing, means that the
 period's exponent increases by message's entropy in bits, approximately.
 The maximal PRNG period's `2^N` exponent is hard to approximate exactly,
 but in most tests it was equal to at least system's size in bits, minus the
-number of hash words in the system. If additional parallel elements are used,
-their size should not be counted in the system size.
+number of hash words in the system.
 
 Moreover, the PRVHASH systems can be freely daisy-chained by feeding their
 outputs to `lcg` inputs, adding guaranteed security firewalls, and increasing
@@ -121,8 +120,8 @@ manner). The best tactic is to augment `lcg` after generating a variable, not
 fixed, number of random bytes, depending on mouse event time or position
 deltas: this is efficient and allows one to disseminate sparse entropy
 represented by mouse events over full system size. Note that after
-disseminating entropy, the PRNG should be run in idle cycles to produce system
-size bits of output to catch up on changes.
+disseminating entropy, the PRNG should be first run in idle cycles to produce
+system size bits of output to catch up on changes.
 
 ## Streamed Hashing ##
 
@@ -133,15 +132,15 @@ offers an extremely increased security and hashing speed. The amount of
 entropy mixing going on in this implementation is substantial.
 
 The default `prvhash64s.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `9f9533c1b79950e6`.
+the bag` is `d7a29f4613ff0dca`.
 
 The default `prvhash64s.h`-based 256-bit hash of the string
 `Only a toilet bowl does not leak` is
-`e1ff537ee67d7fefb15776a6ae37bc2c73cbbb44ada897192654e0a1783f9abf`.
+`ceb828d3613e7d4f90c3348b646f8d17b782aa394bd81cee68535b1aa0f7c766`.
 
 The default prvhash64s 256-bit hash of the string
 `Only a toilet bowl does not leal` is
-`c6516509da89652c52de5f7718cab314489956c0e0a58937739d32deb6ebd503`.
+`92b0b183428d712ba745c4630ba8a68040d283328e39a2727dfc3601f9d3f35b`.
 
 This demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect).
 On a set of 216553 English words, pair-wise hash comparisons give average
@@ -163,12 +162,13 @@ Here is the author's vision on how the core hash function works. In actuality,
 coming up with this solution was accompanied with a lot of trial and error.
 It was especially hard to find a better "hashing finalization" solution.
 
+	lcg ^= msgw; // Mix in external entropy.
 	const uint64_t plcg = lcg; // Save `lcg` for feedback.
 	const uint64_t mx = Seed * ( lcg - ~lcg ); // Multiply random by random, without multiply by zero.
 	const uint64_t rs = prvhash_swu64( mx ); // Produce byte-reversed copy (ideally, bit-reversed).
 	lcg += ~mx; // Internal entropy mixing.
 	Hash ^= rs; // Update hash word.
-	Seed = Hash ^ plcg; // Mix new reversed seed value with hash and previous `lcg`.
+	Seed = Hash ^ plcg; // Mix new reversed seed value with hash and previous `lcg`. Entropy feedback.
 	const uint64_t out = lcg ^ rs; // Produce "compressed" output.
 
 (This core function can be arbitrarily scaled to any even-size variables:
@@ -188,13 +188,14 @@ and transformed into output `Seed` and `Hash` value pairs, this system
 exhibits state collision statistics: on fully random `msgw` input it is
 adequate for 16-bit, and excellent for 64-bit variables (5.47^-18 percent
 chance, which far exceeds collision resistance requirements for 64-bit range
-of bits). On very sparse `msgw` input (in the order of 1 bit per 80), this
-system may exhibit local correlations between adjacent bits if the initial
-state of the system has little or zero information. To further decrease state
-change collisions between `lcg` and `Seed` on entropy input, the byte-reversal
-should be implemented as bit-reversal: in this case the system reaches its
-optimal state, but this is unimplementable in an efficient manner on modern
-processors.
+of bits). If the initial state of the system has little or zero entropy (less
+than 64 bits of entropy), on very sparse `msgw` input (in the order of 1 bit
+per 80), this system may exhibit local correlations between adjacent bits (in
+this case the system may treat some combinations of sparse bits as
+equivalent). To further decrease state change collisions between `lcg` and
+`Seed` with entropy input, the byte-reversal should be implemented as
+bit-reversal: in this case the system reaches its optimal state, but this is
+unimplementable in an efficient manner on modern processors.
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
@@ -232,9 +233,9 @@ acts as a "pathway" to this final part. So, the random sequence of numbers can
 be "programmed" to produce a neccessary outcome. However, as this PRNG does
 not expose its momentary internal state, such "programming" is hardly possible
 to perform for an attacker, even if the entropy input channel is exposed:
-consider an `A*(B+C)` equation, or more specifically, `(A+(B^C))*(B^C)`; an
-adversary can control `C`, but does not know the values of `A` and `B`, thus
-this adversary cannot predict the outcome.
+consider an `A*(B^C)` equation; an adversary can control `C`, but does not
+know the values of `A` and `B`, thus this adversary cannot predict the
+outcome.
 
 P.S. The reason the InitVec in the `prvhash64` hash function have both value
 constraints, and an initial state, is that otherwise the function would
@@ -251,14 +252,16 @@ high-frequency and high-quality re-seeding which changes the random number
 generator's "position" within the PRNG period, randomly. In practice, this
 means that two messages that are different in even 1 bit produce "final"
 random number sequences, and thus hashes, that are completely unrelated to
-each other. Since the hash length affects the PRNG period of the system, the
-same logic applies to hashes of any length, meeting collision and preimage
-resistance specifications for all lengths.
+each other. This also means that any smaller part of the resulting hash can be
+used as a complete hash. Since the hash length affects the PRNG period (and
+thus the combinatorial capacity) of the system, the same logic applies to
+hashes of any length, while meeting collision and preimage resistance
+specifications for all lengths.
 
 Alternatively, the method can be viewed from the standpoint of classic
 bit mixers/shufflers: the hash array can be seen as a "working buffer" whose
 state is mixed back into the "bivariable shuffler" continuously, and the new
-shuffled values stored in this working buffer for later use.
+shuffled values stored in such working buffer for later use.
 
 ## PRNG Period Assessment ##
 

@@ -107,7 +107,7 @@ inline uint8_t prvrng_gen64p2( PRVRNG_CTX* const ctx )
 		if( ctx -> EntCtr == 0 )
 		{
 			const uint16_t v = (uint16_t) prvrng_gen_entropy( ctx, 2 );
-			ctx -> EntCtr = (( v & 0xFF ) + 1 ) << 2;
+			ctx -> EntCtr = ( v & 0xFF ) + 1;
 			ctx -> lcg[ 0 ] ^= ( v >> 8 ) + 1;
 		}
 
@@ -129,7 +129,7 @@ inline uint8_t prvrng_gen64p2( PRVRNG_CTX* const ctx )
 			ctx -> HashPos = 0;
 		}
 
-		ctx -> OutLeft = sizeof( ctx -> OutLeft );
+		ctx -> OutLeft = sizeof( ctx -> LastOut );
 		ctx -> EntCtr--;
 	}
 
