@@ -121,7 +121,7 @@ fixed, number of random bytes, depending on mouse event time or position
 deltas: this is efficient and allows one to disseminate sparse entropy
 represented by mouse events over full system size. Note that after
 disseminating entropy, the PRNG should be first run in idle cycles to produce
-`( PRVRNG_HASH_COUNT + 1 ) * 8` bytes of output to catch up on changes.
+`( PRVRNG_HASH_COUNT + 2 ) * 8` bytes of output to catch up on changes.
 
 ## Minimal PRNG for Everyday Use ##
 
@@ -164,15 +164,15 @@ offers an extremely increased security and hashing speed. The amount of
 entropy mixing going on in this implementation is substantial.
 
 The default `prvhash64s.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `50aa60b20053b091`.
+the bag` is `59907994d1621461`.
 
 The default `prvhash64s.h`-based 256-bit hash of the string
 `Only a toilet bowl does not leak` is
-`6b6c2e16044d802a7c93e1f68d23ba3404dba0533dfae3741649b56d9ae5b924`.
+`788877e88c14d8c67c93e1f68d23ba3404dba0533dfae3741649b56d9ae5b924`.
 
 The default prvhash64s 256-bit hash of the string
 `Only a toilet bowl does not leaj` is
-`2828f7ce37155930d92a9edb937ae3a292cee1f08d7e57cdf71b1b0d0e5be76f`.
+`93fcd3aa301a6044d92a9edb937ae3a292cee1f08d7e57cdf71b1b0d0e5be76f`.
 
 This demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect).
 On a set of 216553 English words, pair-wise hash comparisons give average
@@ -237,7 +237,8 @@ that PRVHASH additionally requires 1 full pass through the hash array for the
 entropy to propagate. However, a non-parallel hashing variant also requires a
 pass to the end of the hash array if message's length is shorter than output
 hash, to "mix in" the initial hash value. Parallel arrangements do not require
-such pass since hashes are additionally mixed by parallel elements.
+such pass since hashes are additionally mixed by parallel elements, but they
+have the state-to-state latency equal to 2.
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the

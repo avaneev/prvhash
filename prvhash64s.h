@@ -270,7 +270,8 @@ inline void prvhash64s_final( PRVHASH64S_CTX* ctx )
 	uint64_t* hc = (uint64_t*) ( ctx -> Hash + ctx -> HashPos );
 	size_t k;
 
-	for( k = 0; k <= ctx -> HashLen; k += sizeof( uint64_t ))
+	for( k = 0; k <= ctx -> HashLen + sizeof( uint64_t );
+		k += sizeof( uint64_t ))
 	{
 		int i;
 
