@@ -1,5 +1,5 @@
 /**
- * prvhash_core.h version 3.0
+ * prvhash_core.h version 3.1
  *
  * The inclusion file for the "prvhash_core64", "prvhash_core32",
  * "prvhash_core16", "prvhash_core8", "prvhash_core4", "prvhash_core2" PRVHASH
@@ -83,8 +83,8 @@ inline uint64_t prvhash_swu64( const uint64_t v )
  * This function runs a single PRVHASH random number generation round. This
  * function can be used both as a hash generator and as a general-purpose
  * random number generator. In the latter case, it is advisable to initially
- * run this function at least 4 times before using its random output, to
- * neutralize any possible oddities of "Seed"'s and "lcg"'s initial values.
+ * run this function 5 times before using its random output, to neutralize any
+ * possible oddities of "Seed"'s and "lcg"'s initial values.
  *
  * To generate hashes, the "lcg" variable should be XORed with entropy input
  * prior to calling this function.

@@ -1,5 +1,5 @@
 /**
- * prvhash16.h version 3.0
+ * prvhash16.h version 3.1
  *
  * The inclusion file for the "prvhash16" hash function.
  *
@@ -58,51 +58,66 @@ inline void prvhash16( const uint8_t* Msg, const size_t MsgLen,
 	memset( Hash, 0, HashLen );
 
 	typedef uint16_t state_t;
+
 	state_t Seed = 48976;
 	state_t lcg = 0;
-	*(uint32_t*) Hash = 1290518352UL ^ SeedXOR;
-
-	if( HashLen >= 8 )
-	{
-		*(uint32_t*) ( Hash + 4 ) = 754388916UL;
-	}
-
-	Seed ^= (state_t) ( HashLen >> 1 );
+	*(uint32_t*) Hash = SeedXOR;
 
 	const state_t* const HashEnd = (state_t*) ( Hash + HashLen );
 	state_t* hc = (state_t*) Hash;
-	state_t fbm = 0;
+	state_t fbm = 0x0101;
 
 	if( MsgLen > 0 )
 	{
-		fbm -= ( ~Msg[ MsgLen - 1 ] >> 7 ) & 1;
-
-		const uint8_t fb = (uint8_t) fbm;
-		const uint8_t* const MsgEnd = Msg + MsgLen;
-
-		while( Msg < MsgEnd )
-		{
-			lcg ^= (state_t) ( *Msg |
-				(state_t) ( Msg + 1 < MsgEnd ? *( Msg + 1 ) : fb ) << 8 );
-
-			prvhash_core16( &Seed, &lcg, hc );
-
-			hc++;
-
-			if( hc == HashEnd )
-			{
-				hc = (state_t*) Hash;
-			}
-
-			Msg += sizeof( state_t );
-		}
+		fbm <<= ( Msg[ MsgLen - 1 ] >> 7 );
 	}
+
+	const uint8_t* const MsgEnd = Msg + MsgLen;
+
+	while( Msg <= MsgEnd )
+	{
+		state_t msgw;
+
+		if( Msg < MsgEnd )
+		{
+			msgw = *Msg;
+		}
+		else
+		{
+			msgw = (state_t) ( fbm & 0xFF );
+			fbm = 0;
+		}
+
+		if( Msg + 1 < MsgEnd )
+		{
+			msgw |= (state_t) *( Msg + 1 ) << 8;
+		}
+		else
+		{
+			msgw |= (state_t) ( fbm & 0xFF00 );
+			fbm = 0;
+		}
+
+		lcg ^= msgw;
+		prvhash_core16( &Seed, &lcg, hc );
+
+		hc++;
+
+		if( hc == HashEnd )
+		{
+			hc = (state_t*) Hash;
+		}
+
+		Msg += sizeof( state_t );
+	}
+
+	const size_t fc = HashLen + ( MsgLen < HashLen - sizeof( state_t ) ?
+		(uint8_t*) HashEnd - (uint8_t*) hc : 0 );
 
 	size_t k;
 
-	for( k = 0; k <= HashLen; k += sizeof( state_t ))
+	for( k = 0; k <= fc; k += sizeof( state_t ))
 	{
-		lcg ^= fbm;
 		prvhash_core16( &Seed, &lcg, hc );
 
 		hc++;
@@ -115,7 +130,6 @@ inline void prvhash16( const uint8_t* Msg, const size_t MsgLen,
 
 	for( k = 0; k < HashLen; k += sizeof( state_t ))
 	{
-		lcg ^= fbm;
 		*hc = prvhash_core16( &Seed, &lcg, hc );
 
 		hc++;

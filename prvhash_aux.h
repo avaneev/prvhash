@@ -1,17 +1,12 @@
 /**
- * @file prvhash_aux.h
- * @version 3.0
+ * prvhash_aux.h version 3.1
  *
- * @brief The inclusion file for the auxiliary functions used by PRVHASH
- * hashing functions.
- *
- * @mainpage
- *
- * @section intro_sec Introduction
+ * The inclusion file for the auxiliary functions used by PRVHASH hashing
+ * functions.
  *
  * Description is available at https://github.com/avaneev/prvhash
  *
- * @section license License
+ * License
  *
  * Copyright (c) 2020-2021 Aleksey Vaneev
  *
@@ -66,22 +61,6 @@ inline uint64_t prvhash_lu64ec( const uint8_t* const p )
 	return( v );
 }
 
-/**
- * An auxiliary function that returns an unsigned 32-bit value created out of
- * individual bytes in a buffer. This function is used to preserve endianness
- * of supplied 32-bit unsigned values.
- *
- * @param p 4-byte buffer. Alignment is unimportant.
- */
-
-inline uint32_t prvhash_lu32ec( const uint8_t* const p )
-{
-	uint32_t v;
-	memcpy( &v, p, 4 );
-
-	return( v );
-}
-
 #else // PRVHASH_LITTLE_ENDIAN
 
 #if defined( __GNUC__ ) || defined( __INTEL_COMPILER ) || defined( __clang__ )
@@ -94,14 +73,6 @@ inline uint64_t prvhash_lu64ec( const uint8_t* const p )
 	return( __builtin_bswap64( v ));
 }
 
-inline uint32_t prvhash_lu32ec( const uint8_t* const p )
-{
-	uint32_t v;
-	memcpy( &v, p, 4 );
-
-	return( __builtin_bswap32( v ));
-}
-
 #elif defined( _MSC_VER )
 
 inline uint64_t prvhash_lu64ec( const uint8_t* const p )
@@ -110,14 +81,6 @@ inline uint64_t prvhash_lu64ec( const uint8_t* const p )
 	memcpy( &v, p, 8 );
 
 	return( _byteswap_uint64( v ));
-}
-
-inline uint32_t prvhash_lu32ec( const uint8_t* const p )
-{
-	uint32_t v;
-	memcpy( &v, p, 4 );
-
-	return( _byteswap_ulong( v ));
 }
 
 #endif // defined( _MSC_VER )
@@ -155,89 +118,62 @@ inline void prvhash_ec64( uint8_t* const Hash, const size_t HashLen )
 #endif // PRVHASH_LITTLE_ENDIAN
 
 /**
- * Function loads 32-bit message word and pads it with the "final byte" if
- * reading occurs beyond message end.
+ * Function loads 64-bit message word and pads it with the "final byte". This
+ * function should only be called if there is less than 8 bytes left to read.
  *
- * @param Msg Message pointer, alignment is unimportant.
+ * @param Msg Message pointer, alignment is unimportant. Should be below or
+ * equal to MsgEnd.
  * @param MsgEnd Message's end pointer.
  * @param fb Final byte used for padding.
  */
 
-inline uint32_t prvhash_lpu32( const uint8_t* Msg,
-	const uint8_t* const MsgEnd, const uint8_t fb )
+inline uint64_t prvhash_lpu64_f( const uint8_t* Msg,
+	const uint8_t* const MsgEnd, const uint64_t fb )
 {
-	if( Msg < MsgEnd - 3 )
+	uint64_t r = fb << (( MsgEnd - Msg ) << 3 );
+
+	if( Msg < MsgEnd )
 	{
-		return( prvhash_lu32ec( Msg ));
+		r |= *Msg;
+		Msg++;
+
+		if( Msg < MsgEnd )
+		{
+			r |= (uint64_t) *Msg << 8;
+			Msg++;
+
+			if( Msg < MsgEnd )
+			{
+				r |= (uint64_t) *Msg << 16;
+				Msg++;
+
+				if( Msg < MsgEnd )
+				{
+					r |= (uint64_t) *Msg << 24;
+					Msg++;
+
+					if( Msg < MsgEnd )
+					{
+						r |= (uint64_t) *Msg << 32;
+						Msg++;
+
+						if( Msg < MsgEnd )
+						{
+							r |= (uint64_t) *Msg << 40;
+							Msg++;
+
+							if( Msg < MsgEnd )
+							{
+								r |= (uint64_t) *Msg << 48;
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
-	uint32_t r = ( Msg < MsgEnd ? *Msg : fb ) | (uint32_t) fb << 24;
-	Msg++;
-	r |= (uint32_t) ( Msg < MsgEnd ? *Msg : fb ) << 8;
-	Msg++;
-	r |= (uint32_t) ( Msg < MsgEnd ? *Msg : fb ) << 16;
-
 	return( r );
-}
-
-/**
- * Function loads 32-bit message word and pads it with the "final byte" if
- * reading occurs beyond message end. This variant of the function assumes
- * that Msg < MsgEnd.
- *
- * @param Msg Message pointer, alignment is unimportant.
- * @param MsgEnd Message's end pointer.
- * @param fb Final byte used for padding.
- */
-
-inline uint32_t prvhash_lpu32_1( const uint8_t* Msg,
-	const uint8_t* const MsgEnd, const uint8_t fb )
-{
-	if( Msg < MsgEnd - 3 )
-	{
-		return( prvhash_lu32ec( Msg ));
-	}
-
-	uint32_t r = *Msg | (uint32_t) fb << 24;
-	Msg++;
-	r |= (uint32_t) ( Msg < MsgEnd ? *Msg : fb ) << 8;
-	Msg++;
-	r |= (uint32_t) ( Msg < MsgEnd ? *Msg : fb ) << 16;
-
-	return( r );
-}
-
-/**
- * Function loads 64-bit message word and pads it with the "final byte" if
- * reading occurs beyond message end.
- *
- * @param Msg Message pointer, alignment is unimportant.
- * @param MsgEnd Message's end pointer.
- * @param fb Final byte used for padding.
- */
-
-inline uint64_t prvhash_lpu64( const uint8_t* Msg,
-	const uint8_t* const MsgEnd, const uint8_t fb )
-{
-	return( prvhash_lpu32( Msg, MsgEnd, fb ) |
-		(uint64_t) prvhash_lpu32( Msg + 4, MsgEnd, fb ) << 32 );
-}
-
-/**
- * Function loads 64-bit message word and pads it with the "final byte" if
- * reading occurs beyond message end. This variant of the function assumes
- * that Msg < MsgEnd.
- *
- * @param Msg Message pointer, alignment is unimportant.
- * @param MsgEnd Message's end pointer.
- * @param fb Final byte used for padding.
- */
-
-inline uint64_t prvhash_lpu64_1( const uint8_t* Msg,
-	const uint8_t* const MsgEnd, const uint8_t fb )
-{
-	return( prvhash_lpu32_1( Msg, MsgEnd, fb ) |
-		(uint64_t) prvhash_lpu32( Msg + 4, MsgEnd, fb ) << 32 );
 }
 
 #endif // PRVHASH_AUX_INCLUDED

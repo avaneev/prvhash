@@ -56,7 +56,7 @@ Please see the `prvhash64.h` file for the details of the implementation (the
 `64` refers to core hash function's variable size.
 
 The default `prvhash64.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `27dedc65682b2493`.
+the bag` is `2491d20332a653d2`.
 
 A proposed short name for hashes created with `prvhash64.h` is `PRH64-N`,
 where `N` is the hash length in bits (e.g. `PRH64-256`).
@@ -121,7 +121,39 @@ fixed, number of random bytes, depending on mouse event time or position
 deltas: this is efficient and allows one to disseminate sparse entropy
 represented by mouse events over full system size. Note that after
 disseminating entropy, the PRNG should be first run in idle cycles to produce
-system size bits of output to catch up on changes.
+`( PRVRNG_HASH_COUNT + 1 ) * 8` bytes of output to catch up on changes.
+
+## Minimal PRNG for Everyday Use ##
+
+The core hash function can be easily integrated into your applications, to be
+used as an effective PRNG. The period of this minimal PRNG is at least
+`2^160`. The initial parameters can be varied at will, and won't "break" the
+PRNG. Setting only the `Seed` or `lcg` value guarantees a random start point
+within the whole PRNG period. Here is the code:
+
+```
+#include "prvhash_core.h"
+#include <stdio.h>
+
+int main()
+{
+	const uint64_t rc = 1ULL << 27;
+
+	uint64_t Seed = 0;
+	uint64_t lcg = 0;
+	uint64_t Hash = 0;
+
+	uint64_t v = 0;
+	uint64_t i;
+
+	for( i = 0; i < rc; i++ )
+	{
+		v = prvhash_core64( &Seed, &lcg, &Hash );
+	}
+
+	printf( "%llu\n", v );
+}
+```
 
 ## Streamed Hashing ##
 
@@ -132,15 +164,15 @@ offers an extremely increased security and hashing speed. The amount of
 entropy mixing going on in this implementation is substantial.
 
 The default `prvhash64s.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `d7a29f4613ff0dca`.
+the bag` is `50aa60b20053b091`.
 
 The default `prvhash64s.h`-based 256-bit hash of the string
 `Only a toilet bowl does not leak` is
-`ceb828d3613e7d4f90c3348b646f8d17b782aa394bd81cee68535b1aa0f7c766`.
+`6b6c2e16044d802a7c93e1f68d23ba3404dba0533dfae3741649b56d9ae5b924`.
 
 The default prvhash64s 256-bit hash of the string
-`Only a toilet bowl does not leal` is
-`92b0b183428d712ba745c4630ba8a68040d283328e39a2727dfc3601f9d3f35b`.
+`Only a toilet bowl does not leaj` is
+`2828f7ce37155930d92a9edb937ae3a292cee1f08d7e57cdf71b1b0d0e5be76f`.
 
 This demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect).
 On a set of 216553 English words, pair-wise hash comparisons give average
@@ -185,17 +217,27 @@ a new `lcg` or a new `Seed` value also produces no input-to-output collisions.
 Thus it can be said that the system does not lose any input entropy. In
 3-dimensional analysis, when `Seed`, `lcg` and `msgw` values are scanned,
 and transformed into output `Seed` and `Hash` value pairs, this system
-exhibits state collision statistics: on fully random `msgw` input it is
-adequate for 16-bit, and excellent for 64-bit variables (5.47^-18 percent
-chance, which far exceeds collision resistance requirements for 64-bit range
-of bits). If the initial state of the system has little or zero entropy (less
-than 64 bits of entropy), on very sparse `msgw` input (in the order of 1 bit
-per 80), this system may exhibit local correlations between adjacent bits (in
-this case the system may treat some combinations of sparse bits as
-equivalent). To further decrease state change collisions between `lcg` and
+exhibits state change-related collision statistics: on a fully random `msgw`
+input it is adequate for 16-bit, and excellent for 64-bit variables (5.47^-18
+percent chance, which far exceeds collision resistance requirements for 64-bit
+range of bits). To further decrease state change collisions between `lcg` and
 `Seed` with entropy input, the byte-reversal should be implemented as
 bit-reversal: in this case the system reaches its optimal state, but this is
-unimplementable in an efficient manner on modern processors.
+unimplementable in an efficient manner on modern processors. If the initial
+state of the system has little or zero entropy (less than state variable size
+bits of entropy), on very sparse `msgw` input (in the order of 1 bit per 80),
+this system may initially exhibit local correlations between adjacent bits, so
+in such case this system requires preliminary "conditioning" rounds (2 for
+16-bit, and 5 for 64-bit state variables).
+
+Another important aspect of this system, especially from the cryptography
+standpoint, is entropy input to output latency. The base latency is equal to 1
+for state-to-state transition, and 1 in hash-to-hash direction. This means
+that PRVHASH additionally requires 1 full pass through the hash array for the
+entropy to propagate. However, a non-parallel hashing variant also requires a
+pass to the end of the hash array if message's length is shorter than output
+hash, to "mix in" the initial hash value. Parallel arrangements do not require
+such pass since hashes are additionally mixed by parallel elements.
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
@@ -230,16 +272,16 @@ irrelevant.
 In essence, the hash function generates a continuous pseudo-random number
 sequence, and returns the final part of the sequence as a result. The message
 acts as a "pathway" to this final part. So, the random sequence of numbers can
-be "programmed" to produce a neccessary outcome. However, as this PRNG does
+be "programmed" to produce a necessary outcome. However, as this PRNG does
 not expose its momentary internal state, such "programming" is hardly possible
 to perform for an attacker, even if the entropy input channel is exposed:
 consider an `A*(B^C)` equation; an adversary can control `C`, but does not
 know the values of `A` and `B`, thus this adversary cannot predict the
 outcome.
 
-P.S. The reason the InitVec in the `prvhash64` hash function have both value
+P.S. The reason the InitVec in the `prvhash64` hash function has the value
 constraints, and an initial state, is that otherwise the function would
-require at least 4 "conditioning" preliminary rounds (core function calls), to
+require at least 5 "conditioning" preliminary rounds (core function calls), to
 neutralize any oddities (including zero values) in InitVec; that would reduce
 the performance of the hash function dramatically for table hash use. Note
 that the `prvhash64s` function starts from the "full zero" state and then

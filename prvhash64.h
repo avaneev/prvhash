@@ -1,5 +1,5 @@
 /**
- * prvhash64.h version 3.0
+ * prvhash64.h version 3.1
  *
  * The inclusion file for the "prvhash64" and "prvhash64_64m" hash functions.
  *
@@ -69,6 +69,7 @@ inline void prvhash64( const uint8_t* Msg, const size_t MsgLen,
 	const uint8_t InitVec[ 16 ])
 {
 	typedef uint64_t state_t;
+
 	state_t Seed;
 	state_t lcg;
 
@@ -78,7 +79,7 @@ inline void prvhash64( const uint8_t* Msg, const size_t MsgLen,
 
 		Seed = 12905183526369792234ULL;
 		lcg = 0;
-		*(state_t*) Hash = 9520040409389298231ULL ^ SeedXOR;
+		*(state_t*) Hash = SeedXOR;
 	}
 	else
 	{
@@ -88,21 +89,36 @@ inline void prvhash64( const uint8_t* Msg, const size_t MsgLen,
 		lcg = prvhash_lu64ec( InitVec + 8 );
 	}
 
-	Seed ^= HashLen >> 3;
-
 	const uint8_t* const MsgEnd = Msg + MsgLen;
 	const state_t* const HashEnd = (state_t*) ( Hash + HashLen );
 	state_t* hc = (state_t*) Hash;
-	state_t fbm = 0;
+
+	state_t fb = 1;
 
 	if( MsgLen > 0 )
 	{
-		fbm -= ( ~Msg[ MsgLen - 1 ] >> 7 ) & 1;
+		fb <<= ( Msg[ MsgLen - 1 ] >> 7 );
 	}
 
-	while( Msg < MsgEnd - 7 )
+	while( 1 )
 	{
-		lcg ^= prvhash_lu64ec( Msg );
+		state_t msgw;
+
+		if( Msg < MsgEnd - 7 )
+		{
+			msgw = prvhash_lu64ec( Msg );
+		}
+		else
+		{
+			if( Msg > MsgEnd )
+			{
+				break;
+			}
+
+			msgw = prvhash_lpu64_f( Msg, MsgEnd, fb );
+		}
+
+		lcg ^= msgw;
 		prvhash_core64( &Seed, &lcg, hc );
 
 		hc++;
@@ -115,24 +131,13 @@ inline void prvhash64( const uint8_t* Msg, const size_t MsgLen,
 		Msg += sizeof( state_t );
 	}
 
-	if( Msg < MsgEnd )
-	{
-		lcg ^= prvhash_lpu64_1( Msg, MsgEnd, (uint8_t) fbm );
-		prvhash_core64( &Seed, &lcg, hc );
-
-		hc++;
-
-		if( hc == HashEnd )
-		{
-			hc = (state_t*) Hash;
-		}
-	}
+	const size_t fc = HashLen + ( MsgLen < HashLen - sizeof( state_t ) ?
+		(uint8_t*) HashEnd - (uint8_t*) hc : 0 );
 
 	size_t k;
 
-	for( k = 0; k <= HashLen; k += sizeof( state_t ))
+	for( k = 0; k <= fc; k += sizeof( state_t ))
 	{
-		lcg ^= fbm;
 		prvhash_core64( &Seed, &lcg, hc );
 
 		hc++;
@@ -145,7 +150,6 @@ inline void prvhash64( const uint8_t* Msg, const size_t MsgLen,
 
 	for( k = 0; k < HashLen; k += sizeof( state_t ))
 	{
-		lcg ^= fbm;
 		*hc = prvhash_core64( &Seed, &lcg, hc );
 
 		hc++;
@@ -162,7 +166,8 @@ inline void prvhash64( const uint8_t* Msg, const size_t MsgLen,
 /**
  * PRVHASH hash function. Produces and returns 64-bit hash of the specified
  * message. This is a "minimal" implementation. Designed for 64-bit table hash
- * use. Equivalent to "prvhash64" function with HashLen == 8.
+ * use. Equivalent to "prvhash64" function with HashLen == 8, but returns an
+ * immediate result (endianness-correction is not required).
  *
  * @param Msg The message to produce hash from. The alignment of the message
  * is unimportant.
@@ -176,23 +181,39 @@ inline uint64_t prvhash64_64m( const uint8_t* Msg, const size_t MsgLen,
 	const uint64_t SeedXOR )
 {
 	typedef uint64_t state_t;
-	state_t Seed = 12905183526369792234ULL ^ ( 8 >> 3 );
-	state_t lcg = 0;
-	state_t HashVal = 9520040409389298231ULL ^ SeedXOR;
 
-	state_t fbm = 0;
+	state_t Seed = 12905183526369792234ULL;
+	state_t lcg = 0;
+	state_t HashVal = SeedXOR;
+
+	state_t fb = 1;
 
 	if( MsgLen > 0 )
 	{
-		fbm -= ( ~Msg[ MsgLen - 1 ] >> 7 ) & 1;
+		fb <<= ( Msg[ MsgLen - 1 ] >> 7 );
 	}
 
-	const uint8_t fb = (uint8_t) fbm;
 	const uint8_t* const MsgEnd = Msg + MsgLen;
 
-	while( Msg < MsgEnd )
+	while( 1 )
 	{
-		lcg ^= prvhash_lpu64_1( Msg, MsgEnd, fb );
+		state_t msgw;
+
+		if( Msg < MsgEnd - 7 )
+		{
+			msgw = prvhash_lu64ec( Msg );
+		}
+		else
+		{
+			if( Msg > MsgEnd )
+			{
+				break;
+			}
+
+			msgw = prvhash_lpu64_f( Msg, MsgEnd, fb );
+		}
+
+		lcg ^= msgw;
 		prvhash_core64( &Seed, &lcg, &HashVal );
 		Msg += sizeof( state_t );
 	}
@@ -202,7 +223,6 @@ inline uint64_t prvhash64_64m( const uint8_t* Msg, const size_t MsgLen,
 
 	for( i = 0; i < 3; i++ )
 	{
-		lcg ^= fbm;
 		h = prvhash_core64( &Seed, &lcg, &HashVal );
 	}
 
