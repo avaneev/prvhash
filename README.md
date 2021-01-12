@@ -234,13 +234,13 @@ in such case this system requires preliminary "conditioning" rounds (2 for
 Another important aspect of this system, especially from the cryptography
 standpoint, is entropy input to output latency. The base latency for
 non-parallel state-to-state transition is equal to 1, and 2 for parallel;
-plus 1 in hash-to-hash direction: this means that PRVHASH additionally
-requires 1 full pass through the hash array for the entropy to propagate.
-However, hashing also requires a pass to the end of the hash array if
-message's length is shorter than the output hash, to "mix in" the initial hash
-value. When there is only 1 hash word in use, this hash word is mixed back
-without delay, and thus there is no added hash-to-hash direction latency:
-the entropy input is only subject to base latency.
+and at the same time, 1 in hash-to-hash direction: this means that PRVHASH
+additionally requires 1 full pass through the hash array for the entropy to
+propagate. However, hashing also requires a pass to the end of the hash array
+if message's length is shorter than the output hash, to "mix in" the initial
+hash value. When there is only 1 hash word in use, this hash word is mixed
+back without delay, and thus there is no added hash-to-hash direction latency:
+the entropy propagation is only subject to base latency.
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
