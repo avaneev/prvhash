@@ -56,7 +56,7 @@ Please see the `prvhash64.h` file for the details of the implementation (the
 `64` refers to core hash function's variable size.
 
 The default `prvhash64.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `2491d20332a653d2`.
+the bag` is `4c4187f40932be09`.
 
 A proposed short name for hashes created with `prvhash64.h` is `PRH64-N`,
 where `N` is the hash length in bits (e.g. `PRH64-256`).
@@ -165,7 +165,7 @@ offers an extremely increased security and hashing speed. The amount of
 entropy mixing going on in this implementation is substantial.
 
 The default `prvhash64s.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `59907994d1621461`.
+the bag` is `50aa60b20053b091`.
 
 The default `prvhash64s.h`-based 256-bit hash of the string
 `Only a toilet bowl does not leak` is
@@ -183,8 +183,8 @@ avalanche criterion.
 This streamed hash function produces hash values that are different to the
 `prvhash64` hash function. It is incorrect to use both of these hash function
 implementations on the same data set. While the `prvhash64` can be used as
-a fast table hash, it is not so fast on large data blocks. The `prvhash64s`
-can be used to create hashes of large data blocks like files.
+a fast hash for tables, it is not so fast on large data blocks. The
+`prvhash64s` can be used to create hashes of large data blocks like files.
 
 A proposed short name for hashes created with `prvhash64s.h` is `PRH64S-N`,
 where `N` is the hash length in bits (e.g. `PRH64S-256`).
@@ -232,12 +232,15 @@ in such case this system requires preliminary "conditioning" rounds (2 for
 16-bit, and 5 for 64-bit state variables).
 
 Another important aspect of this system, especially from the cryptography
-standpoint, is entropy input to output latency. The latency for non-parallel
-state-to-state transition is equal to 1, and 2 for parallel; plus 1 in
-hash-to-hash direction: this means that PRVHASH additionally requires 1 full
-pass through the hash array for the entropy to propagate. However, hashing
-also requires a pass to the end of the hash array if message's length is
-shorter than the output hash, to "mix in" the initial hash value.
+standpoint, is entropy input to output latency. The base latency for
+non-parallel state-to-state transition is equal to 1, and 2 for parallel;
+plus 1 in hash-to-hash direction: this means that PRVHASH additionally
+requires 1 full pass through the hash array for the entropy to propagate.
+However, hashing also requires a pass to the end of the hash array if
+message's length is shorter than the output hash, to "mix in" the initial hash
+value. When there is only 1 hash word in use, this hash word is mixed back
+without delay, and thus there is no added hash-to-hash direction latency:
+the entropy input is only subject to base latency.
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
