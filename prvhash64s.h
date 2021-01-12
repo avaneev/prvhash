@@ -51,6 +51,8 @@ typedef struct {
 	uint8_t* Hash; ///< Pointer to the hash buffer.
 	size_t HashLen; ///< Hash buffer length, in bytes, >= 8, increments of 8.
 	size_t HashPos; ///< Hash buffer position.
+	size_t InitBytePos; ///< Initial input byte position, does not accumulate.
+	uint8_t IsHashFilled; ///< Flag denoting that the whole hash was filled.
 	uint8_t fb; ///< Final stream bit value, for hashing finalization.
 } PRVHASH64S_CTX;
 
@@ -121,6 +123,8 @@ inline void prvhash64s_init( PRVHASH64S_CTX* ctx, uint8_t* const Hash,
 	ctx -> Hash = Hash;
 	ctx -> HashLen = HashLen;
 	ctx -> HashPos = 0;
+	ctx -> InitBytePos = 0;
+	ctx -> IsHashFilled = 0;
 	ctx -> fb = 1;
 
 	for( i = 0; i < 5; i++ )
@@ -163,6 +167,16 @@ inline void prvhash64s_update( PRVHASH64S_CTX* ctx, const uint8_t* Msg,
 	}
 
 	ctx -> fb = (uint8_t) ( 1 << ( Msg[ MsgLen - 1 ] >> 7 ));
+
+	if( ctx -> IsHashFilled == 0 )
+	{
+		ctx -> InitBytePos += MsgLen;
+
+		if( ctx -> InitBytePos >= ctx -> HashLen * PRVHASH64S_PAR )
+		{
+			ctx -> IsHashFilled = 1;
+		}
+	}
 
 	const uint64_t* const HashEnd =
 		(uint64_t*) ( ctx -> Hash + ctx -> HashLen );
@@ -263,22 +277,32 @@ inline void prvhash64s_final( PRVHASH64S_CTX* ctx )
 
 	prvhash64s_update( ctx, fbytes, PRVHASH64S_LEN - ctx -> BlockFill );
 
-	const uint64_t fbm = prvhash_lu64ec( fbytes );
 	const uint64_t* const HashEnd =
 		(uint64_t*) ( ctx -> Hash + ctx -> HashLen );
 
 	uint64_t* hc = (uint64_t*) ( ctx -> Hash + ctx -> HashPos );
+
+	uint64_t Seed1 = ctx -> Seed[ 0 ];
+	uint64_t Seed2 = ctx -> Seed[ 1 ];
+	uint64_t Seed3 = ctx -> Seed[ 2 ];
+	uint64_t Seed4 = ctx -> Seed[ 3 ];
+	uint64_t lcg1 = ctx -> lcg[ 0 ];
+	uint64_t lcg2 = ctx -> lcg[ 1 ];
+	uint64_t lcg3 = ctx -> lcg[ 2 ];
+	uint64_t lcg4 = ctx -> lcg[ 3 ];
+
+	const size_t fc = ctx -> HashLen + sizeof( uint64_t ) +
+		( ctx -> IsHashFilled == 0 ?
+		(uint8_t*) HashEnd - (uint8_t*) hc : 0 );
+
 	size_t k;
 
-	for( k = 0; k <= ctx -> HashLen + sizeof( uint64_t );
-		k += sizeof( uint64_t ))
+	for( k = 0; k <= fc; k += sizeof( uint64_t ))
 	{
-		int i;
-
-		for( i = 0; i < PRVHASH64S_PAR; i++ )
-		{
-			prvhash_core64( &ctx -> Seed[ i ], &ctx -> lcg[ i ], hc );
-		}
+		prvhash_core64( &Seed1, &lcg1, hc );
+		prvhash_core64( &Seed2, &lcg2, hc );
+		prvhash_core64( &Seed3, &lcg3, hc );
+		prvhash_core64( &Seed4, &lcg4, hc );
 
 		hc++;
 
@@ -290,10 +314,10 @@ inline void prvhash64s_final( PRVHASH64S_CTX* ctx )
 
 	for( k = 0; k < ctx -> HashLen; k += sizeof( uint64_t ))
 	{
-		prvhash_core64( &ctx -> Seed[ 0 ], &ctx -> lcg[ 0 ], hc );
-		prvhash_core64( &ctx -> Seed[ 1 ], &ctx -> lcg[ 1 ], hc );
-		prvhash_core64( &ctx -> Seed[ 2 ], &ctx -> lcg[ 2 ], hc );
-		*hc = prvhash_core64( &ctx -> Seed[ 3 ], &ctx -> lcg[ 3 ], hc );
+		prvhash_core64( &Seed1, &lcg1, hc );
+		prvhash_core64( &Seed2, &lcg2, hc );
+		prvhash_core64( &Seed3, &lcg3, hc );
+		*hc = prvhash_core64( &Seed4, &lcg4, hc );
 
 		hc++;
 

@@ -17,9 +17,9 @@ is the resulting hash length in bits.
 
 PRVHASH can generate 64- to unlimited-bit hashes, yielding hashes of roughly
 equal quality independent of the chosen hash length. PRVHASH is based on
-64-bit math. The use of the function beyond 512-bit hashes is easily possible,
-but has to be statistically tested. For example, any 32-bit element extracted
-from 1024-, 2048-, or 4096-bit resulting hash is as collision resistant as
+64-bit math. The use of the function beyond 1024-bit hashes is easily
+possible, but has to be statistically tested. For example, any 32-bit element
+extracted from 2048-, or 4096-bit resulting hash is as collision resistant as
 just a 32-bit hash. It is a fixed execution time hash function that depends
 only on message length. A streamed hashing implementation is available.
 
@@ -33,7 +33,7 @@ have a greater statistical distance from each other. In practice, the
 seeded (see the suggestions in `prvhash64.h`), adding useful initial entropy
 (`InitVec` plus `Hash` total bits of entropy).
 
-64-, 128-, 256- and 512-bit PRVHASH hashes pass all [SMHasher](https://github.com/rurban/smhasher)
+64-, 128-, 256-, 512- and 1024-bit PRVHASH hashes pass all [SMHasher](https://github.com/rurban/smhasher)
 tests. Other hash lengths were not thoroughly tested, but extrapolations can
 be made. PRVHASH possesses most of the cryptographic properties, but this
 aspect has yet to be better proven.
@@ -231,14 +231,12 @@ in such case this system requires preliminary "conditioning" rounds (2 for
 16-bit, and 5 for 64-bit state variables).
 
 Another important aspect of this system, especially from the cryptography
-standpoint, is entropy input to output latency. The base latency is equal to 1
-for state-to-state transition, and 1 in hash-to-hash direction. This means
-that PRVHASH additionally requires 1 full pass through the hash array for the
-entropy to propagate. However, a non-parallel hashing variant also requires a
-pass to the end of the hash array if message's length is shorter than output
-hash, to "mix in" the initial hash value. Parallel arrangements do not require
-such pass since hashes are additionally mixed by parallel elements, but they
-have the state-to-state latency equal to 2.
+standpoint, is entropy input to output latency. The latency for non-parallel
+state-to-state transition is equal to 1, and 2 for parallel; plus 1 in
+hash-to-hash direction: this means that PRVHASH additionally requires 1 full
+pass through the hash array for the entropy to propagate. However, hashing
+also requires a pass to the end of the hash array if message's length is
+shorter than the output hash, to "mix in" the initial hash value.
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
