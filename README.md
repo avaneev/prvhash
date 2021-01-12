@@ -72,7 +72,8 @@ file: simply call the `prvrng_test64p2()` function.
 
 `prvrng_gen64p2()`-based generator passes [`PractRand`](http://pracrand.sourceforge.net/)
 32 TB threshold with rare non-systematic "unusual" evaluations. Which suggests
-it's the working universal TRNG.
+it's the working universal TRNG and randomness extractor that can "recycle"
+entropy of any statistical quality, probably the first in the world.
 
 Note that due to the structure of the core hash function the probability of
 PRNG completely "stopping", or losing internal entropy, is absent.
@@ -419,6 +420,12 @@ passes all SMHasher tests like 64-bit PRVHASH functions, for any hash length.
 This function is very slow, and is provided for demonstration purposes only,
 to assure that the core hash function works in principle, independent of state
 variable size.
+
+## PRVHASH64_64M ##
+
+This is a minimized implementation of the `prvhash64` hash function. Since
+arguably it's the smallest hash function that produces 64-bit hashes of this
+quality level, in the world, it is very useful for hash tables.
 
 ## Other ##
 

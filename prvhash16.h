@@ -1,7 +1,8 @@
 /**
  * prvhash16.h version 3.1
  *
- * The inclusion file for the "prvhash16" hash function.
+ * The inclusion file for the "prvhash16" hash function. For demonstration
+ * purposes, not practically useful.
  *
  * Description is available at https://github.com/avaneev/prvhash
  *
@@ -42,7 +43,7 @@
  * @param Msg The message to produce hash from. The alignment of the message
  * is unimportant.
  * @param MsgLen Message's length, in bytes.
- * @param[in,out] Hash The resulting hash. The length of this buffer should be
+ * @param[out] Hash The resulting hash. The length of this buffer should be
  * equal to HashLen. On systems where this is relevant, this address should be
  * aligned to 16 bits.
  * @param HashLen The required hash length, in bytes, should be >= 4, in
