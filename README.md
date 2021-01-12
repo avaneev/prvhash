@@ -394,12 +394,17 @@ When the system state is not known, when PRVHASH acts as a black-box, one has
 to consider core hash function's statistical properties. All internal
 variables - `Seed`, `lcg`, and `Hash` - are random: they are uncorrelated to
 each other at all times, and are also wholly-unequal during the PRNG period
-(they are not just time-delayed versions of each other). When the message
-enters the system as `lcg ^= msgw`, it works like mixing a message with an
-one-time-pad used in symmetric cryptography. This operation completely hides
-the message in `lcg`'s entropy. Beside that the output of PRVHASH uses mix of
-two variables: statistically, this means the mixing of two unrelated random
-variables, with such summary output never appearing in system's state.
+(they are not just time-delayed versions of each other). Moreover, as can be
+assured with PractRand, the whole `Seed`, and halves of `Hash` and `lcg`
+separately (as they have logarithmic-like distribution), can be used as
+independent random number generators.
+
+When the message enters the system as `lcg ^= msgw`, it works like mixing a
+message with an one-time-pad used in symmetric cryptography. This operation
+completely hides the message in `lcg`'s entropy. Beside that the output of
+PRVHASH uses mix of two variables: statistically, this means the mixing of two
+unrelated random variables, with such summary output never appearing in
+system's state.
 
 To sum up, the author is unable to find cryptographical security flaws in
 PRVHASH. The author will be happy to offer a negotiable grant to any
