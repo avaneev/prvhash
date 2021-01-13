@@ -280,7 +280,10 @@ not expose its momentary internal state, such "programming" is hardly possible
 to perform for an attacker, even if the entropy input channel is exposed:
 consider an `A*(B^C)` equation; an adversary can control `C`, but does not
 know the values of `A` and `B`, thus this adversary cannot predict the
-outcome.
+outcome. Beside that as the core hash function naturally eliminates the bias
+from the external entropy of any statistical quality and frequency, its
+control is fruitless. Since the function's output is "compressed", it gives no
+hint on the internal state of the system.
 
 P.S. The reason the InitVec in the `prvhash64` hash function has the value
 constraints, and an initial state, is that otherwise the function would
@@ -413,7 +416,10 @@ system's state.
 To sum up, the author is unable to find cryptographical security flaws in
 PRVHASH. The author will be happy to offer a negotiable grant to any
 cryptanalyst willing to "break" PRVHASH, or publish its cryptanalysis. You can
-contact the author via aleksey.vaneev@gmail.com
+contact the author via aleksey.vaneev@gmail.com . Note that it is possible to
+perform "hard" computational experiments by using smaller state variable
+sizes. This is what the author did extensively. However, a cryptanalysis also
+requires mathematical analysis: it is there where any flaws can be found.
 
 ## PRVHASH16 ##
 
