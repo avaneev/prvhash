@@ -129,8 +129,8 @@ disseminating entropy, the PRNG should be first run in idle cycles to produce
 The core hash function can be easily integrated into your applications, to be
 used as an effective PRNG. The period of this minimal PRNG is at least
 `2^187`. The initial parameters can be varied at will, and won't "break" the
-PRNG. Setting only the `Seed` or `lcg` value guarantees a random start point
-within the whole PRNG period, with at least `2^64` spacing. Here is the code:
+PRNG. Setting only the `Seed` value guarantees a random start point within the
+whole PRNG period, with at least `2^64` spacing. Here is the code:
 
 ```
 #include "prvhash_core.h"
@@ -138,8 +138,6 @@ within the whole PRNG period, with at least `2^64` spacing. Here is the code:
 
 int main()
 {
-	const uint64_t rc = 1ULL << 27;
-
 	uint64_t Seed = 0;
 	uint64_t lcg = 0;
 	uint64_t Hash = 0;
@@ -147,7 +145,7 @@ int main()
 	uint64_t v = 0;
 	uint64_t i;
 
-	for( i = 0; i < rc; i++ )
+	for( i = 0; i < ( 1ULL << 27 ); i++ )
 	{
 		v = prvhash_core64( &Seed, &lcg, &Hash );
 	}
