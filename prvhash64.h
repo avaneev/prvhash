@@ -102,11 +102,9 @@ inline void prvhash64( const uint8_t* Msg, const size_t MsgLen,
 
 	while( 1 )
 	{
-		state_t msgw;
-
 		if( Msg < MsgEnd - 7 )
 		{
-			msgw = prvhash_lu64ec( Msg );
+			lcg ^= prvhash_lu64ec( Msg );
 		}
 		else
 		{
@@ -115,10 +113,9 @@ inline void prvhash64( const uint8_t* Msg, const size_t MsgLen,
 				break;
 			}
 
-			msgw = prvhash_lpu64_f( Msg, MsgEnd, fb );
+			lcg ^= prvhash_lpu64_f( Msg, MsgEnd, fb );
 		}
 
-		lcg ^= msgw;
 		prvhash_core64( &Seed, &lcg, hc );
 
 		hc++;
@@ -198,11 +195,9 @@ inline uint64_t prvhash64_64m( const uint8_t* Msg, const size_t MsgLen,
 
 	while( 1 )
 	{
-		state_t msgw;
-
 		if( Msg < MsgEnd - 7 )
 		{
-			msgw = prvhash_lu64ec( Msg );
+			lcg ^= prvhash_lu64ec( Msg );
 		}
 		else
 		{
@@ -213,11 +208,11 @@ inline uint64_t prvhash64_64m( const uint8_t* Msg, const size_t MsgLen,
 				return( prvhash_core64( &Seed, &lcg, &HashVal ));
 			}
 
-			msgw = prvhash_lpu64_f( Msg, MsgEnd, fb );
+			lcg ^= prvhash_lpu64_f( Msg, MsgEnd, fb );
 		}
 
-		lcg ^= msgw;
 		prvhash_core64( &Seed, &lcg, &HashVal );
+
 		Msg += sizeof( state_t );
 	}
 }
