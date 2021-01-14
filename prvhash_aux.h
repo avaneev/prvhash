@@ -63,7 +63,7 @@ inline uint64_t prvhash_lu64ec( const uint8_t* const p )
 
 #else // PRVHASH_LITTLE_ENDIAN
 
-#if defined( __GNUC__ ) || defined( __INTEL_COMPILER ) || defined( __clang__ )
+#if defined( __GNUC__ ) || defined( __clang__ )
 
 inline uint64_t prvhash_lu64ec( const uint8_t* const p )
 {
@@ -73,7 +73,7 @@ inline uint64_t prvhash_lu64ec( const uint8_t* const p )
 	return( __builtin_bswap64( v ));
 }
 
-#elif defined( _MSC_VER )
+#elif defined( _MSC_VER ) || defined( __INTEL_COMPILER )
 
 inline uint64_t prvhash_lu64ec( const uint8_t* const p )
 {

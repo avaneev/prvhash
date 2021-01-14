@@ -35,7 +35,7 @@
 
 #include <stdint.h>
 
-#if defined( __GNUC__ ) || defined( __INTEL_COMPILER ) || defined( __clang__ )
+#if defined( __GNUC__ ) || defined( __clang__ )
 
 /**
  * An auxiliary function that returns a byte-swapped version of the input
@@ -61,7 +61,7 @@ inline uint64_t prvhash_swu64( const uint64_t v )
 	return( __builtin_bswap64( v ));
 }
 
-#elif defined( _MSC_VER )
+#elif defined( _MSC_VER ) || defined( __INTEL_COMPILER )
 
 inline uint32_t prvhash_swu32( const uint32_t v )
 {
@@ -74,8 +74,6 @@ inline uint64_t prvhash_swu64( const uint64_t v )
 }
 
 #else // defined( _MSC_VER )
-
-	#error PRVHASH: Byte-swapping intrinsics required in compiler.
 
 #endif // defined( _MSC_VER )
 
