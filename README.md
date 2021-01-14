@@ -86,15 +86,15 @@ system which can be reached if there is only a small number of hash words in
 the system. PRNG will continously produce non-repeating random sequences given
 external entropy injections, but their statistical quality on a larger frames
 will be limited by the size of `lcg` and `Seed` variables, the number of hash
-words in the system, and the quality of the external entropy. A way to
-increase the structural limit is to use a parallel PRNG structure demonstrated
-in the `prvhash64s.h` file, which additionally increases the security
-exponentially. Also any non-constant entropy input usually increases the
-period of randomness, which, when extrapolated to hashing, means that the
-period's exponent increases by message's entropy in bits, approximately.
-The maximal PRNG period's `2^N` exponent is hard to approximate exactly,
-but in most tests it was equal to at least system's size in bits, minus the
-number of hash words in the system.
+words in the system, and the combinatorial capacity of the external entropy.
+A way to increase the structural limit is to use a parallel PRNG structure
+demonstrated in the `prvhash64s.h` file, which additionally increases the
+security exponentially. Also any non-constant entropy input usually increases
+the period of randomness, which, when extrapolated to hashing, means that the
+period increases by message's combinatorial capacity (or the number of various
+combinations of its bits). The maximal PRNG period's `2^N` exponent is hard to
+approximate exactly, but in most tests it was equal to at least system's size
+in bits, minus the number of hash words in the system.
 
 Moreover, the PRVHASH systems can be freely daisy-chained by feeding their
 outputs to `lcg` inputs, adding guaranteed security firewalls, and increasing
