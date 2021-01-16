@@ -426,7 +426,9 @@ variables are 16-bit, they are enough to perform hashing: this hash function
 passes all SMHasher tests like 64-bit PRVHASH functions, for any hash length.
 This function is very slow, and is provided for demonstration purposes only,
 to assure that the core hash function works in principle, independent of state
-variable size.
+variable size. This hash function variant also demonstrates that PRVHASH's
+method does not rely on bit mixing alone, but is genuinely based on PRNG
+position "jumps".
 
 ## PRVHASH64_64M ##
 
