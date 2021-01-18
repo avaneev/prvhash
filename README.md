@@ -291,6 +291,20 @@ the performance of the hash function dramatically for table hash use. Note
 that the `prvhash64s` function starts from the "full zero" state and then
 performs acceptably.
 
+## An Ideal Core Hash Function ##
+
+The author found a variant of the core hash function that can be considered
+"ideal" from PRNG/hashing point of view, as it features a minimal entropy
+propagation latency. However, it turned out to be 20-30% slower, due to weaker
+instruction parallelism.
+
+	Seed ^= Hash ^ lcg;
+	Seed *= lcg - ~lcg;
+	lcg += ~Seed;
+	rs = Seed >> 32 | Seed << 32;
+	Hash ^= rs;
+	out = lcg ^ rs;
+
 ## Method's Philosophy ##
 
 Any external entropy (message) that enters this PRNG system acts as a
@@ -426,9 +440,9 @@ variables are 16-bit, they are enough to perform hashing: this hash function
 passes all SMHasher tests like 64-bit PRVHASH functions, for any hash length.
 This function is very slow, and is provided for demonstration purposes only,
 to assure that the core hash function works in principle, independent of state
-variable size. This hash function variant also demonstrates that PRVHASH's
-method does not rely on bit mixing alone, but is genuinely based on PRNG
-position "jumps".
+variable size. This hash function variant demonstrates that PRVHASH's method
+does not rely on bit mixing/shuffling alone (shuffles are purely local), but
+is genuinely based on PRNG position "jumps".
 
 ## PRVHASH64_64M ##
 
