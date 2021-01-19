@@ -167,11 +167,11 @@ the bag` is `f6aac79fcb700c4c`.
 
 The default `prvhash64s.h`-based 256-bit hash of the string
 `Only a toilet bowl does not leak` is
-`3ddf580ff8ec3dc7b0e0aaecd8517376ca181078b26936cb3baf4dff4c5ba38e`.
+`3ddf580ff8ec3dc72dc0cf92e0a8db2eca181078b26936cb3baf4dff4c5ba38e`.
 
 The default prvhash64s 256-bit hash of the string
 `Only a toilet bowl does not leaj` is
-`8211fc846854bc1303cfed87c7fce9f239876c9ef79fe1e6d69b4d87fa28d9b7`.
+`8211fc846854bc13885fc0f9d6977e5039876c9ef79fe1e6d69b4d87fa28d9b7`.
 
 This demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect).
 On a set of 216553 English words, pair-wise hash comparisons give average
