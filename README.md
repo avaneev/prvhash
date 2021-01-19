@@ -414,8 +414,8 @@ to consider core hash function's statistical properties. All internal
 variables - `Seed`, `lcg`, and `Hash` - are random: they are uncorrelated to
 each other at all times, and are also wholly-unequal during the PRNG period
 (they are not just time-delayed versions of each other). Moreover, as can be
-assured with PractRand, the whole `Seed`, and halves of `Hash` and `lcg`
-separately (as they have logarithmic-like distribution), can be used as
+assured with PractRand, the whole `Seed` and `lcg`, and halves of `Hash`
+separately (as it has a logarithmic-like distribution), can be used as
 independent random number generators.
 
 When the message enters the system as `lcg ^= msgw`, it works like mixing a
