@@ -1,5 +1,5 @@
 /**
- * prvhash16.h version 3.1
+ * prvhash16.h version 3.2
  *
  * The inclusion file for the "prvhash16" hash function. For demonstration
  * purposes, not practically useful.
@@ -91,7 +91,7 @@ inline void prvhash16( const uint8_t* Msg, const size_t MsgLen,
 
 		if( Msg + 1 < MsgEnd )
 		{
-			msgw |= (state_t) *( Msg + 1 ) << 8;
+			msgw |= (state_t) ( (state_t) *( Msg + 1 ) << 8 );
 		}
 		else
 		{
@@ -117,7 +117,7 @@ inline void prvhash16( const uint8_t* Msg, const size_t MsgLen,
 
 	size_t k;
 
-	for( k = 0; k <= fc; k += sizeof( state_t ))
+	for( k = 0; k < fc; k += sizeof( state_t ))
 	{
 		prvhash_core16( &Seed, &lcg, hc );
 

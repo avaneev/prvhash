@@ -56,7 +56,7 @@ Please see the `prvhash64.h` file for the details of the implementation (the
 `64` refers to core hash function's variable size.
 
 The default `prvhash64.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `4c4187f40932be09`.
+the bag` is `d4d921d015a2f537`.
 
 A proposed short name for hashes created with `prvhash64.h` is `PRH64-N`,
 where `N` is the hash length in bits (e.g. `PRH64-256`).
@@ -122,7 +122,7 @@ fixed, number of random bytes, depending on mouse event time or position
 deltas: this is efficient and allows one to disseminate sparse entropy
 represented by mouse events over full system size. Note that after
 disseminating entropy, the PRNG should be first run in idle cycles to produce
-`( PRVRNG_HASH_COUNT + 2 ) * 8` bytes of output to catch up on changes.
+`( PRVRNG_HASH_COUNT + 1 ) * 8` bytes of output to catch up on changes.
 
 ## Minimal PRNG for Everyday Use ##
 
@@ -163,15 +163,15 @@ offers an extremely increased security and hashing speed. The amount of
 entropy mixing going on in this implementation is substantial.
 
 The default `prvhash64s.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `50aa60b20053b091`.
+the bag` is `f6aac79fcb700c4c`.
 
 The default `prvhash64s.h`-based 256-bit hash of the string
 `Only a toilet bowl does not leak` is
-`788877e88c14d8c67c93e1f68d23ba3404dba0533dfae3741649b56d9ae5b924`.
+`3ddf580ff8ec3dc7b0e0aaecd8517376ca181078b26936cb3baf4dff4c5ba38e`.
 
 The default prvhash64s 256-bit hash of the string
 `Only a toilet bowl does not leaj` is
-`93fcd3aa301a6044d92a9edb937ae3a292cee1f08d7e57cdf71b1b0d0e5be76f`.
+`8211fc846854bc1303cfed87c7fce9f239876c9ef79fe1e6d69b4d87fa28d9b7`.
 
 This demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect).
 On a set of 216553 English words, pair-wise hash comparisons give average
@@ -196,7 +196,7 @@ It was especially hard to find a better "hashing finalization" solution.
 	lcg ^= msgw; // Mix in external entropy.
 	const uint64_t plcg = lcg; // Save `lcg` for feedback.
 	const uint64_t mx = Seed * ( lcg - ~lcg ); // Multiply random by random, without multiply by zero.
-	const uint64_t rs = prvhash_swu64( mx ); // Produce byte-reversed copy (ideally, bit-reversed).
+	const uint64_t rs = mx >> 32 | mx << 32; // Produce reversed copy (ideally, bit-reversed).
 	lcg += ~mx; // Internal entropy mixing.
 	Hash ^= rs; // Update hash word.
 	Seed = Hash ^ plcg; // Mix new reversed seed value with hash and previous `lcg`. Entropy feedback.
@@ -233,12 +233,12 @@ Another important aspect of this system, especially from the cryptography
 standpoint, is entropy input to output latency. The base latency for
 non-parallel state-to-state transition is equal to 1, and 2 for parallel;
 and at the same time, 1 in hash-to-hash direction: this means that PRVHASH
-additionally requires 1 full pass through the hash array for the entropy to
-propagate. However, hashing also requires a pass to the end of the hash array
-if message's length is shorter than the output hash, to "mix in" the initial
-hash value. When there is only 1 hash word in use, this hash word is mixed
-back without delay, and thus there is no added hash-to-hash direction latency:
-the entropy propagation is only subject to base latency.
+additionally requires a full pass through the hash array (minus 1 hashword)
+for the entropy to propagate. However, hashing also requires a pass to the end
+of the hash array if message's length is shorter than the output hash, to
+"mix in" the initial hash value. When there is only 1 hash word in use, this
+hash word is mixed back without delay, and thus there is no added hash-to-hash
+direction latency: the entropy propagation is only subject to base latency.
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the

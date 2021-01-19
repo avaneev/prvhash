@@ -1,5 +1,5 @@
 /**
- * prvhash_core.h version 3.1
+ * prvhash_core.h version 3.2
  *
  * The inclusion file for the "prvhash_core64", "prvhash_core32",
  * "prvhash_core16", "prvhash_core8", "prvhash_core4", "prvhash_core2" PRVHASH
@@ -35,48 +35,6 @@
 
 #include <stdint.h>
 
-#if defined( __GNUC__ ) || defined( __clang__ )
-
-/**
- * An auxiliary function that returns a byte-swapped version of the input
- * 32-bit value.
- *
- * @param v Value to byte-swap.
- */
-
-inline uint32_t prvhash_swu32( const uint32_t v )
-{
-	return( __builtin_bswap32( v ));
-}
-
-/**
- * An auxiliary function that returns a byte-swapped version of the input
- * 64-bit value.
- *
- * @param v Value to byte-swap.
- */
-
-inline uint64_t prvhash_swu64( const uint64_t v )
-{
-	return( __builtin_bswap64( v ));
-}
-
-#elif defined( _MSC_VER ) || defined( __INTEL_COMPILER )
-
-inline uint32_t prvhash_swu32( const uint32_t v )
-{
-	return( _byteswap_ulong( v ));
-}
-
-inline uint64_t prvhash_swu64( const uint64_t v )
-{
-	return( _byteswap_uint64( v ));
-}
-
-#else // defined( _MSC_VER )
-
-#endif // defined( _MSC_VER )
-
 /**
  * This function runs a single PRVHASH random number generation round. This
  * function can be used both as a hash generator and as a general-purpose
@@ -102,7 +60,7 @@ inline uint64_t prvhash_core64( uint64_t* const Seed0, uint64_t* const lcg0,
 
 	const uint64_t plcg = lcg;
 	const uint64_t mx = Seed * ( lcg - ~lcg );
-	const uint64_t rs = prvhash_swu64( mx );
+	const uint64_t rs = mx >> 32 | mx << 32;
 	lcg += ~mx;
 	Hash ^= rs;
 	Seed = Hash ^ plcg;
@@ -120,7 +78,7 @@ inline uint32_t prvhash_core32( uint32_t* const Seed0, uint32_t* const lcg0,
 
 	const uint32_t plcg = lcg;
 	const uint32_t mx = Seed * ( lcg - ~lcg );
-	const uint32_t rs = prvhash_swu32( mx );
+	const uint32_t rs = mx >> 16 | mx << 16;
 	lcg += ~mx;
 	Hash ^= rs;
 	Seed = Hash ^ plcg;
