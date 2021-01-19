@@ -117,7 +117,7 @@ inline void prvhash16( const uint8_t* Msg, const size_t MsgLen,
 
 	size_t k;
 
-	for( k = 0; k < fc; k += sizeof( state_t ))
+	for( k = 0; k <= fc; k += sizeof( state_t ))
 	{
 		prvhash_core16( &Seed, &lcg, hc );
 

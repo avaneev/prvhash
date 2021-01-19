@@ -291,8 +291,9 @@ inline void prvhash64s_final( PRVHASH64S_CTX* ctx )
 	uint64_t lcg3 = ctx -> lcg[ 2 ];
 	uint64_t lcg4 = ctx -> lcg[ 3 ];
 
-	const size_t fc = ctx -> HashLen +
-		( ctx -> IsHashFilled == 0 ? (uint8_t*) HashEnd - (uint8_t*) hc : 0 );
+	const size_t fc = sizeof( uint64_t ) +
+		( ctx -> HashLen == sizeof( uint64_t ) ? 0 : ctx -> HashLen +
+		( ctx -> IsHashFilled == 0 ? (uint8_t*) HashEnd - (uint8_t*) hc : 0 ));
 
 	size_t k;
 
