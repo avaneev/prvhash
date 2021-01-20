@@ -356,7 +356,4 @@ inline void prvhash64s_oneshot( const uint8_t* const Msg, const size_t MsgLen,
 	prvhash64s_final( &ctx );
 }
 
-#undef PRVHASH64S_PAR
-#undef PRVHASH64S_LEN
-
 #endif // PRVHASH64S_INCLUDED

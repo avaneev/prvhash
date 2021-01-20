@@ -206,7 +206,7 @@ It was especially hard to find a better "hashing finalization" solution.
 2-, 4-, 8-, 16-, 32-, 64-bit variable sizes were tested, with similar
 statistical results).
 
-The three instructions - `Seed *= lcg - ~lcg`, `lcg += ~Seed`, `Seed ^= lcg` -
+The three instructions - `Seed ^= lcg`, `Seed *= lcg - ~lcg`, `lcg += ~Seed` -
 represent an "ideal" mixer/shuffler: the whole construction represents a
 "bivariable shuffler" which transforms input `lcg` and `Seed` variables into
 another pair of variables with 50% bit difference relative to input, and no
