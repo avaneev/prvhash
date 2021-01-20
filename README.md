@@ -295,8 +295,8 @@ performs acceptably.
 
 The author found a variant of the core hash function that can be considered
 "ideal" from PRNG/hashing point of view, as it features a minimal entropy
-propagation latency. However, it turned out to be 20-30% slower, due to weaker
-instruction parallelism.
+propagation latency. However, this variant turned out to be 20-30% slower, due
+to weaker instruction parallelism.
 
 	Seed ^= Hash ^ lcg;
 	Seed *= lcg - ~lcg;
@@ -304,6 +304,17 @@ instruction parallelism.
 	rs = Seed >> 32 | Seed << 32;
 	Hash ^= rs;
 	out = lcg ^ rs;
+
+You may wonder, what's the quality difference between this "ideal" function
+and the "production" one, currently implemented in the `prvhash_core.h` file?
+A short answer: there is no practical difference. The entropy propagation
+latency depends on the structure of the function and the state variable size.
+The "ideal" function having minimal latency gets a fast entropy propagation
+even with 8-bit state variables. The current "production" function propagates
+the entropy slower, and for 8-bit state variables requires more hash array
+passes. However, if 16-bit state variables are used, there is no practical
+difference between the "ideal" and "production" functions. This equality is
+further strengthened when 64-bit state variables are used.
 
 ## Method's Philosophy ##
 
