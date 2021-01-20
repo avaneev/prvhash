@@ -49,7 +49,7 @@ is known, it reveals no information about its prior or later state: all
 elements of the core hash function (`Seed`, `lcg`, `out`, `Hash`) are
 mutually-uncorrelated and wholly-unequal during the PRNG period. In this case,
 the core hash function has the security level that is equal to its full bit
-size.
+size (or message's size, if it is smaller).
 
 Please see the `prvhash64.h` file for the details of the implementation (the
 `prvhash.h`, `prvhash4.h`, `prvhash42.h` are outdated versions). Note that
