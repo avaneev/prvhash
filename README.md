@@ -236,9 +236,9 @@ and at the same time, 1 in hash-to-hash direction: this means that PRVHASH
 additionally requires a full pass through the hash array for the entropy to
 propagate. However, hashing also requires a pass to the end of the hash array
 if message's length is shorter than the output hash, to "mix in" the initial
-hash value. When there is only 1 hash word in use, this hash word is mixed
-back without delay, and thus there is no added hash-to-hash direction latency:
-the entropy propagation is only subject to base latency.
+hash value. When there is only 1 hash word in use, for larger state variable
+sizes there is practically no added delay, and thus the entropy propagation is
+only subject to base latency.
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
