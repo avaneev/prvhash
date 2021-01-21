@@ -61,6 +61,12 @@ the bag` is `d4d921d015a2f537`.
 A proposed short name for hashes created with `prvhash64.h` is `PRH64-N`,
 where `N` is the hash length in bits (e.g. `PRH64-256`).
 
+## PRVHASH64_64M ##
+
+This is a minimized implementation of the `prvhash64` hash function. Since
+arguably it's the smallest hash function in the world, that produces 64-bit
+hashes of this quality level, it is very useful for hash tables.
+
 ## Entropy PRNG ##
 
 PRVHASH can be also used as a very efficient general-purpose PRNG with an
@@ -455,12 +461,6 @@ only, to assure that the core hash function works in principle, independent of
 state variable size. This hash function variant demonstrates that PRVHASH's
 method does not rely on bit shuffling alone (shuffles are purely local), but
 is genuinely based on PRNG position "jumps".
-
-## PRVHASH64_64M ##
-
-This is a minimized implementation of the `prvhash64` hash function. Since
-arguably it's the smallest hash function that produces 64-bit hashes of this
-quality level, in the world, it is very useful for hash tables.
 
 ## Other ##
 
