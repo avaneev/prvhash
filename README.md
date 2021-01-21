@@ -332,7 +332,7 @@ specifications for all lengths.
 
 Alternatively, the method can be viewed from the standpoint of classic
 bit mixers/shufflers: the hash array can be seen as a "working buffer" whose
-state is mixed back into the "bivariable shuffler" continuously, and the new
+state is passed back into the "bivariable shuffler" continuously, and the new
 shuffled values stored in such working buffer for later use.
 
 ## PRNG Period Assessment ##
@@ -449,11 +449,11 @@ requires mathematical analysis: it is there where any flaws can be found.
 
 PRVHASH16 demonstrates the quality of the core hash function. While the state
 variables are 16-bit, they are enough to perform hashing: this hash function
-passes all SMHasher tests like 64-bit PRVHASH functions, for any hash length.
-This function is very slow, and is provided for demonstration purposes only,
-to assure that the core hash function works in principle, independent of state
-variable size. This hash function variant demonstrates that PRVHASH's method
-does not rely on bit mixing/shuffling alone (shuffles are purely local), but
+passes all SMHasher tests, like 64-bit PRVHASH function do, for any hash
+length. This function is very slow, and is provided for demonstration purposes
+only, to assure that the core hash function works in principle, independent of
+state variable size. This hash function variant demonstrates that PRVHASH's
+method does not rely on bit shuffling alone (shuffles are purely local), but
 is genuinely based on PRNG position "jumps".
 
 ## PRVHASH64_64M ##
