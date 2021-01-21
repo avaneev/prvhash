@@ -314,7 +314,8 @@ even with 8-bit state variables. The current "production" function propagates
 the entropy slower, and for 8-bit state variables requires more hash array
 passes. However, if 16-bit state variables are used, there is no practical
 difference between the "ideal" and "production" functions. This equality is
-further strengthened when 64-bit state variables are used.
+further strengthened when 64-bit state variables are used (larger state
+variables have better shuffling statistics).
 
 ## Method's Philosophy ##
 
