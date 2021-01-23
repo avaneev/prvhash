@@ -244,7 +244,12 @@ propagate. However, hashing also requires a pass to the end of the hash array
 if message's length is shorter than the output hash, to "mix in" the initial
 hash value. When there is only 1 hash word in use, for larger state variable
 sizes there is practically no added delay, and thus the entropy propagation is
-only subject to base latency.
+only subject to base latency. Empirically, however, entropy propagation speed
+depends on the state variable size: for 8-bit variables 4 full hash array
+passes are needed, for 16-bit variables 1 full pass is needed, but for 32-bit
+variables no additional passes are needed in order to produce quality hashes.
+Anyway, from the standpoint of the core hash function structure, 1 full pass
+is needed to stay on a "safer" side.
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
