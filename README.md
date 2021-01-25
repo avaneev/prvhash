@@ -103,8 +103,11 @@ approximate exactly, but in most tests it was equal to at least system's size
 in bits, minus the number of hash words in the system.
 
 Moreover, the PRVHASH systems can be freely daisy-chained by feeding their
-outputs to `lcg` inputs, adding guaranteed security firewalls, and increasing
-the PRNG period of the final output accordingly.
+outputs to `Seed` inputs, adding guaranteed security firewalls, and increasing
+the PRNG period of the final output accordingly. Note that any external PRNG
+output should be inputted via `Seed`, not `lcg`, as to not be subject to
+interference with the feedback path. The `lcg` is best used for unstructured
+sparse entropy input, it is preferred for hashing.
 
 While `lcg`, `Seed`, and `Hash` variables are best initialized with good
 entropy source (however, structurally, they can accept just about any entropy
@@ -199,7 +202,7 @@ Here is the author's vision on how the core hash function works. In actuality,
 coming up with this solution was accompanied with a lot of trial and error.
 It was especially hard to find a better "hashing finalization" solution.
 
-	lcg ^= msgw; // Mix in external entropy.
+	lcg ^= msgw; // Mix in external entropy (use `Seed` for daisy-chaining).
 	const uint64_t plcg = lcg; // Save `lcg` for feedback.
 	const uint64_t mx = Seed * ( lcg - ~lcg ); // Multiply random by random, without multiply by zero.
 	const uint64_t rs = mx >> 32 | mx << 32; // Produce reversed copy (ideally, bit-reversed).
