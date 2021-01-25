@@ -1,5 +1,5 @@
 /**
- * prvhash64s.h version 3.2
+ * prvhash64s.h version 3.3
  *
  * The inclusion file for the "prvhash64s" hash function. Efficient on large
  * data blocks, more secure, streamed. Implements a parallel variant of the

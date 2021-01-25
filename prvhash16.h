@@ -1,5 +1,5 @@
 /**
- * prvhash16.h version 3.2
+ * prvhash16.h version 3.3
  *
  * The inclusion file for the "prvhash16" hash function. For demonstration
  * purposes, not practically useful.

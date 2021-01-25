@@ -1,5 +1,5 @@
 /**
- * prvhash64.h version 3.2
+ * prvhash64.h version 3.3
  *
  * The inclusion file for the "prvhash64" and "prvhash64_64m" hash functions.
  *

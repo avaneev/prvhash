@@ -134,7 +134,7 @@ disseminating entropy, the PRNG should be first run in idle cycles to produce
 
 The core hash function can be easily integrated into your applications, to be
 used as an effective PRNG. The period of this minimal PRNG is at least
-`2^187`. The initial parameters can be varied at will, and won't "break" the
+`2^191`. The initial parameters can be varied at will, and won't "break" the
 PRNG. Setting only the `Seed` value guarantees a random start point within the
 whole PRNG period, with at least `2^64` spacing. Here is the code:
 
@@ -204,7 +204,7 @@ It was especially hard to find a better "hashing finalization" solution.
 	const uint64_t mx = Seed * ( lcg - ~lcg ); // Multiply random by random, without multiply by zero.
 	const uint64_t rs = mx >> 32 | mx << 32; // Produce reversed copy (ideally, bit-reversed).
 	lcg += ~mx; // Internal entropy mixing.
-	Hash ^= rs; // Update hash word.
+	Hash += rs; // Update hash word.
 	Seed = Hash ^ plcg; // Mix new reversed seed value with hash and previous `lcg`. Entropy feedback.
 	const uint64_t out = lcg ^ rs; // Produce "compressed" output.
 
@@ -352,13 +352,17 @@ The following "minimal" implementation for PractRand class can be used to
 independently assess randomness period properties of PRVHASH. By varying
 the `PH_HASH_COUNT` and `PH_PAR_COUNT` values it is possible to test various
 PRNG system sizes. By adjusting other values it is possible to test PRVHASH
-scalability across different state variable sizes. By additionally
-uncommenting the `Ctr++` instruction it is possible to assess the PRNG period
-increase due to sparse entropy input. The PractRand should be run with the
-`-tlmin 64KB` parameter to evaluate changes to the constants quicker. Note
-that both the `PH_HASH_COUNT` and `PH_PAR_COUNT` affect the PRNG period
-exponent not exactly linearly for small state variable sizes. Depending on
-initial seed value, the period may fluctuate by a factor of 16.
+scalability across different state variable sizes (PractRand class and PRNG
+output size should be matched, as PractRand test results depend on PRNG output
+size). By additionally uncommenting the `Ctr++` instruction it is possible to
+assess the PRNG period increase due to input of sparse entropy. The PractRand
+should be run with the `-tlmin 64KB` parameter to evaluate changes to the
+constants quicker. Note that both the `PH_HASH_COUNT` and `PH_PAR_COUNT`
+affect the PRNG period exponent not exactly linearly for small variable sizes:
+there is a saturation factor present for small variable sizes; after some
+point the period increase is non-linear due to small shuffling space.
+Shuffling space can be increased considerably with a parallel arrangement.
+Depending on the initial seed value, the period may fluctuate.
 
 ```
 #include "prvhash_core.h"
@@ -369,9 +373,10 @@ initial seed value, the period may fluctuate by a factor of 16.
 #define PH_STATE_TYPE uint8_t // State variable physical type.
 #define PH_FN prvhash_core4 // Core hash function name.
 #define PH_BITS 4 // State variable size in bits.
-#define PH_RAW_ROUNDS ( 32 / PH_BITS ) // PRVHASH rounds per 1 raw output.
+#define PH_RAW_BITS 8 // Raw output bits.
+#define PH_RAW_ROUNDS ( PH_RAW_BITS / PH_BITS ) // Rounds per raw output.
 
-class DummyRNG : public PractRand::RNGs::vRNG32 {
+class DummyRNG : public PractRand::RNGs::vRNG8 {
 public:
     PH_STATE_TYPE Seed[ PH_PAR_COUNT ];
     PH_STATE_TYPE lcg[ PH_PAR_COUNT ];
@@ -387,8 +392,8 @@ public:
         Ctr = 0;
     }
 
-    Uint32 raw32() {
-        uint32_t OutValue = 0;
+    Uint8 raw8() {
+        uint64_t OutValue = 0;
         int k, j;
 
         for( k = 0; k < PH_RAW_ROUNDS; k++ )
@@ -437,9 +442,8 @@ to consider core hash function's statistical properties. All internal
 variables - `Seed`, `lcg`, and `Hash` - are random: they are uncorrelated to
 each other at all times, and are also wholly-unequal during the PRNG period
 (they are not just time-delayed versions of each other). Moreover, as can be
-assured with PractRand, the whole `Seed` and `lcg`, and halves of `Hash`
-separately (as it has a logarithmic-like distribution), can be used as
-independent random number generators.
+assured with PractRand, all of these variables can be used as independent
+random number generators.
 
 When the message enters the system as `lcg ^= msgw`, it works like mixing a
 message with an one-time-pad used in symmetric cryptography. This operation
