@@ -56,7 +56,7 @@ Please see the `prvhash64.h` file for the details of the implementation (the
 `64` refers to core hash function's variable size.
 
 The default `prvhash64.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `d4d921d015a2f537`.
+the bag` is `ecdcccb4f86e3569`.
 
 A proposed short name for hashes created with `prvhash64.h` is `PRH64-N`,
 where `N` is the hash length in bits (e.g. `PRH64-256`).
@@ -169,15 +169,15 @@ offers an extremely increased security and hashing speed. The amount of
 entropy mixing going on in this implementation is substantial.
 
 The default `prvhash64s.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `f6aac79fcb700c4c`.
+the bag` is `a23b7ec63da0657d`.
 
 The default `prvhash64s.h`-based 256-bit hash of the string
 `Only a toilet bowl does not leak` is
-`3ddf580ff8ec3dc72dc0cf92e0a8db2eca181078b26936cb3baf4dff4c5ba38e`.
+`cb5dda3f9f4f8ebf714911bcb9ad1ed9b956fb593b411cb12d3a6776239d21ac`.
 
 The default prvhash64s 256-bit hash of the string
 `Only a toilet bowl does not leaj` is
-`8211fc846854bc13885fc0f9d6977e5039876c9ef79fe1e6d69b4d87fa28d9b7`.
+`84c4a3cd346a361549bc806b63f6db3a0bfe79ef8b075641ee9397c485b4321a`.
 
 This demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect).
 On a set of 216553 English words, pair-wise hash comparisons give average
