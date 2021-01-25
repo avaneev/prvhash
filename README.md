@@ -204,7 +204,7 @@ It was especially hard to find a better "hashing finalization" solution.
 	const uint64_t mx = Seed * ( lcg - ~lcg ); // Multiply random by random, without multiply by zero.
 	const uint64_t rs = mx >> 32 | mx << 32; // Produce reversed copy (ideally, bit-reversed).
 	lcg += ~mx; // Internal entropy mixing.
-	Hash += rs; // Update hash word.
+	Hash += rs; // Update hash word (summation produces uniform distribution).
 	Seed = Hash ^ plcg; // Mix new reversed seed value with hash and previous `lcg`. Entropy feedback.
 	const uint64_t out = lcg ^ rs; // Produce "compressed" output.
 
@@ -212,22 +212,38 @@ It was especially hard to find a better "hashing finalization" solution.
 2-, 4-, 8-, 16-, 32-, 64-bit variable sizes were tested, with similar
 statistical results).
 
+How does it work? First of all, this PRNG system, represented by the core hash
+function, does not work with numbers in a common sense: it works with [entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)),
+or random sequences of bits. The current "expression" of system's overall
+internal entropy - the `Seed` - gets multiplied ("smeared") by a supportive
+variable - `lcg`, - which is also a random value. Such multiplication produces
+result with a logarithmic-like distribution. This result is then bit-reversed,
+and is accumulated in the `Hash`. The `lcg` variable accumulates the result
+with bit-inversion. The `Seed` is then updated with a mix of the bit-reversed
+multiplication result, previous `lcg`'s value (that includes the message
+input), and the hash word produced on previous rounds. The reason the
+message's entropy (which may be sparse or non-random) does not destabilize the
+system is because the message becomes hidden in a mix of internal entropy;
+message's distribution becomes irrelevant. Both the accumulation of the
+multiplication result and mixing of its bit-reversed and original version
+produce a uniformly-distributed value.
+
 The three instructions - `Seed ^= lcg`, `Seed *= lcg - ~lcg`, `lcg += ~Seed` -
-represent an "ideal" mixer/shuffler: the whole construction represents a
-"bivariable shuffler" which transforms input `lcg` and `Seed` variables into
-another pair of variables with 50% bit difference relative to input, and no
-collisions. The whole core hash function, however, uses a rearranged mixing,
-which produces a hash value: the pair composed of the hash value and either
-a new `lcg` or a new `Seed` value also produces no input-to-output collisions.
-Thus it can be said that the system does not lose any input entropy. In
-3-dimensional analysis, when `Seed`, `lcg` and `msgw` values are scanned,
-and transformed into output `Seed` and `Hash` value pairs, this system
-exhibits state change-related collision statistics: on a fully random `msgw`
-input it is adequate for 16-bit, and excellent for 64-bit variables (`5.47^-18`
-percent chance, which far exceeds collision resistance requirements for 64-bit
-range of bits). To further decrease state change collisions between `lcg` and
-`Seed` with entropy input, the byte-reversal should be implemented as
-bit-reversal: in this case the system reaches its optimal state, but this is
+represent an "ideal" bit shuffler: this construction represents a "bivariable
+shuffler" which transforms input `lcg` and `Seed` variables into another pair
+of variables with 50% bit difference relative to input, and no collisions. The
+whole core hash function, however, uses a rearranged mixing, which produces a
+hash value: the pair composed of the hash value and either a new `lcg` or a
+new `Seed` value also produces no input-to-output collisions. Thus it can be
+said that the system does not lose any input entropy. In 3-dimensional
+analysis, when `Seed`, `lcg` and `msgw` values are scanned, and transformed
+into output `Seed` and `Hash` value pairs, this system exhibits state
+change-related collision statistics: on a fully random `msgw` input it is
+adequate for 16-bit, and excellent for 64-bit variables (`5.47^-18` percent
+chance, which far exceeds collision resistance requirements for 64-bit range
+of bits). To further decrease state change collisions between `lcg` and `Seed`
+with entropy input, the byte-reversal should be implemented as bit-reversal:
+in this case the system reaches its optimal state, but this is
 unimplementable in an efficient manner on modern processors. If the initial
 state of the system has little or zero entropy (less than state variable size
 bits of entropy), on very sparse `msgw` input (in the order of 1 bit per 80),
@@ -267,19 +283,6 @@ and "index" of sequence. This property of PRVHASH assures that different
 initial states of its `lcg` state variable (or `Seed`, which is mostly
 equivalent at initialization stage) produce practically unrelated random
 number sequences, permitting to use PRVHASH for PRNG-based simulations.
-
-How does it work? First of all, this PRNG system, represented by the core hash
-function, does not work with numbers in a common sense: it works with [entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)),
-or random sequences of bits. The current "expression" of system's overall
-internal entropy - the `Seed` - gets multiplied ("smeared") by a supportive
-variable - `lcg`, - which is also a random value. Such multiplication changes
-the `Seed` into a logarithmic-like distribution, dividing (in distribution
-sense) its lower and higher parts. The `Seed` is then updated by a mix of its
-own bit-reversed version, `lcg`'s value, the hash word produced on previous
-rounds, and the message. The reason the message's entropy (which may be sparse
-or non-random) does not destabilize the system is because the message becomes
-hidden in a mix of internal entropy; message's distribution becomes
-irrelevant.
 
 In essence, the hash function generates a continuous pseudo-random number
 sequence, and returns the final part of the sequence as a result. The message
