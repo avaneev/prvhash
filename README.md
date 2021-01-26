@@ -312,8 +312,8 @@ performs acceptably.
 
 The author found a variant of the core hash function that can be considered
 "ideal" from PRNG/hashing point of view, as it features a minimal entropy
-propagation latency. However, this variant turned out to be 20-30% slower, due
-to weaker instruction parallelism.
+propagation latency. However, this variant turned out to be a lot slower, due
+to reduced instruction parallelism.
 
 	Seed ^= Hash ^ lcg;
 	Seed *= lcg - ~lcg;
