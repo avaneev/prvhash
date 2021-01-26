@@ -319,7 +319,7 @@ to weaker instruction parallelism.
 	Seed *= lcg - ~lcg;
 	lcg += ~Seed;
 	rs = Seed >> 32 | Seed << 32;
-	Hash ^= rs;
+	Hash += rs;
 	out = lcg ^ rs;
 
 You may wonder, what's the quality difference between this "ideal" function
