@@ -166,7 +166,7 @@ int main()
 
 If security is not a concern, all three variables, together with the
 function's return value, can be used as independent PRNG outputs, which makes
-this PRNG the fastest in the world (0.24 cycles/byte). They can be used
+this PRNG one of the fastest in the world (0.24 cycles/byte). They can be used
 independently, or can be interleaved in this order only: 1. function's result;
 2. `Seed`; 3. `lcg`; 4. `Hash`.
 
