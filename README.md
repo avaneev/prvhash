@@ -169,8 +169,10 @@ function's return value, can be used as independent PRNG outputs, which makes
 this PRNG one of the fastest in the world (0.24 cycles/byte), and the fastest
 one that does not rely on SIMD instructions. The variables can be used
 independently, or can be interleaved in this order only: 1. function's result;
-2. `Seed`; 3. `lcg`; 4. `Hash`. (Interleaving can only be used with this
-minimal PRNG; interleaving limits the period to `2^128`).
+2. `Seed`; 3. `lcg`; 4. `Hash`. (Such interleaving can only be used with this
+minimal PRNG; such interleaving limits the period to `2^128`; when only
+`Seed`, `lcg` and `Hash` are interleaved, this can be used for any system
+size without period impact).
 
 ## Streamed Hashing ##
 
