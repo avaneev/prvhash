@@ -163,9 +163,9 @@ int main()
 }
 ```
 
-If security is not a concern, instead of using the return value of the
-function, all three variables can be used as independent PRNG outputs, which
-makes this PRNG the fastest in the world (0.32 cycles/byte).
+If security is not a concern, all three variables, together with the
+function's return value, can be used as independent PRNG outputs, which makes
+this PRNG the fastest in the world (0.24 cycles/byte).
 
 ## Streamed Hashing ##
 
