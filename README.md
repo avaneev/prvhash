@@ -163,6 +163,10 @@ int main()
 }
 ```
 
+If security is not a concern, instead of using the return value of the
+function, all three variables can be used as independent PRNG outputs, which
+makes this PRNG the fastest in the world (0.32 cycles/byte).
+
 ## Streamed Hashing ##
 
 The file `prvhash64s.h` implements a relatively fast streamed hashing
