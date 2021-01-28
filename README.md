@@ -100,7 +100,8 @@ the period of randomness, which, when extrapolated to hashing, means that the
 period increases by message's combinatorial capacity (or the number of various
 combinations of its bits). The maximal PRNG period's `2^N` exponent is hard to
 approximate exactly, but in most tests it was equal to at least system's size
-in bits, minus the number of hash words in the system.
+in bits, minus the number of hash words in the system, minus 1/4 of state
+size.
 
 Moreover, the PRVHASH systems can be freely daisy-chained by feeding their
 outputs to `Seed` inputs, adding guaranteed security firewalls, and increasing
@@ -137,7 +138,7 @@ disseminating entropy, the PRNG should be first run in idle cycles to produce
 
 The core hash function can be easily integrated into your applications, to be
 used as an effective PRNG. The period of this minimal PRNG is at least
-`2^191`. The initial parameters can be varied at will, and won't "break" the
+`2^160`. The initial parameters can be varied at will, and won't "break" the
 PRNG. Setting only the `Seed` value guarantees a random start point within the
 whole PRNG period, with at least `2^64` spacing. Here is the code:
 
