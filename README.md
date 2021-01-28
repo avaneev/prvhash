@@ -169,7 +169,7 @@ function's return value, can be used as independent PRNG outputs, which makes
 this PRNG one of the fastest in the world (0.24 cycles/byte). They can be used
 independently, or can be interleaved in this order only: 1. function's result;
 2. `Seed`; 3. `lcg`; 4. `Hash`. (Interleaving can only be used with this
-minimal PRNG).
+minimal PRNG; interleaving limits the period to `2^128`).
 
 ## Streamed Hashing ##
 
