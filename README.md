@@ -457,7 +457,10 @@ message with an one-time-pad used in symmetric cryptography. This operation
 completely hides the message in `lcg`'s entropy. Beside that the output of
 PRVHASH uses mix of two variables: statistically, this means the mixing of two
 unrelated random variables, with such summary output never appearing in
-system's state.
+system's state. It's worth noting the `lcg ^ rs` expression: the `rs` variable
+is composed of two halves, both of them practically being independent PRNG
+outputs with period exponents smaller by half the state variable size. This
+additionally complicates system's reversal.
 
 To sum up, the author is unable to find cryptographical security flaws in
 PRVHASH. The author will be happy to offer a negotiable grant to any
