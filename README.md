@@ -449,8 +449,8 @@ to consider core hash function's statistical properties. All internal
 variables - `Seed`, `lcg`, and `Hash` - are random: they are uncorrelated to
 each other at all times, and are also wholly-unequal during the PRNG period
 (they are not just time-delayed versions of each other). Moreover, as can be
-assured with PractRand, all of these variables can be used as independent
-random number generators.
+assured with PractRand, all of these variables can be used as random number
+generators: they can even be interleaved after each round.
 
 When the message enters the system as `lcg ^= msgw`, it works like mixing a
 message with an one-time-pad used in symmetric cryptography. This operation
