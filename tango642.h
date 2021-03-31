@@ -1,5 +1,5 @@
 /**
- * tango642.h version 3.3
+ * tango642.h version 3.3.1
  *
  * The inclusion file for the "tango642" PRVHASH PRNG-based stream cipher.
  *
@@ -41,8 +41,8 @@
 #define TANGO642_HASH_COUNT 16 // Hashwords in a hasharray, and in output buf.
 #define TANGO642_T uint64_t // PRVHASH state variable type.
 #define TANGO642_FN prvhash_core64 // PRVHASH core function name.
-#define TANGO642_LU prvhash_lu64ec // Unsigned value load function.
-#define TANGO642_EC prvhash_ec64 // Function for output endianness-correction.
+#define TANGO642_LU prvhash_lu64ec // Unsigned value EC load function.
+#define TANGO642_EC64 PRVHASH_EC64 // Value EC function.
 
 /**
  * tango642 context structure, can be placed on stack.
@@ -56,19 +56,25 @@ typedef struct
 	TANGO642_T SeedF; ///< "Firewalling" PRNG Seed value.
 	TANGO642_T lcgF; ///< "Firewalling" PRNG lcg value.
 	TANGO642_T HashF; ///< "Firewalling" PRNG Hash value.
-	TANGO642_T Buf[ TANGO642_HASH_COUNT ]; ///< PRNG output buffer.
-	size_t BufLeft; ///< The number of bytes left in buffer.
-	size_t BufPos; ///< Buffer position.
+	TANGO642_T RndBytes; ///< The recent partial random output.
+	size_t RndLeft; ///< The number of bytes left in RndBytes.
+	size_t HashPos; ///< Hash array position, in bytes.
 } TANGO642_CTX;
 
 /**
  * This function initializes the "tango642" structure. After the session, the
  * tango642_final() function should be called.
  *
+ * Note that this function can be also used as a "conditioning" function for
+ * the specified "key" and "iv" values, if processing of several independent
+ * data blocks is needed with the same "key" and "iv" values, to minimize
+ * initialization overhead. In this case, the initialized context structure
+ * can be wholly saved in a private cache, as a substitute for key/iv pair.
+ *
  * @param ctx Pointer to the context structure.
  * @param key Uniformly-random key buffer, alignment is unimportant.
  * @param keylen Length of "key" in bytes, should be >= 16, in increments of
- * 8. Should not exceed 128 bytes. 
+ * 8. Should not exceed 128 bytes.
  * @param iv Uniformly-random "unsecure" initialization vector (nonce),
  * alignment is unimportant. Can be 0 if "ivlen" is also 0.
  * @param ivlen Length of "iv" in bytes, in increments of 8, can be zero.
@@ -83,13 +89,14 @@ inline void tango642_init( TANGO642_CTX* ctx, const uint8_t* key,
 	ctx -> SeedF = TANGO642_LU( key + sizeof( TANGO642_T ));
 	ctx -> lcgF = 0;
 	ctx -> HashF = 0;
-	ctx -> BufLeft = 0;
-	ctx -> BufPos = 0;
+	ctx -> RndBytes = 0;
+	ctx -> RndLeft = 0;
+	ctx -> HashPos = 0;
 
 	key += sizeof( TANGO642_T ) * 2;
 	keylen -= sizeof( TANGO642_T ) * 2;
 
-	int i, j, k;
+	int i;
 
 	for( i = 0; i < TANGO642_HASH_COUNT; i++ )
 	{
@@ -159,60 +166,82 @@ inline void tango642_init( TANGO642_CTX* ctx, const uint8_t* key,
 
 inline void tango642_xor( TANGO642_CTX* ctx, uint8_t* msg, size_t msglen )
 {
-	size_t bl = ctx -> BufLeft;
-	uint8_t* bp = (uint8_t*) ctx -> Buf + ctx -> BufPos;
+	TANGO642_T Seed = ctx -> Seed;
+	TANGO642_T lcg = ctx -> lcg;
+	TANGO642_T SeedF = ctx -> SeedF;
+	TANGO642_T lcgF = ctx -> lcgF;
+	TANGO642_T HashF = ctx -> HashF;
+	uint8_t* ha = (uint8_t*) ctx -> Hash + ctx -> HashPos;
+	uint8_t* const haend = (uint8_t*) ( ctx -> Hash + TANGO642_HASH_COUNT );
 
-	while( msglen > 0 )
+	TANGO642_T RndBytes = ctx -> RndBytes;
+	size_t rl = ctx -> RndLeft;
+
+	do
 	{
-		if( bl == 0 )
+		if( rl == 0 )
 		{
-			TANGO642_T Seed = ctx -> Seed;
-			TANGO642_T lcg = ctx -> lcg;
-			TANGO642_T SeedF = ctx -> SeedF;
-			TANGO642_T lcgF = ctx -> lcgF;
-			TANGO642_T HashF = ctx -> HashF;
+			size_t rep = msglen >> 3;
 
-			TANGO642_T* ha = ctx -> Hash;
-			TANGO642_T* b = ctx -> Buf;
-
-			int i;
-
-			for( i = 0; i < TANGO642_HASH_COUNT; i++ )
+			while( rep > 0 )
 			{
-				SeedF ^= TANGO642_FN( &Seed, &lcg, ha );
-				*b = TANGO642_FN( &SeedF, &lcgF, &HashF );
+				SeedF ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ha );
+				const TANGO642_T rb = TANGO642_EC64(
+					TANGO642_FN( &SeedF, &lcgF, &HashF ));
 
-				ha++;
-				b++;
+				ha += sizeof( TANGO642_T );
+
+				if( ha == haend )
+				{
+					ha -= TANGO642_HASH_COUNT * sizeof( TANGO642_T );
+				}
+
+				TANGO642_T mx;
+				memcpy( &mx, msg, sizeof( mx ));
+				mx ^= rb;
+				memcpy( msg, &mx, sizeof( mx ));
+
+				rep--;
+				msg += sizeof( mx );
 			}
 
-			ctx -> Seed = Seed;
-			ctx -> lcg = lcg;
-			ctx -> SeedF = SeedF;
-			ctx -> lcgF = lcgF;
-			ctx -> HashF = HashF;
+			SeedF ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ha );
+			RndBytes = TANGO642_EC64(
+				TANGO642_FN( &SeedF, &lcgF, &HashF ));
 
-			bl = TANGO642_HASH_COUNT * sizeof( TANGO642_T );
-			bp = (uint8_t*) ctx -> Buf;
+			ha += sizeof( TANGO642_T );
 
-			TANGO642_EC( bp, bl );
+			if( ha == haend )
+			{
+				ha -= TANGO642_HASH_COUNT * sizeof( TANGO642_T );
+			}
+
+			rl = sizeof( RndBytes );
+			msglen &= sizeof( TANGO642_T ) - 1;
 		}
 
-		size_t c = ( msglen > bl ? bl : msglen );
+		size_t c = ( msglen > rl ? rl : msglen );
 		msglen -= c;
-		bl -= c;
+		rl -= c;
 
 		while( c > 0 )
 		{
-			*msg ^= *bp;
+			*msg ^= (uint8_t) RndBytes;
+			RndBytes >>= 8;
 			msg++;
-			bp++;
 			c--;
 		}
-	}
+	} while( msglen > 0 );
 
-	ctx -> BufLeft = bl;
-	ctx -> BufPos = bp - (uint8_t*) ctx -> Buf;
+	ctx -> Seed = Seed;
+	ctx -> lcg = lcg;
+	ctx -> SeedF = SeedF;
+	ctx -> lcgF = lcgF;
+	ctx -> HashF = HashF;
+	ctx -> HashPos = ha - (uint8_t*) ctx -> Hash;
+
+	ctx -> RndBytes = RndBytes;
+	ctx -> RndLeft = rl;
 }
 
 /**

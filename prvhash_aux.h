@@ -1,5 +1,5 @@
 /**
- * prvhash_aux.h version 3.3
+ * prvhash_aux.h version 3.3.1
  *
  * The inclusion file for the auxiliary functions used by PRVHASH hashing
  * functions.
@@ -46,9 +46,29 @@
 #if PRVHASH_LITTLE_ENDIAN
 
 /**
+ * An macro that applies byte-swapping used for endianness-correction.
+ */
+
+#define PRVHASH_EC64( v ) ( v )
+
+#else // PRVHASH_LITTLE_ENDIAN
+
+#if defined( __GNUC__ ) || defined( __clang__ )
+
+#define PRVHASH_EC64( v ) __builtin_bswap64( v )
+
+#elif defined( _MSC_VER ) || defined( __INTEL_COMPILER )
+
+#define PRVHASH_EC64( v ) _byteswap_uint64( v )
+
+#endif // defined( _MSC_VER ) || defined( __INTEL_COMPILER )
+
+#endif // PRVHASH_LITTLE_ENDIAN
+
+/**
  * An auxiliary function that returns an unsigned 64-bit value created out of
- * individual bytes in a buffer. This function is used to preserve endianness
- * of supplied 64-bit unsigned values.
+ * individual bytes in a buffer. This function is used to convert endianness
+ * of supplied 64-bit unsigned values, and to avoid unaligned memory accesses.
  *
  * @param p 8-byte buffer. Alignment is unimportant.
  */
@@ -58,40 +78,14 @@ inline uint64_t prvhash_lu64ec( const uint8_t* const p )
 	uint64_t v;
 	memcpy( &v, p, 8 );
 
-	return( v );
+	return( PRVHASH_EC64( v ));
 }
-
-#else // PRVHASH_LITTLE_ENDIAN
-
-#if defined( __GNUC__ ) || defined( __clang__ )
-
-inline uint64_t prvhash_lu64ec( const uint8_t* const p )
-{
-	uint64_t v;
-	memcpy( &v, p, 8 );
-
-	return( __builtin_bswap64( v ));
-}
-
-#elif defined( _MSC_VER ) || defined( __INTEL_COMPILER )
-
-inline uint64_t prvhash_lu64ec( const uint8_t* const p )
-{
-	uint64_t v;
-	memcpy( &v, p, 8 );
-
-	return( _byteswap_uint64( v ));
-}
-
-#endif // defined( _MSC_VER )
-
-#endif // PRVHASH_LITTLE_ENDIAN
 
 #if PRVHASH_LITTLE_ENDIAN
 
 /**
  * This function corrects (inverses) endianness of the specified hash value,
- * based on 64-bit word.
+ * based on 64-bit words.
  *
  * @param[in,out] Hash The hash to correct endianness of. On systems where
  * this is relevant, this address should be aligned to 64 bits.
@@ -111,7 +105,7 @@ inline void prvhash_ec64( uint8_t* const Hash, const size_t HashLen )
 
 	for( k = 0; k < HashLen; k += sizeof( uint64_t ))
 	{
-		*(uint64_t*) ( Hash + k ) = prvhash_lu64ec( Hash + k );
+		*(uint64_t*) ( Hash + k ) = PRVHASH_EC64( *(uint64_t*) ( Hash + k ));
 	}
 }
 

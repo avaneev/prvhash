@@ -100,8 +100,8 @@ the period of randomness, which, when extrapolated to hashing, means that the
 period increases by message's combinatorial capacity (or the number of various
 combinations of its bits). The maximal PRNG period's `2^N` exponent is hard to
 approximate exactly, but in most tests it was equal to at least system's size
-in bits, minus the number of hash words in the system, minus 1/4 of state
-size.
+in bits, minus the number of hash words in the system, minus 1/4 of `lcg` and
+`Seed` variables' size.
 
 Moreover, the PRVHASH systems can be freely daisy-chained by feeding their
 outputs to `Seed` inputs, adding guaranteed security firewalls, and increasing
