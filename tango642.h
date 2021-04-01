@@ -1,5 +1,5 @@
 /**
- * tango642.h version 3.3.2
+ * tango642.h version 3.3.4
  *
  * The inclusion file for the "tango642" PRVHASH PRNG-based stream cipher.
  *
@@ -68,10 +68,9 @@ typedef struct
  * tango642_final() function should be called.
  *
  * Note that this function can be also used as a "conditioning" function for
- * the specified "key" and "iv" values, if processing of several independent
- * data blocks is needed with the same "key" and "iv" values, to minimize
- * initialization overhead. In this case, the initialized context structure
- * can be wholly saved in a private cache, as a substitute for key/iv pair.
+ * the specified "key" and "iv" values, to minimize overhead if "iv" values
+ * are pre-generated and cached. In this case, the initialized context
+ * structure can stored as a whole, and used as a substitute for key+iv pair.
  *
  * @param ctx Pointer to the context structure.
  * @param key Uniformly-random key buffer, alignment is unimportant.
@@ -86,22 +85,10 @@ typedef struct
 inline void tango642_init( TANGO642_CTX* ctx, const uint8_t* key,
 	size_t keylen, const uint8_t* iv, size_t ivlen )
 {
+	memset( ctx, 0, sizeof( TANGO642_CTX ));
+
 	ctx -> Seed = TANGO642_LU( key );
-	ctx -> lcg = 0;
-
 	ctx -> SeedF[ 0 ] = TANGO642_LU( key + sizeof( TANGO642_T ));
-	ctx -> SeedF[ 1 ] = 0;
-	ctx -> lcgF[ 0 ] = 0;
-	ctx -> lcgF[ 1 ] = 0;
-	ctx -> HashF[ 0 ] = 0;
-	ctx -> HashF[ 1 ] = 0;
-	ctx -> HashF[ 2 ] = 0;
-
-	ctx -> RndBytes[ 0 ] = 0;
-	ctx -> RndBytes[ 1 ] = 0;
-	ctx -> RndLeft[ 0 ] = 0;
-	ctx -> RndLeft[ 1 ] = 0;
-	ctx -> HashPos = 0;
 
 	key += sizeof( TANGO642_T ) * 2;
 	keylen -= sizeof( TANGO642_T ) * 2;
@@ -110,16 +97,14 @@ inline void tango642_init( TANGO642_CTX* ctx, const uint8_t* key,
 
 	for( i = 0; i < TANGO642_HASH_COUNT; i++ )
 	{
-		if( keylen > 0 )
+		if( keylen == 0 )
 		{
-			ctx -> Hash[ i ] = TANGO642_LU( key );
-			key += sizeof( TANGO642_T );
-			keylen -= sizeof( TANGO642_T );
+			break;
 		}
-		else
-		{
-			ctx -> Hash[ i ] = 0;
-		}
+
+		ctx -> Hash[ i ] = TANGO642_LU( key );
+		key += sizeof( TANGO642_T );
+		keylen -= sizeof( TANGO642_T );
 	}
 
 	TANGO642_T Seed = ctx -> Seed;
@@ -135,10 +120,7 @@ inline void tango642_init( TANGO642_CTX* ctx, const uint8_t* key,
 
 	for( i = 0; i < TANGO642_HASH_COUNT; i++ )
 	{
-		SeedF2 ^= TANGO642_FN( &Seed, &lcg, ha + i );
-		TANGO642_FN( &SeedF, &lcgF, &HashF );
-		TANGO642_FN( &SeedF2, &lcgF2, &HashF2 );
-		TANGO642_SH3( HashF, HashF2, HashF3 );
+		TANGO642_FN( &Seed, &lcg, ha + i );
 	}
 
 	const int ivo = TANGO642_HASH_COUNT - 2 -
@@ -153,10 +135,7 @@ inline void tango642_init( TANGO642_CTX* ctx, const uint8_t* key,
 			ivlen -= sizeof( TANGO642_T );
 		}
 
-		SeedF2 ^= TANGO642_FN( &Seed, &lcg, ha + i );
-		TANGO642_FN( &SeedF, &lcgF, &HashF );
-		TANGO642_FN( &SeedF2, &lcgF2, &HashF2 );
-		TANGO642_SH3( HashF, HashF2, HashF3 );
+		TANGO642_FN( &Seed, &lcg, ha + i );
 	}
 
 	for( i = 0; i < TANGO642_HASH_COUNT; i++ )
@@ -202,9 +181,9 @@ inline void tango642_xor( TANGO642_CTX* ctx, uint8_t* msg, size_t msglen )
 	uint8_t* ha = (uint8_t*) ctx -> Hash + ctx -> HashPos;
 	uint8_t* const haend = (uint8_t*) ( ctx -> Hash + TANGO642_HASH_COUNT );
 
-	do
+	while( 1 )
 	{
-		if( ctx -> RndLeft[ 0 ] + ctx -> RndLeft[ 1 ] == 0 )
+		if( ctx -> RndLeft[ 1 ] == 0 )
 		{
 			size_t rep = msglen >> 4;
 
@@ -233,6 +212,13 @@ inline void tango642_xor( TANGO642_CTX* ctx, uint8_t* msg, size_t msglen )
 				msg += sizeof( TANGO642_T ) * 2;
 			}
 
+			msglen &= 15;
+
+			if( msglen == 0 )
+			{
+				break;
+			}
+
 			SeedF2 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ha );
 
 			ctx -> RndBytes[ 0 ] = TANGO642_EC64(
@@ -252,7 +238,6 @@ inline void tango642_xor( TANGO642_CTX* ctx, uint8_t* msg, size_t msglen )
 
 			ctx -> RndLeft[ 0 ] = sizeof( TANGO642_T );
 			ctx -> RndLeft[ 1 ] = sizeof( TANGO642_T );
-			msglen &= 15;
 		}
 
 		size_t c = ( msglen > ctx -> RndLeft[ 0 ] ?
@@ -277,23 +262,25 @@ inline void tango642_xor( TANGO642_CTX* ctx, uint8_t* msg, size_t msglen )
 
 		c = ( msglen > ctx -> RndLeft[ 1 ] ? ctx -> RndLeft[ 1 ] : msglen );
 
-		if( c > 0 )
+		if( c == 0 )
 		{
-			msglen -= c;
-			ctx -> RndLeft[ 1 ] -= c;
-			TANGO642_T RndBytes = ctx -> RndBytes[ 1 ];
-
-			do
-			{
-				*msg ^= (uint8_t) RndBytes;
-				RndBytes >>= 8;
-				msg++;
-				c--;
-			} while( c > 0 );
-
-			ctx -> RndBytes[ 1 ] = RndBytes;
+			break;
 		}
-	} while( msglen > 0 );
+
+		msglen -= c;
+		ctx -> RndLeft[ 1 ] -= c;
+		TANGO642_T RndBytes = ctx -> RndBytes[ 1 ];
+
+		do
+		{
+			*msg ^= (uint8_t) RndBytes;
+			RndBytes >>= 8;
+			msg++;
+			c--;
+		} while( c > 0 );
+
+		ctx -> RndBytes[ 1 ] = RndBytes;
+	}
 
 	ctx -> Seed = Seed;
 	ctx -> lcg = lcg;
