@@ -1,5 +1,5 @@
 /**
- * tango642.h version 3.3.1
+ * tango642.h version 3.3.2
  *
  * The inclusion file for the "tango642" PRVHASH PRNG-based stream cipher.
  *
@@ -38,11 +38,13 @@
  * Tango642 context structure.
  */
 
-#define TANGO642_HASH_COUNT 16 // Hashwords in a hasharray, and in output buf.
+#define TANGO642_HASH_COUNT 16 // Hashwords in a hasharray.
 #define TANGO642_T uint64_t // PRVHASH state variable type.
 #define TANGO642_FN prvhash_core64 // PRVHASH core function name.
 #define TANGO642_LU prvhash_lu64ec // Unsigned value EC load function.
 #define TANGO642_EC64 PRVHASH_EC64 // Value EC function.
+#define TANGO642_SH3( v1, v2, v3 ) \
+	{ TANGO642_T t = v1; v1 = v2; v2 = v3; v3 = t; } // 3-value shift macro.
 
 /**
  * tango642 context structure, can be placed on stack.
@@ -53,11 +55,11 @@ typedef struct
 	TANGO642_T Seed; ///< Current Seed value.
 	TANGO642_T lcg; ///< Current lcg value.
 	TANGO642_T Hash[ TANGO642_HASH_COUNT ]; ///< Current hash values.
-	TANGO642_T SeedF; ///< "Firewalling" PRNG Seed value.
-	TANGO642_T lcgF; ///< "Firewalling" PRNG lcg value.
-	TANGO642_T HashF; ///< "Firewalling" PRNG Hash value.
-	TANGO642_T RndBytes; ///< The recent partial random output.
-	size_t RndLeft; ///< The number of bytes left in RndBytes.
+	TANGO642_T SeedF[ 2 ]; ///< "Firewalling" fused PRNG Seed values.
+	TANGO642_T lcgF[ 2 ]; ///< "Firewalling" fused PRNG lcg values.
+	TANGO642_T HashF[ 3 ]; ///< "Firewalling" fused PRNG Hash values.
+	TANGO642_T RndBytes[ 2 ]; ///< The recent partial random outputs.
+	size_t RndLeft[ 2 ]; ///< The number of bytes left in RndBytes.
 	size_t HashPos; ///< Hash array position, in bytes.
 } TANGO642_CTX;
 
@@ -86,11 +88,19 @@ inline void tango642_init( TANGO642_CTX* ctx, const uint8_t* key,
 {
 	ctx -> Seed = TANGO642_LU( key );
 	ctx -> lcg = 0;
-	ctx -> SeedF = TANGO642_LU( key + sizeof( TANGO642_T ));
-	ctx -> lcgF = 0;
-	ctx -> HashF = 0;
-	ctx -> RndBytes = 0;
-	ctx -> RndLeft = 0;
+
+	ctx -> SeedF[ 0 ] = TANGO642_LU( key + sizeof( TANGO642_T ));
+	ctx -> SeedF[ 1 ] = 0;
+	ctx -> lcgF[ 0 ] = 0;
+	ctx -> lcgF[ 1 ] = 0;
+	ctx -> HashF[ 0 ] = 0;
+	ctx -> HashF[ 1 ] = 0;
+	ctx -> HashF[ 2 ] = 0;
+
+	ctx -> RndBytes[ 0 ] = 0;
+	ctx -> RndBytes[ 1 ] = 0;
+	ctx -> RndLeft[ 0 ] = 0;
+	ctx -> RndLeft[ 1 ] = 0;
 	ctx -> HashPos = 0;
 
 	key += sizeof( TANGO642_T ) * 2;
@@ -114,15 +124,21 @@ inline void tango642_init( TANGO642_CTX* ctx, const uint8_t* key,
 
 	TANGO642_T Seed = ctx -> Seed;
 	TANGO642_T lcg = ctx -> lcg;
-	TANGO642_T SeedF = ctx -> SeedF;
-	TANGO642_T lcgF = ctx -> lcgF;
-	TANGO642_T HashF = ctx -> HashF;
+	TANGO642_T SeedF = ctx -> SeedF[ 0 ];
+	TANGO642_T lcgF = ctx -> lcgF[ 0 ];
+	TANGO642_T HashF = ctx -> HashF[ 0 ];
+	TANGO642_T SeedF2 = ctx -> SeedF[ 1 ];
+	TANGO642_T lcgF2 = ctx -> lcgF[ 1 ];
+	TANGO642_T HashF2 = ctx -> HashF[ 1 ];
+	TANGO642_T HashF3 = ctx -> HashF[ 2 ];
 	TANGO642_T* const ha = ctx -> Hash;
 
 	for( i = 0; i < TANGO642_HASH_COUNT; i++ )
 	{
-		SeedF ^= TANGO642_FN( &Seed, &lcg, ha + i );
+		SeedF2 ^= TANGO642_FN( &Seed, &lcg, ha + i );
 		TANGO642_FN( &SeedF, &lcgF, &HashF );
+		TANGO642_FN( &SeedF2, &lcgF2, &HashF2 );
+		TANGO642_SH3( HashF, HashF2, HashF3 );
 	}
 
 	const int ivo = TANGO642_HASH_COUNT - 2 -
@@ -137,21 +153,29 @@ inline void tango642_init( TANGO642_CTX* ctx, const uint8_t* key,
 			ivlen -= sizeof( TANGO642_T );
 		}
 
-		SeedF ^= TANGO642_FN( &Seed, &lcg, ha + i );
+		SeedF2 ^= TANGO642_FN( &Seed, &lcg, ha + i );
 		TANGO642_FN( &SeedF, &lcgF, &HashF );
+		TANGO642_FN( &SeedF2, &lcgF2, &HashF2 );
+		TANGO642_SH3( HashF, HashF2, HashF3 );
 	}
 
 	for( i = 0; i < TANGO642_HASH_COUNT; i++ )
 	{
-		SeedF ^= TANGO642_FN( &Seed, &lcg, ha + i );
+		SeedF2 ^= TANGO642_FN( &Seed, &lcg, ha + i );
 		TANGO642_FN( &SeedF, &lcgF, &HashF );
+		TANGO642_FN( &SeedF2, &lcgF2, &HashF2 );
+		TANGO642_SH3( HashF, HashF2, HashF3 );
 	}
 
 	ctx -> Seed = Seed;
 	ctx -> lcg = lcg;
-	ctx -> SeedF = SeedF;
-	ctx -> lcgF = lcgF;
-	ctx -> HashF = HashF;
+	ctx -> SeedF[ 0 ] = SeedF;
+	ctx -> lcgF[ 0 ] = lcgF;
+	ctx -> HashF[ 0 ] = HashF;
+	ctx -> SeedF[ 1 ] = SeedF2;
+	ctx -> lcgF[ 1 ] = lcgF2;
+	ctx -> HashF[ 1 ] = HashF2;
+	ctx -> HashF[ 2 ] = HashF3;
 }
 
 /**
@@ -168,26 +192,35 @@ inline void tango642_xor( TANGO642_CTX* ctx, uint8_t* msg, size_t msglen )
 {
 	TANGO642_T Seed = ctx -> Seed;
 	TANGO642_T lcg = ctx -> lcg;
-	TANGO642_T SeedF = ctx -> SeedF;
-	TANGO642_T lcgF = ctx -> lcgF;
-	TANGO642_T HashF = ctx -> HashF;
+	TANGO642_T SeedF = ctx -> SeedF[ 0 ];
+	TANGO642_T lcgF = ctx -> lcgF[ 0 ];
+	TANGO642_T HashF = ctx -> HashF[ 0 ];
+	TANGO642_T SeedF2 = ctx -> SeedF[ 1 ];
+	TANGO642_T lcgF2 = ctx -> lcgF[ 1 ];
+	TANGO642_T HashF2 = ctx -> HashF[ 1 ];
+	TANGO642_T HashF3 = ctx -> HashF[ 2 ];
 	uint8_t* ha = (uint8_t*) ctx -> Hash + ctx -> HashPos;
 	uint8_t* const haend = (uint8_t*) ( ctx -> Hash + TANGO642_HASH_COUNT );
 
-	TANGO642_T RndBytes = ctx -> RndBytes;
-	size_t rl = ctx -> RndLeft;
-
 	do
 	{
-		if( rl == 0 )
+		if( ctx -> RndLeft[ 0 ] + ctx -> RndLeft[ 1 ] == 0 )
 		{
-			size_t rep = msglen >> 3;
+			size_t rep = msglen >> 4;
 
 			while( rep > 0 )
 			{
-				SeedF ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ha );
-				const TANGO642_T rb = TANGO642_EC64(
-					TANGO642_FN( &SeedF, &lcgF, &HashF ));
+				SeedF2 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ha );
+
+				TANGO642_T mx, mx2;
+				memcpy( &mx, msg, sizeof( mx ));
+				memcpy( &mx2, msg + sizeof( mx ), sizeof( mx2 ));
+				mx ^= TANGO642_EC64( TANGO642_FN( &SeedF, &lcgF, &HashF ));
+				mx2 ^= TANGO642_EC64( TANGO642_FN( &SeedF2, &lcgF2, &HashF2 ));
+				memcpy( msg, &mx, sizeof( mx ));
+				memcpy( msg + sizeof( mx ), &mx2, sizeof( mx2 ));
+
+				TANGO642_SH3( HashF, HashF2, HashF3 );
 
 				ha += sizeof( TANGO642_T );
 
@@ -196,18 +229,19 @@ inline void tango642_xor( TANGO642_CTX* ctx, uint8_t* msg, size_t msglen )
 					ha -= TANGO642_HASH_COUNT * sizeof( TANGO642_T );
 				}
 
-				TANGO642_T mx;
-				memcpy( &mx, msg, sizeof( mx ));
-				mx ^= rb;
-				memcpy( msg, &mx, sizeof( mx ));
-
 				rep--;
-				msg += sizeof( mx );
+				msg += sizeof( TANGO642_T ) * 2;
 			}
 
-			SeedF ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ha );
-			RndBytes = TANGO642_EC64(
+			SeedF2 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ha );
+
+			ctx -> RndBytes[ 0 ] = TANGO642_EC64(
 				TANGO642_FN( &SeedF, &lcgF, &HashF ));
+
+			ctx -> RndBytes[ 1 ] = TANGO642_EC64(
+				TANGO642_FN( &SeedF2, &lcgF2, &HashF2 ));
+
+			TANGO642_SH3( HashF, HashF2, HashF3 );
 
 			ha += sizeof( TANGO642_T );
 
@@ -216,32 +250,61 @@ inline void tango642_xor( TANGO642_CTX* ctx, uint8_t* msg, size_t msglen )
 				ha -= TANGO642_HASH_COUNT * sizeof( TANGO642_T );
 			}
 
-			rl = sizeof( RndBytes );
-			msglen &= sizeof( TANGO642_T ) - 1;
+			ctx -> RndLeft[ 0 ] = sizeof( TANGO642_T );
+			ctx -> RndLeft[ 1 ] = sizeof( TANGO642_T );
+			msglen &= 15;
 		}
 
-		size_t c = ( msglen > rl ? rl : msglen );
-		msglen -= c;
-		rl -= c;
+		size_t c = ( msglen > ctx -> RndLeft[ 0 ] ?
+			ctx -> RndLeft[ 0 ] : msglen );
 
-		while( c > 0 )
+		if( c > 0 )
 		{
-			*msg ^= (uint8_t) RndBytes;
-			RndBytes >>= 8;
-			msg++;
-			c--;
+			msglen -= c;
+			ctx -> RndLeft[ 0 ] -= c;
+			TANGO642_T RndBytes = ctx -> RndBytes[ 0 ];
+
+			do
+			{
+				*msg ^= (uint8_t) RndBytes;
+				RndBytes >>= 8;
+				msg++;
+				c--;
+			} while( c > 0 );
+
+			ctx -> RndBytes[ 0 ] = RndBytes;
+		}
+
+		c = ( msglen > ctx -> RndLeft[ 1 ] ? ctx -> RndLeft[ 1 ] : msglen );
+
+		if( c > 0 )
+		{
+			msglen -= c;
+			ctx -> RndLeft[ 1 ] -= c;
+			TANGO642_T RndBytes = ctx -> RndBytes[ 1 ];
+
+			do
+			{
+				*msg ^= (uint8_t) RndBytes;
+				RndBytes >>= 8;
+				msg++;
+				c--;
+			} while( c > 0 );
+
+			ctx -> RndBytes[ 1 ] = RndBytes;
 		}
 	} while( msglen > 0 );
 
 	ctx -> Seed = Seed;
 	ctx -> lcg = lcg;
-	ctx -> SeedF = SeedF;
-	ctx -> lcgF = lcgF;
-	ctx -> HashF = HashF;
+	ctx -> SeedF[ 0 ] = SeedF;
+	ctx -> lcgF[ 0 ] = lcgF;
+	ctx -> HashF[ 0 ] = HashF;
+	ctx -> SeedF[ 1 ] = SeedF2;
+	ctx -> lcgF[ 1 ] = lcgF2;
+	ctx -> HashF[ 1 ] = HashF2;
+	ctx -> HashF[ 2 ] = HashF3;
 	ctx -> HashPos = ha - (uint8_t*) ctx -> Hash;
-
-	ctx -> RndBytes = RndBytes;
-	ctx -> RndLeft = rl;
 }
 
 /**
