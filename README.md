@@ -481,6 +481,54 @@ state variable size. This hash function variant demonstrates that PRVHASH's
 method does not rely on bit shuffling alone (shuffles are purely local), but
 is genuinely based on PRNG position "jumps".
 
+## Fused PRNG ##
+
+While this "fused" arrangement is currently not used in the hash function
+implementations, it is also working fine with the core hash function.
+For example, while the "minimal PRNG" described above has 0.95 cycles/byte
+performance, the "fused" arrangement has a PRNG performance of 0.41
+cycles/byte, with a possibility of further scaling using AVX-512 instructions.
+
+```
+#include "prvhash_core.h"
+#include <stdio.h>
+
+int main()
+{
+	uint64_t Seed = 0;
+	uint64_t lcg = 0;
+	uint64_t Hash = 0;
+	uint64_t Seed2 = 0;
+	uint64_t lcg2 = 0;
+	uint64_t Hash2 = 0;
+	uint64_t Seed3 = 0;
+	uint64_t lcg3 = 0;
+	uint64_t Hash3 = 0;
+	uint64_t Hash4 = 0;
+
+	uint64_t v = 0;
+	uint64_t v2 = 0;
+	uint64_t v3 = 0;
+
+	uint64_t i;
+
+	for( i = 0; i < ( 1ULL << 27 ); i++ )
+	{
+		v = prvhash_core64( &Seed, &lcg, &Hash );
+		v2 = prvhash_core64( &Seed2, &lcg2, &Hash2 );
+		v3 = prvhash_core64( &Seed3, &lcg3, &Hash3 );
+
+		uint64_t t = Hash;
+		Hash = Hash2;
+		Hash2 = Hash3;
+		Hash3 = Hash4;
+		Hash4 = t;
+	}
+
+	printf( "%llu %llu %llu\n", v, v2, v3 );
+}
+```
+
 ## Other ##
 
 [Follow the author on Twitter](https://twitter.com/AlekseyVaneev)
