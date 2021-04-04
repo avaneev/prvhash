@@ -107,8 +107,8 @@ Moreover, the PRVHASH systems can be freely daisy-chained by feeding their
 outputs to `Seed` inputs, adding guaranteed security firewalls, and increasing
 the PRNG period of the final output accordingly. Note that any external PRNG
 output should be inputted via `Seed`, not `lcg`, as to not be subject to
-interference with the feedback path. For hashing, only input via `lcg` works
-in practice.
+interference with the feedback path. For hashing and external entropy, only
+input via `lcg` works in practice.
 
 While `lcg`, `Seed`, and `Hash` variables are best initialized with good
 entropy source (however, structurally, they can accept just about any entropy
