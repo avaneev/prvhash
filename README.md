@@ -335,13 +335,13 @@ difference between the "ideal" and "production" functions. This equality is
 further strengthened when 64-bit state variables are used (larger state
 variables have better shuffling statistics).
 
-However, to match ideal's core hash function's property of summation of PRNG
-period exponents on external entropy input, the `plcg` value in the production
-function should be acquired before the `lcg ^= msgw` operation. But this is
-not a requirement for hashing since it is enough for the PRNG period to
-correspond to the system size, not to the period of external entropy. As was
-noted earlier, for daisy-chaining, the input via `Seed` should be used: in
-this case PRNG period exponents are summed.
+However, to fully match ideal core hash function's property of summation of
+PRNG period exponents on external entropy input, the `plcg` value in the
+production function should be acquired before the `lcg ^= msgw` operation. But
+this is not a requirement for hashing since it is enough for the PRNG period
+to correspond to the system size, not to the period of external entropy. As
+was noted earlier, for daisy-chaining, the input via `Seed` should be used:
+in this case PRNG period exponents are summed.
 
 ## Method's Philosophy ##
 
