@@ -1,5 +1,5 @@
 /**
- * tango642.h version 3.3.5
+ * tango642.h version 3.3.6
  *
  * The inclusion file for the "tango642" PRVHASH PRNG-based streamed XOR
  * function.
@@ -77,6 +77,11 @@ typedef struct
  * structure can be stored as a whole, and used as a substitute for key+iv
  * pair.
  *
+ * When "keylen+ivlen" is larger than 1168 bits, there can be theoretical
+ * "key+iv" collisions: such collisions should not pose a security threat, but
+ * may be perceived as "non-ideal". However, when the "keylen" is 1024
+ * bits long, this still allows "iv" to be 128 bits long "safely".
+ *
  * @param ctx Pointer to the context structure.
  * @param key Uniformly-random key buffer, alignment is unimportant.
  * @param keylen Length of "key" in bytes, should be >= 16, in increments of
@@ -84,7 +89,7 @@ typedef struct
  * @param iv Uniformly-random "unsecure" initialization vector (nonce),
  * alignment is unimportant. Can be 0 if "ivlen" is also 0.
  * @param ivlen Length of "iv" in bytes, in increments of 8, can be zero.
- * Should not exceed 96 bytes.
+ * Should not exceed 80 bytes.
  */
 
 inline void tango642_init( TANGO642_CTX* ctx, const uint8_t* key,
@@ -126,7 +131,7 @@ inline void tango642_init( TANGO642_CTX* ctx, const uint8_t* key,
 		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + i ));
 	}
 
-	const size_t ivo = TANGO642_HASH_SIZE - sizeof( TANGO642_T ) * 2 - ivlen;
+	const size_t ivo = TANGO642_HASH_SIZE - sizeof( TANGO642_T ) * 4 - ivlen;
 
 	for( i = 0; i < TANGO642_HASH_SIZE; i += sizeof( TANGO642_T ))
 	{
