@@ -489,6 +489,14 @@ state variable size. This hash function variant demonstrates that PRVHASH's
 method does not rely on bit shuffling alone (shuffles are purely local), but
 is genuinely based on PRNG position "jumps".
 
+## The Most Minimal Hash Array-less PRVHASH ##
+
+    Seed *= lcg - ~lcg;
+	const uint64_t rs = Seed >> 32 | Seed << 32;
+	lcg += ~Seed;
+	Seed = lcg ^ rs;
+	const uint64_t out = Seed;
+
 ## Fused PRNG ##
 
 While this "fused" arrangement is currently not used in the hash function
