@@ -547,10 +547,6 @@ int main()
 
 ## Other ##
 
-[Follow the author on Twitter](https://twitter.com/AlekseyVaneev)
-
-[Become a patron on Patreon](https://patreon.com/aleksey_vaneev)
-
 PRVHASH authorship and copyright was registered at the
 [Russian Patent Office](https://rospatent.gov.ru/) under reg.numbers
 2020661136, 2020666287, 2021615385.
