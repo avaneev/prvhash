@@ -545,6 +545,13 @@ int main()
 }
 ```
 
+## Other Thoughts ##
+
+PRVHASH being scalable potentially allows to apply "infinite" state variable
+size in its system. This reasoning makes PRVHASH comparable to PI. Moreover,
+this also opens up a notion of "infinite frequency", and thus "infinite
+energy".
+
 ## Other ##
 
 PRVHASH authorship and copyright was registered at the
