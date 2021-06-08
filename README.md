@@ -552,6 +552,48 @@ size in its system. This reasoning makes PRVHASH comparable to PI. Moreover,
 this also opens up a notion of "infinite frequency", and thus "infinite
 energy".
 
+During the course of PRVHASH development, the author has found that the
+simplest sinewave oscillator with period being a multiple of PI, can be used
+as a pseudo-random number generator.
+
+```
+#include <math.h>
+#include <stdint.h>
+
+class DummyRNG : public PractRand::RNGs::vRNG16 {
+public:
+double si;
+double sincr;
+double svalue1;
+double svalue2;
+
+DummyRNG() {
+si = 0.01 / 3.14159265358979324;
+sincr = 2.0 * cos( si );
+seed( 0 );
+}
+
+Uint16 raw16() {
+	uint64_t Value = ( *(uint64_t*) &svalue1 ) >> 4;
+
+	const double tmp = svalue1;
+	svalue1 = sincr * svalue1 - svalue2;
+	svalue2 = tmp;
+
+	return (Uint16) ( Value ^ Value >> 16 ^ Value >> 32 );
+}
+void walk_state(PractRand::StateWalkingObject *walker) {}
+void seed(Uint64 sv) {
+const double ph = sv * 3.40612158008655459e-19;
+
+svalue1 = sin( ph );
+svalue2 = sin( ph - si );
+
+}
+std::string get_name() const {return "SINEWAVE";}
+};
+```
+
 ## Other ##
 
 PRVHASH authorship and copyright was registered at the
