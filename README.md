@@ -220,12 +220,11 @@ How does it work? First of all, this PRNG system, represented by the core hash
 function, does not work with numbers in a common sense: it works with [entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)),
 or random sequences of bits. The current "expression" of system's overall
 internal entropy - the `Seed` - gets multiplied ("smeared") by a supportive
-variable - `lcg`, - which is also a random value. Such multiplication produces
-result with a logarithmic-like distribution. This result is then bit-reversed,
-and is accumulated in the `Hash`. The `lcg` variable accumulates the result
-with bit-inversion. The `Seed` is then updated with a mix of the bit-reversed
-multiplication result, previous `lcg`'s value (that includes the message
-input), and the hash word produced on previous rounds. The reason the
+variable - `lcg`, - which is also a random value. This result is then
+bit-reversed, and is accumulated in the `Hash`. The `lcg` variable accumulates
+the result with bit-inversion. The `Seed` is then updated with a mix of the
+bit-reversed multiplication result, previous `lcg`'s value (that includes the
+message input), and the hash word produced on previous rounds. The reason the
 message's entropy (which may be sparse or non-random) does not destabilize the
 system is because the message becomes hidden in a mix of internal entropy;
 message's distribution becomes irrelevant. Both the accumulation of the
