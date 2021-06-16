@@ -552,22 +552,22 @@ PRVHASH comparable to PI in its reach of "infinite" bit sequence length.
 Moreover, this also opens up a notion of "infinite frequency", and thus
 "infinite energy".
 
-I, as an author of PRVHASH, would like to point out at some long-standing
+I, as the author of PRVHASH, would like to point out at some long-standing
 misconception in relating "combinatorics" to "random numbers". Historically,
 cryptography was based on a concept of permutations, mixed with some sort of
-mathematical operations - most hashes and ciphers use such "constructs".
-However, when viewing a system as having some "combinatorical capacity" or
+mathematical operations: most hashes and ciphers use such "constructs".
+However, when viewing a system as having some "combinatorial capacity" or
 the number of bit combinations a given system may have, and combining this
 understanding with "random permutations", it may give a false understanding
 that "uniform randomness" may generate any combination within the limits of
 "combinatorial capacity", with some probability. In fact, "uniform randomness"
 auto-limits the "sparseness" of random bit sequences it generates since
 "too sparse" bit sequence cannot be statistically called as uniformly-random.
-However, "combinatorial capacity" of a system, when applied to random number
+Thus, "combinatorial capacity" of a system, when applied to random number
 generation, transforms into a notion of ability of a system to generate
 independent uniformly-random number sequences. This is what happens in
 PRVHASH: on entropy input the system may "jump" or "converge" into an
-unrelated sub-sequence.
+unrelated random sub-sequence.
 
 During the course of PRVHASH development, the author has found that the
 simplest sinewave oscillator with period being a multiple of PI, can be used
