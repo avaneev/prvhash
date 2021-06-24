@@ -167,7 +167,8 @@ int main()
 ## Two-bit PRNG ##
 
 This is a "just for fun" example, but it passes 128 MB PractRand threshold.
-You CAN generate pseudo-random numbers by using 2-bit shuffles.
+You CAN generate pseudo-random numbers by using 2-bit shuffles; moreover, you
+can input external entropy into the system.
 
 ```
 #include <stdio.h>
