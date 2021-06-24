@@ -164,6 +164,47 @@ int main()
 }
 ```
 
+## Two-bit PRNG ##
+
+This is a "just for fun" example, but it passes 128 MB PractRand threshold.
+You CAN generate pseudo-random numbers by using 2-bit shuffles.
+
+```
+#include <stdio.h>
+#include "prvhash_core.h"
+#define PH_HASH_COUNT 42
+
+int main()
+{
+	uint8_t Seed = 0;
+	uint8_t lcg = 0;
+	uint8_t Hash[ PH_HASH_COUNT ] = { 0 };
+	int HashPos = 0;
+	int l;
+
+	for( l = 0; l < 256; l++ )
+	{
+		uint8_t r = 0;
+		int k;
+
+		for( k = 0; k < 4; k++ )
+		{
+			r <<= 2;
+			r |= prvhash_core2( &Seed, &lcg, Hash + HashPos );
+
+			HashPos++;
+
+			if( HashPos == PH_HASH_COUNT )
+			{
+				HashPos = 0;
+			}
+		}
+
+		printf( "%4i ", (int) r );
+	}
+}
+```
+
 ## Streamed Hashing ##
 
 The file `prvhash64s.h` implements a relatively fast streamed hashing
