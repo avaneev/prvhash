@@ -545,6 +545,8 @@ implementations, it is also working fine with the core hash function.
 For example, while the "minimal PRNG" described above has 0.95 cycles/byte
 performance, the "fused" arrangement has a PRNG performance of 0.41
 cycles/byte, with a possibility of further scaling using AVX-512 instructions.
+Note that hash array size should not be a multiple of the number of fused
+elements, otherwise PRNG stalls.
 
 ```
 #include "prvhash_core.h"
