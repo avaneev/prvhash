@@ -388,8 +388,9 @@ in this case PRNG period exponents are summed.
 
 If the state of the hashing function ever reaches all-zeroes in `Seed` and
 `Hash`, and at the same time all `lcg` values will be equal to -1, any
-subsequent external entropy input of -1 will result in a stalled state:
-the hash function will produce the same hash.
+subsequent continous external entropy input of -1 will result in a stalled
+state: the hash function will produce the same hash value. This does not
+affect PRNG uses of the core hash function.
 
 ## Method's Philosophy ##
 
