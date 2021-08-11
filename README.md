@@ -384,6 +384,13 @@ to correspond to the system size, not to the period of external entropy. As
 was noted earlier, for daisy-chaining, the input via `Seed` should be used:
 in this case PRNG period exponents are summed.
 
+## The Flawed State of the Hash Function ##
+
+If the state of the hashing function ever reaches all-zeroes in `Seed` and
+`Hash`, and at the same time all `lcg` values will be equal to -1, any
+subsequent external entropy input of -1 will result in a stalled state:
+the hash function will produce the same hash.
+
 ## Method's Philosophy ##
 
 Any external entropy (message) that enters this PRNG system acts as a
