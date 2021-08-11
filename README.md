@@ -9,11 +9,7 @@ using a pseudo-random number sequence as a hash) to [`keccak`](https://en.wikipe
 and [`RadioGatun`](https://en.wikipedia.org/wiki/RadioGat%C3%BAn)
 schemes, but is a completely different implementation of such concept.
 PRVHASH is both a ["randomness extractor"](https://en.wikipedia.org/wiki/Randomness_extractor)
-and an "extendable-output function" (XOF), however the resulting hashes have
-[security level](https://en.wikipedia.org/wiki/Security_of_cryptographic_hash_functions)
-that corresponds to the hash length specification: the collision resistance is
-equal to `2^(n/2)` while the preimage resistance is equal to `2^n`, where `n`
-is the resulting hash length in bits.
+and an "extendable-output function" (XOF).
 
 PRVHASH can generate 64- to unlimited-bit hashes, yielding hashes of roughly
 equal quality independent of the chosen hash length. PRVHASH is based on
@@ -25,31 +21,19 @@ only on message length. A streamed hashing implementation is available.
 
 PRVHASH is solely based on the butterfly effect, inspired by [LCG](https://en.wikipedia.org/wiki/Linear_congruential_generator)
 pseudo-random number generators. The generated hashes have good avalanche
-properties. For best results, when creating (H)MACs, a random seed should be
-supplied to the hash function, but this is not a requirement. When each
-message in a set is given a random seed, this allows hashes of such set to
-have a greater statistical distance from each other. In practice, the
-`InitVec` (instead of `SeedXOR`), and initial hash, can both be randomly
-seeded (see the suggestions in `prvhash64.h`), adding useful initial entropy
-(`InitVec` plus `Hash` total bits of entropy).
+properties. For best results, a random seed should be supplied to the hash
+function, but this is not a requirement. When each message in a set is given a
+random seed, this allows hashes of such set to have a greater statistical
+distance from each other. In practice, the `InitVec` (instead of `SeedXOR`),
+and initial hash, can both be randomly seeded (see the suggestions in
+`prvhash64.h`), adding useful initial entropy (`InitVec` plus `Hash` total
+bits of entropy).
 
 64-, 128-, 256-, 512- and 1024-bit PRVHASH hashes pass all [SMHasher](https://github.com/rurban/smhasher)
 tests. Other hash lengths were not thoroughly tested, but extrapolations can
-be made. PRVHASH possesses most of the cryptographic properties, but this
-aspect has yet to be better proven.
-
-In author's opinion, this hash function is provably [irreversible](https://en.wikipedia.org/wiki/One-way_function)
-as it does not use fixed prime numbers, its output depends on all prior input,
-the function has non-linearities (loss of state information) induced by bit
-truncations, and because the message enters the system only as a mix with the
-system's internal entropy without permutations of any sort. This reasoning
-applies to the case when the internal state of the hashing system is known.
-However, if the core hash function is a black-box, and only its output (`out`)
-is known, it reveals no information about its prior or later state: all
-elements of the core hash function (`Seed`, `lcg`, `out`, `Hash`) are
-mutually-uncorrelated and wholly-unequal during the PRNG period. In this case,
-the core hash function has the security level that is equal to its full bit
-size (or message's size, if it is smaller).
+be made. Streamed version ("parallel" variant) of PRVHASH possesses
+cryptographic properties, but this aspect has yet to be better proven. The
+author makes no cryptographic claims about PRVHASH.
 
 Please see the `prvhash64.h` file for the details of the implementation (the
 `prvhash.h`, `prvhash4.h`, `prvhash42.h` are outdated versions). Note that
@@ -114,11 +98,6 @@ While `lcg`, `Seed`, and `Hash` variables are best initialized with good
 entropy source (however, structurally, they can accept just about any entropy
 quality), the message can be sparsely-random: even an increasing counter can
 be considered as having a suitable sparse entropy.
-
-Since both internal variables (`Seed` and `lcg`) do not interact with the
-output directly, the PRNG has a high level of security: it is not enough to
-know the output of PRNG to predict its future values, or discover its prior
-values.
 
 If you have little confidence in OS-provided entropy (via `CryptGenRandom` or
 `/dev/random/`), you may consider augmenting the `ctx -> lcg[ 0 ]` variable
@@ -211,8 +190,8 @@ int main()
 The file `prvhash64s.h` implements a relatively fast streamed hashing
 function by utilizing a parallel `prvhash64` structure. Please take a look
 at the `prvhash64s_oneshot()` function for usage example. The `prvhash64s`
-offers an extremely increased security and hashing speed. The amount of
-entropy mixing going on in this implementation is substantial.
+offers an increased security and hashing speed. The amount of entropy mixing
+and "compression" going on in this implementation is substantial.
 
 The default `prvhash64s.h`-based 64-bit hash of the string `The cat is out of
 the bag` is `a23b7ec63da0657d`.
@@ -388,9 +367,9 @@ in this case PRNG period exponents are summed.
 
 If the state of the hashing function ever reaches all-zeroes in `Seed` and
 `Hash`, and at the same time all `lcg` values will be equal to -1, any
-subsequent continous external entropy input of -1 will result in a stalled
+subsequent continuous external entropy input of -1 will result in a stalled
 state: the hash function will produce the same hash value. This does not
-affect PRNG uses of the core hash function.
+affect PRNG usage of the core hash function.
 
 ## Method's Philosophy ##
 
@@ -493,13 +472,12 @@ public:
 
 ## PRVHASH Cryptanalysis Basics ##
 
-As was noted previously, when the internal momentary state of PRVHASH is
-known, its reversal poses a serious computational problem since the message
-that enters the system becomes indistinguishable from system's own random
-state. Moreover, each reversal round's complexity increases exponentially,
-depending on the used PRVHASH parallelism (the `lcg - ~lcg` instruction
-assures this: it naturally reduces bit size of `lcg` by 1 and thus induces
-uncertainty about system's state).
+When the internal momentary state of PRVHASH is known, its reversal poses a
+serious computational problem since the message that enters the system becomes
+indistinguishable from system's own random state. Moreover, each reversal
+round's complexity increases exponentially, depending on the used PRVHASH
+parallelism (the `lcg - ~lcg` instruction assures this: it naturally reduces
+bit size of `lcg` by 1 and thus induces uncertainty about system's state).
 
 When the system state is not known, when PRVHASH acts as a black-box, one has
 to consider core hash function's statistical properties. All internal
@@ -518,14 +496,6 @@ system's state. It's worth noting the `lcg ^ rs` expression: the `rs` variable
 is composed of two halves, both of them practically being independent PRNG
 outputs with period exponents smaller by half the state variable size. This
 additionally complicates system's reversal.
-
-To sum up, the author is unable to find cryptographical security flaws in
-PRVHASH. The author will be happy to offer a negotiable grant to any
-cryptanalyst willing to "break" PRVHASH, or publish its cryptanalysis. You can
-contact the author via aleksey.vaneev@gmail.com . Note that it is possible to
-perform "hard" computational experiments by using smaller state variable
-sizes. This is what the author did extensively. However, a cryptanalysis also
-requires mathematical analysis: it is there where any flaws can be found.
 
 ## PRVHASH16 ##
 
