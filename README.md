@@ -105,7 +105,12 @@ The core hash function can be easily integrated into your applications, to be
 used as an effective PRNG. The period of this minimal PRNG is at least
 `2^160`. The initial parameters can be varied at will, and won't "break" the
 PRNG. Setting only the `Seed` value guarantees a random start point within the
-whole PRNG period, with at least `2^64` spacing. Here is the code:
+whole PRNG period, with at least `2^64` spacing. The code follows.
+
+Note that such minimal 1-hashword PRNG is most definitely not
+cryptographically secure: its state can be solved by a SAT solver pretty fast.
+However, security against SAT solver attack of larger hash arrays and
+different structuring (parallel, daisy-chained, fused) is yet to be checked.
 
 ```
 #include "prvhash_core.h"
