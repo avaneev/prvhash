@@ -88,7 +88,7 @@ in bits, minus the number of hash words in the system, minus 1/4 of `lcg` and
 `Seed` variables' size.
 
 Moreover, the PRVHASH systems can be freely daisy-chained by feeding their
-outputs to `Seed` inputs, adding guaranteed security firewalls, and increasing
+outputs to `Seed` inputs, adding some security firewalls, and increasing
 the PRNG period of the final output accordingly. Note that any external PRNG
 output should be inputted via `Seed`, not `lcg`, as to not be subject to
 interference with the feedback path. For hashing and external entropy, only
@@ -304,8 +304,7 @@ consider an `A*(B^C)` equation; an adversary can control `C`, but does not
 know the values of `A` and `B`, thus this adversary cannot predict the
 outcome. Beside that as the core hash function naturally eliminates the bias
 from the external entropy of any statistical quality and frequency, its
-control is fruitless. Since the function's output is "compressed", it gives no
-hint on the internal state of the system.
+control may be fruitless.
 
 P.S. The reason the InitVec in the `prvhash64` hash function has the value
 constraints, and an initial state, is that otherwise the function would
@@ -367,8 +366,8 @@ random number sequences, and thus hashes, that are completely unrelated to
 each other. This also means that any smaller part of the resulting hash can be
 used as a complete hash. Since the hash length affects the PRNG period (and
 thus the combinatorial capacity) of the system, the same logic applies to
-hashes of any length, while meeting collision and preimage resistance
-specifications for all lengths.
+hashes of any length, while meeting collision resistance specifications for
+all lengths.
 
 Alternatively, the method can be viewed from the standpoint of classic
 bit mixers/shufflers: the hash array can be seen as a "working buffer" whose
