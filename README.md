@@ -32,8 +32,8 @@ bits of entropy).
 64-, 128-, 256-, 512- and 1024-bit PRVHASH hashes pass all [SMHasher](https://github.com/rurban/smhasher)
 tests. Other hash lengths were not thoroughly tested, but extrapolations can
 be made. Streamed version ("parallel" variant) of PRVHASH possesses
-cryptographic properties, but this aspect has yet to be better proven. The
-author makes no cryptographic claims about PRVHASH.
+cryptographic properties, but this aspect has yet to be better checked. The
+author makes no cryptographic claims about PRVHASH-based constructs.
 
 Please see the `prvhash64.h` file for the details of the implementation (the
 `prvhash.h`, `prvhash4.h`, `prvhash42.h` are outdated versions). Note that
@@ -62,8 +62,8 @@ file: simply call the `prvrng_test64p2()` function.
 
 `prvrng_gen64p2()`-based generator passes [`PractRand`](http://pracrand.sourceforge.net/)
 32 TB threshold with rare non-systematic "unusual" evaluations. Which suggests
-it's the working universal TRNG and randomness extractor that can "recycle"
-entropy of any statistical quality, probably the first in the world.
+it's the working randomness extractor that can "recycle" entropy of any
+statistical quality, probably the first in the world.
 
 Note that due to the structure of the core hash function the probability of
 PRNG completely "stopping", or losing internal entropy, is absent.
@@ -98,20 +98,6 @@ While `lcg`, `Seed`, and `Hash` variables are best initialized with good
 entropy source (however, structurally, they can accept just about any entropy
 quality), the message can be sparsely-random: even an increasing counter can
 be considered as having a suitable sparse entropy.
-
-If you have little confidence in OS-provided entropy (via `CryptGenRandom` or
-`/dev/random/`), you may consider augmenting the `ctx -> lcg[ 0 ]` variable
-yourself, before generating the required random number sequence. A good
-independent source of entropy is user mouse event timing and positions: you
-may simply apply something like `ctx -> lcg[ 0 ] ^= event_time_delta_micro;`
-successively after generating at least 8 random bytes, or even combine the
-mouse event time delta with mouse X-Y positions (via `XOR` or round-robin
-manner). The best tactic is to augment `lcg` after generating a variable, not
-fixed, number of random bytes, depending on mouse event time or position
-deltas: this is efficient and allows one to disseminate sparse entropy
-represented by mouse events over full system size. Note that after
-disseminating entropy, the PRNG should be first run in idle cycles to produce
-`( PRVRNG_HASH_COUNT + 2 ) * 8` bytes of output to catch up on changes.
 
 ## Minimal PRNG for Everyday Use ##
 
