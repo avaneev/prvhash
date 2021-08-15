@@ -1,5 +1,5 @@
 /**
- * prvhash_aux.h version 3.4
+ * prvhash_aux.h version 3.5
  *
  * The inclusion file for the auxiliary functions used by PRVHASH hashing
  * functions.

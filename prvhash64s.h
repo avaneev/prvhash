@@ -1,5 +1,5 @@
 /**
- * prvhash64s.h version 3.4
+ * prvhash64s.h version 3.5
  *
  * The inclusion file for the "prvhash64s" hash function. Efficient on large
  * data blocks, more secure, streamed. Implements a parallel variant of the
@@ -292,7 +292,7 @@ inline void prvhash64s_final( PRVHASH64S_CTX* ctx )
 	uint64_t lcg4 = ctx -> lcg[ 3 ];
 
 	const size_t fc = sizeof( uint64_t ) +
-		( ctx -> HashLen == sizeof( uint64_t ) ? 0 : ctx -> HashLen +
+		( ctx -> HashLen == sizeof( uint64_t ) ? 0 : ctx -> HashLen * 2 +
 		( ctx -> IsHashFilled == 0 ? (uint8_t*) HashEnd - (uint8_t*) hc : 0 ));
 
 	size_t k;

@@ -189,11 +189,11 @@ the bag` is `a43be1734f86f2fb`.
 
 The default `prvhash64s.h`-based 256-bit hash of the string
 `Only a toilet bowl does not leak` is
-`aba3433146dc86043fe898a77d5e1a5460fc3a29793402cfef0fdbeb973ed6b5`.
+`07854cd0916957e4958e3f3cf6e9c34910c911c68b927edb47de25742aba140e`.
 
 The default prvhash64s 256-bit hash of the string
 `Only a toilet bowl does not leaj` is
-`f615d235fbdd5fc4dccf553c83c412670670ad6974ac82fab8bb107b0eed5fb1`.
+`22d33e6df1100835588fdda159fe9f573a06b21b7f8e48bfc15fce7e7560e049`.
 
 This demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect).
 On a set of 216553 English words, pair-wise hash comparisons give average
@@ -280,7 +280,9 @@ depends on the state variable size: for 8-bit variables 4 full hash array
 passes are needed, for 16-bit variables 1 full pass is needed, but for 32-bit
 variables no additional passes are needed in order to produce quality hashes.
 Anyway, from the standpoint of the core hash function structure, 1 full pass
-is needed to stay on a "safer" side.
+is needed to stay on a "safer" side. Since statistical tests have shown that
+very short input in longer hashes may cause minor bit bias issues, hash
+functions implement an additional hash array pass unconditionally.
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
@@ -326,6 +328,7 @@ The author found a variant of the core hash function that can be considered
 propagation latency. However, this variant turned out to be a lot slower, due
 to reduced instruction parallelism.
 
+	lcg ^= msgw;
 	Seed ^= Hash ^ lcg;
 	Seed *= lcg - ~lcg;
 	lcg += ~Seed;
@@ -483,6 +486,8 @@ method does not rely on bit shuffling alone (shuffles are purely local), but
 is genuinely based on PRNG position "jumps".
 
 ## The Most Minimal Hash Array-less PRVHASH ##
+
+This function cannot be used for hashing.
 
     Seed *= lcg - ~lcg;
 	const uint64_t rs = Seed >> 32 | Seed << 32;

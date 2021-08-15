@@ -1,5 +1,5 @@
 /**
- * prvhash_core.h version 3.4
+ * prvhash_core.h version 3.5
  *
  * The inclusion file for the "prvhash_core64", "prvhash_core32",
  * "prvhash_core16", "prvhash_core8", "prvhash_core4", "prvhash_core2" PRVHASH
