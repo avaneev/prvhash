@@ -40,7 +40,7 @@ Please see the `prvhash64.h` file for the details of the implementation (the
 `64` refers to core hash function's variable size.
 
 The default `prvhash64.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `ecdcccb4f86e3569`.
+the bag` is `85815002aa6f213e`.
 
 A proposed short name for hashes created with `prvhash64.h` is `PRH64-N`,
 where `N` is the hash length in bits (e.g. `PRH64-256`).
@@ -185,15 +185,15 @@ offers an increased security and hashing speed. The amount of entropy mixing
 and "compression" going on in this implementation is substantial.
 
 The default `prvhash64s.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `a23b7ec63da0657d`.
+the bag` is `5bc41e8c4f86f2fb`.
 
 The default `prvhash64s.h`-based 256-bit hash of the string
 `Only a toilet bowl does not leak` is
-`cb5dda3f9f4f8ebf714911bcb9ad1ed9b956fb593b411cb12d3a6776239d21ac`.
+`545cbcce46dc8604c01767587d5e1a549f03c5d6793402cf10f02414973ed6b5`.
 
 The default prvhash64s 256-bit hash of the string
 `Only a toilet bowl does not leaj` is
-`84c4a3cd346a361549bc806b63f6db3a0bfe79ef8b075641ee9397c485b4321a`.
+`09ea2dcafbdd5fc42330aac383c41267f98f529674ac82fa4744ef840eed5fb1`.
 
 This demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect).
 On a set of 216553 English words, pair-wise hash comparisons give average
@@ -218,7 +218,7 @@ It was especially hard to find a better "hashing finalization" solution.
 	lcg ^= msgw; // Mix in external entropy (use `Seed` for daisy-chaining).
 	const uint64_t plcg = lcg; // Save `lcg` for feedback.
 	const uint64_t mx = Seed * ( lcg - ~lcg ); // Multiply random by random, without multiply by zero.
-	const uint64_t rs = mx >> 32 | mx << 32; // Produce reversed copy (ideally, bit-reversed).
+	const uint64_t rs = ( mx >> 32 | mx << 32 ) ^ 0xFFFFFFFF; // Produce reversed copy (ideally, bit-reversed).
 	lcg += ~mx; // Internal entropy mixing.
 	Hash += rs; // Update hash word (summation produces uniform distribution).
 	Seed = Hash ^ plcg; // Mix new reversed seed value with hash and previous `lcg`. Entropy feedback.
@@ -329,7 +329,7 @@ to reduced instruction parallelism.
 	Seed ^= Hash ^ lcg;
 	Seed *= lcg - ~lcg;
 	lcg += ~Seed;
-	rs = Seed >> 32 | Seed << 32;
+	rs = ( Seed >> 32 | Seed << 32 ) ^ 0xFFFFFFFF;
 	Hash += rs;
 	out = lcg ^ rs;
 
@@ -352,14 +352,6 @@ this is not a requirement for hashing since it is enough for the PRNG period
 to correspond to the system size, not to the period of external entropy. As
 was noted earlier, for daisy-chaining, the input via `Seed` should be used:
 in this case PRNG period exponents are summed.
-
-## The Flawed State of the Hash Function ##
-
-If the state of the hashing function ever reaches all-zeroes in `Seed` and
-`Hash`, and at the same time all `lcg` values will be equal to -1, any
-subsequent continuous external entropy input of -1 will result in a stalled
-state: the hash function will produce the same hash value. This does not
-affect PRNG usage of the core hash function.
 
 ## Method's Philosophy ##
 
@@ -433,7 +425,7 @@ public:
         {
 //            Ctr++; lcg[ 0 ] ^= ( Ctr ^ ( Ctr >> 4 )) & 15;
 
-            uint32_t h = 0;
+            uint64_t h = 0;
 
             for( j = 0; j < PH_PAR_COUNT; j++ )
             {
@@ -510,8 +502,8 @@ is genuinely based on PRNG position "jumps".
 
 While this "fused" arrangement is currently not used in the hash function
 implementations, it is also working fine with the core hash function.
-For example, while the "minimal PRNG" described above has 0.95 cycles/byte
-performance, the "fused" arrangement has a PRNG performance of 0.41
+For example, while the "minimal PRNG" described above has 0.98 cycles/byte
+performance, the "fused" arrangement has a PRNG performance of 0.45
 cycles/byte, with a possibility of further scaling using AVX-512 instructions.
 Note that hash array size should not be a multiple of the number of fused
 elements, otherwise PRNG stalls.

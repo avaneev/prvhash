@@ -1,5 +1,5 @@
 /**
- * tango642.h version 3.3.6
+ * tango642.h version 3.4
  *
  * The inclusion file for the "tango642" PRVHASH PRNG-based streamed XOR
  * function.
