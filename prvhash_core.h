@@ -60,9 +60,9 @@ inline uint64_t prvhash_core64( uint64_t* const Seed0, uint64_t* const lcg0,
 
 	const uint64_t plcg = lcg;
 	const uint64_t mx = Seed * ( lcg - ~lcg );
-	const uint64_t rs = ( mx >> 32 | mx << 32 ) ^ 0xFFFFFFFF;
+	const uint64_t rs = mx >> 32 | mx << 32;
 	lcg += ~mx;
-	Hash += rs;
+	Hash += rs ^ 0xFFFFFFFF;
 	Seed = Hash ^ plcg;
 	const uint64_t out = lcg ^ rs;
 
@@ -78,9 +78,9 @@ inline uint32_t prvhash_core32( uint32_t* const Seed0, uint32_t* const lcg0,
 
 	const uint32_t plcg = lcg;
 	const uint32_t mx = Seed * ( lcg - ~lcg );
-	const uint32_t rs = ( mx >> 16 | mx << 16 ) ^ 0xFFFF;
+	const uint32_t rs = mx >> 16 | mx << 16;
 	lcg += ~mx;
-	Hash += rs;
+	Hash += rs ^ 0xFFFF;
 	Seed = Hash ^ plcg;
 	const uint32_t out = lcg ^ rs;
 
@@ -96,9 +96,9 @@ inline uint16_t prvhash_core16( uint16_t* const Seed0, uint16_t* const lcg0,
 
 	const uint16_t plcg = lcg;
 	const uint16_t mx = (uint16_t) ( Seed * ( lcg - ~lcg ));
-	const uint16_t rs = (uint16_t) (( mx >> 8 | mx << 8 ) ^ 255 );
+	const uint16_t rs = (uint16_t) ( mx >> 8 | mx << 8 );
 	lcg += (uint16_t) ~mx;
-	Hash += rs;
+	Hash += (uint16_t) ( rs ^ 0xFF );
 	Seed = (uint16_t) ( Hash ^ plcg );
 	const uint16_t out = (uint16_t) ( lcg ^ rs );
 
@@ -114,9 +114,9 @@ inline uint8_t prvhash_core8( uint8_t* const Seed0, uint8_t* const lcg0,
 
 	const uint8_t plcg = lcg;
 	const uint8_t mx = (uint8_t) ( Seed * ( lcg - ~lcg ));
-	const uint8_t rs = (uint8_t) (( mx >> 4 | mx << 4 ) ^ 15 );
+	const uint8_t rs = (uint8_t) ( mx >> 4 | mx << 4 );
 	lcg += (uint8_t) ~mx;
-	Hash += rs;
+	Hash += (uint8_t) ( rs ^ 15 );
 	Seed = (uint8_t) ( Hash ^ plcg );
 	const uint8_t out = (uint8_t) ( lcg ^ rs );
 
@@ -132,10 +132,10 @@ inline uint8_t prvhash_core4( uint8_t* const Seed0, uint8_t* const lcg0,
 
 	const uint8_t plcg = lcg;
 	const uint8_t mx = (uint8_t) (( Seed * ( lcg - ~lcg )) & 15 );
-	const uint8_t rs = (uint8_t) ((( mx >> 2 | mx << 2 ) ^ 3 ) & 15 );
+	const uint8_t rs = (uint8_t) (( mx >> 2 | mx << 2 ) & 15 );
 	lcg += (uint8_t) ~mx;
 	lcg &= 15;
-	Hash += rs;
+	Hash += (uint8_t) ( rs ^ 3 );
 	Hash &= 15;
 	Seed = (uint8_t) ( Hash ^ plcg );
 	const uint8_t out = (uint8_t) ( lcg ^ rs );
@@ -152,10 +152,10 @@ inline uint8_t prvhash_core2( uint8_t* const Seed0, uint8_t* const lcg0,
 
 	const uint8_t plcg = lcg;
 	const uint8_t mx = (uint8_t) (( Seed * ( lcg - ~lcg )) & 3 );
-	const uint8_t rs = (uint8_t) ((( mx >> 1 | mx << 1 ) ^ 1 ) & 3 );
+	const uint8_t rs = (uint8_t) (( mx >> 1 | mx << 1 ) & 3 );
 	lcg += (uint8_t) ~mx;
 	lcg &= 3;
-	Hash += rs;
+	Hash += (uint8_t) ( rs ^ 1 );
 	Hash &= 3;
 	Seed = (uint8_t) ( Hash ^ plcg );
 	const uint8_t out = (uint8_t) ( lcg ^ rs );
