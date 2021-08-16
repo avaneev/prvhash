@@ -1,5 +1,5 @@
 /**
- * prvhash64.h version 3.5
+ * prvhash64.h version 3.6
  *
  * The inclusion file for the "prvhash64" and "prvhash64_64m" hash functions.
  *
@@ -128,7 +128,7 @@ inline void prvhash64( const uint8_t* Msg, const size_t MsgLen,
 		Msg += sizeof( state_t );
 	}
 
-	const size_t fc = ( HashLen == sizeof( state_t ) ? 0 : HashLen * 2 +
+	const size_t fc = ( HashLen == sizeof( state_t ) ? 0 : HashLen +
 		( MsgLen < HashLen - sizeof( state_t ) ?
 		(uint8_t*) HashEnd - (uint8_t*) hc : 0 ));
 

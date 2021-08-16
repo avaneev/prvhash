@@ -348,6 +348,27 @@ difference between the "ideal" and "production" functions. This equality is
 further strengthened when 64-bit state variables are used (larger state
 variables have better shuffling statistics).
 
+## The Stalled State of the Hash Function ##
+
+If the state of the hashing function ever reaches all-zeroes in `Seed` and
+`Hash` and at the same time all `lcg` values will be equal to -1, any
+subsequent continuous external entropy input of -1 will result in a stalled
+state: the hash function will produce the same hash value. This may happen
+if a precisely-crafted message is created. Various other very rare
+combinations of entropy input may also produce a stalled state.
+
+To avoid stalled state, only the lower part of the `lcg` should be augmented:
+this obviously offers a lot less control over the internal state of the core
+hash function. However, this has a hashing speed impact, so `PRVHASH64` and
+`PRVHASH64_64M` should not be used at all, or not used without a seed, in
+cases when an external collision attack is possible.
+
+PRVHASH64S, however, uses a "padding" PRNG to avoid turning function's state
+into a stalled state.
+
+This does not affect PRNG usage of the core hash function, when `lcg` is never
+augmented.
+
 ## Method's Philosophy ##
 
 Any external entropy (message) that enters this PRNG system acts as a
@@ -484,16 +505,6 @@ only, to assure that the core hash function works in principle, independent of
 state variable size. This hash function variant demonstrates that PRVHASH's
 method does not rely on bit shuffling alone (shuffles are purely local), but
 is genuinely based on PRNG position "jumps".
-
-## The Most Minimal Hash Array-less PRVHASH ##
-
-This function cannot be used for hashing.
-
-    Seed *= lcg - ~lcg;
-	const uint64_t rs = Seed >> 32 | Seed << 32;
-	lcg += ~Seed;
-	Seed = lcg ^ rs;
-	const uint64_t out = Seed;
 
 ## Fused PRNG ##
 

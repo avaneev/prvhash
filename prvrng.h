@@ -1,5 +1,5 @@
 /**
- * prvrng.h version 3.5
+ * prvrng.h version 3.6
  *
  * The inclusion file for the "prvrng" entropy pseudo-random number generator.
  *
