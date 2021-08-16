@@ -220,7 +220,7 @@ It was especially hard to find a better "hashing finalization" solution.
 	const uint64_t mx = Seed * ( lcg - ~lcg ); // Multiply random by random, without multiply by zero.
 	const uint64_t rs = mx >> 32 | mx << 32; // Produce reversed copy (ideally, bit-reversed).
 	lcg += ~mx; // Internal entropy mixing.
-	Hash += rs ^ 0xFFFFFFFF; // Update hash word (summation produces uniform distribution).
+	Hash += rs; // Update hash word (summation produces uniform distribution).
 	Seed = Hash ^ plcg; // Mix new reversed seed value with hash and previous `lcg`. Entropy feedback.
 	const uint64_t out = lcg ^ rs; // Produce "compressed" output.
 
@@ -333,7 +333,7 @@ to reduced instruction parallelism.
 	Seed *= lcg - ~lcg;
 	lcg += ~Seed;
 	rs = Seed >> 32 | Seed << 32;
-	Hash += rs ^ 0xFFFFFFFF;
+	Hash += rs;
 	out = lcg ^ rs;
 
 You may wonder, what's the quality difference between this "ideal" function
