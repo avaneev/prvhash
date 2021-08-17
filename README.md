@@ -564,6 +564,14 @@ PRVHASH comparable to PI in its reach of "infinite" bit sequence length.
 Moreover, this also opens up a notion of "infinite frequency", and thus
 "infinite energy".
 
+The mathematics offers an interesting understanding. Take in your mind a
+moment before the Big Bang. Did mathematical rules exist at that moment? Of
+course, they did, otherwise there would be no Big Band. The span of existence
+of mathematical rules cannot be estimated, so it safe to assume they existed
+for an eternity. On top of that, PRVHASH practically proves that entropy can
+self-start from zero-state or "nothing", if mathematical rules exist prior to
+that.
+
 I, as the author of PRVHASH, would like to point out at some long-standing
 misconception in relating "combinatorics" to "random numbers". Historically,
 cryptography was based on a concept of permutations, mixed with some sort of
