@@ -51,6 +51,51 @@ This is a minimized implementation of the `prvhash64` hash function. Since
 arguably it's the smallest hash function in the world, that produces 64-bit
 hashes of this quality level, it is very useful for hash tables.
 
+## Minimal PRNG for Everyday Use ##
+
+The core hash function can be easily integrated into your applications, to be
+used as an effective PRNG. The period of this minimal PRNG is at least
+`2^160`. The initial parameters can be varied at will, and won't "break" the
+PRNG. Setting only the `Seed` value guarantees a random start point within the
+whole PRNG period, with at least `2^64` spacing. The code follows.
+
+Note that such minimal 1-hashword PRNG is most definitely not
+cryptographically secure: its state can be solved by a SAT solver pretty fast.
+However, security against SAT solver attack of larger hash arrays and
+different structuring (parallel, daisy-chained, fused) is yet to be checked.
+
+```
+#include "prvhash_core.h"
+#include <stdio.h>
+
+int main()
+{
+	uint64_t Seed = 0;
+	uint64_t lcg = 0;
+	uint64_t Hash = 0;
+
+	uint64_t v = 0;
+	uint64_t i;
+
+	for( i = 0; i < ( 1ULL << 27 ); i++ )
+	{
+		v = prvhash_core64( &Seed, &lcg, &Hash );
+	}
+
+	printf( "%llu\n", v );
+}
+```
+
+## TPDF Dithering ##
+
+The core hash function can be used to implement a "statistically-good"
+dithering noise for audio signal: both floating point to fixed point
+conversions, and bit depth reductions.
+
+	static const double m = 0.5 / ( 1UL << 31 );
+	uint64_t rng = prvhash_core64( &Seed, &lcg, &Hash );
+	double tpdf = ( (int64_t) (uint32_t) rng - (int64_t) ( rng >> 32 )) * m;
+
 ## Entropy PRNG ##
 
 PRVHASH can be also used as a very efficient general-purpose PRNG with an
@@ -98,41 +143,6 @@ While `lcg`, `Seed`, and `Hash` variables are best initialized with good
 entropy source (however, structurally, they can accept just about any entropy
 quality), the message can be sparsely-random: even an increasing counter can
 be considered as having a suitable sparse entropy.
-
-## Minimal PRNG for Everyday Use ##
-
-The core hash function can be easily integrated into your applications, to be
-used as an effective PRNG. The period of this minimal PRNG is at least
-`2^160`. The initial parameters can be varied at will, and won't "break" the
-PRNG. Setting only the `Seed` value guarantees a random start point within the
-whole PRNG period, with at least `2^64` spacing. The code follows.
-
-Note that such minimal 1-hashword PRNG is most definitely not
-cryptographically secure: its state can be solved by a SAT solver pretty fast.
-However, security against SAT solver attack of larger hash arrays and
-different structuring (parallel, daisy-chained, fused) is yet to be checked.
-
-```
-#include "prvhash_core.h"
-#include <stdio.h>
-
-int main()
-{
-	uint64_t Seed = 0;
-	uint64_t lcg = 0;
-	uint64_t Hash = 0;
-
-	uint64_t v = 0;
-	uint64_t i;
-
-	for( i = 0; i < ( 1ULL << 27 ); i++ )
-	{
-		v = prvhash_core64( &Seed, &lcg, &Hash );
-	}
-
-	printf( "%llu\n", v );
-}
-```
 
 ## Two-bit PRNG ##
 
@@ -246,15 +256,15 @@ produce a uniformly-distributed value.
 The three instructions - `Seed ^= lcg`, `Seed *= lcg - ~lcg`, `lcg += ~Seed` -
 represent an "ideal" bit shuffler: this construction represents a "bivariable
 shuffler" which transforms input `lcg` and `Seed` variables into another pair
-of variables with 50% bit difference relative to input, and no collisions. The
-whole core hash function, however, uses a rearranged mixing, which produces a
-hash value: the pair composed of the hash value and either a new `lcg` or a
-new `Seed` value also produces no input-to-output collisions. Thus it can be
-said that the system does not lose any input entropy. In 3-dimensional
-analysis, when `Seed`, `lcg` and `msgw` values are scanned, and transformed
-into output `Seed` and `Hash` value pairs, this system exhibits state
-change-related collision statistics: on a fully random `msgw` input it is
-adequate for 16-bit, and excellent for 64-bit variables (`5.47^-18` percent
+of variables with 50% bit difference relative to input, and without
+collisions. The whole core hash function, however, uses a rearranged mixing,
+which produces a hash value: the pair composed of the hash value and either a
+new `lcg` or a new `Seed` value also produces no input-to-output collisions.
+Thus it can be said that the system does not lose any input entropy. In
+3-dimensional analysis, when `Seed`, `lcg` and `msgw` values are scanned, and
+transformed into output `Seed` and `Hash` value pairs, this system exhibits
+state change-related collision statistics: on a fully random `msgw` input it
+is adequate for 16-bit, and excellent for 64-bit variables (`5.47^-18` percent
 chance, which far exceeds collision resistance requirements for 64-bit range
 of bits). To further decrease state change collisions between `lcg` and `Seed`
 with entropy input, the byte-reversal should be implemented as bit-reversal:
@@ -291,12 +301,12 @@ unrelated state unpredictably. So, it can be said that the function "jumps"
 within a space of a huge number of pseudo-random sub-sequences. Hash
 length affects the size of this "space of sub-sequences", permitting the
 function to produce quality hashes for any required hash length.
-Statistically, these "jumps" are close to a purely random repositioning:
+Statistically, these "jumps" are close to a uniformly-random repositioning:
 each new possible `lcg` value corresponds to a new random position, with a
 spread over the whole PRNG period. The actual performace is a lot more
 complicated as this PRNG system is able to converge into unrelated random
 number sequences of varying lengths, so the "jump" changes both the position
-and "index" of sequence. This property of PRVHASH assures that different
+and "index" of sub-sequence. This property of PRVHASH assures that different
 initial states of its `lcg` state variable (or `Seed`, which is mostly
 equivalent at initialization stage) produce practically unrelated random
 number sequences, permitting to use PRVHASH for PRNG-based simulations.
@@ -311,7 +321,8 @@ consider an `A*(B^C)` equation; an adversary can control `C`, but does not
 know the values of `A` and `B`, thus this adversary cannot predict the
 outcome. Beside that as the core hash function naturally eliminates the bias
 from the external entropy of any statistical quality and frequency, its
-control may be fruitless.
+control may be fruitless. Note that to reduce such "control risks", the
+entropy input should use as fewer bits as possible.
 
 P.S. The reason the InitVec in the `prvhash64` hash function has the value
 constraints, and an initial state, is that otherwise the function would
