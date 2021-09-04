@@ -459,7 +459,7 @@ public:
                 h = PH_FN( Seed + j, lcg + j, Hash + HashPos );
             }
 
-            OutValue <<= PH_BITS;
+            if( PH_BITS < sizeof( uint64_t )) OutValue <<= PH_BITS;
             OutValue |= h;
 
             HashPos++;
