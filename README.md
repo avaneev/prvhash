@@ -322,7 +322,8 @@ know the values of `A` and `B`, thus this adversary cannot predict the
 outcome. Beside that as the core hash function naturally eliminates the bias
 from the external entropy of any statistical quality and frequency, its
 control may be fruitless. Note that to reduce such "control risks", the
-entropy input should use as fewer bits as possible.
+entropy input should use as fewer bits as possible, and augment the upper half
+of `lcg`.
 
 P.S. The reason the InitVec in the `prvhash64` hash function has the value
 constraints, and an initial state, is that otherwise the function would
@@ -368,7 +369,7 @@ state: the hash function will produce the same hash value. This may happen
 if a precisely-crafted message is created. Various other very rare
 combinations of entropy input may also produce a stalled state.
 
-To avoid stalled state, only the lower part of the `lcg` should be augmented:
+To avoid stalled state, only the higher part of the `lcg` should be augmented:
 this obviously offers a lot less control over the internal state of the core
 hash function. However, this has a hashing speed impact, so `PRVHASH64` and
 `PRVHASH64_64M` should not be used at all, or not used without a seed, in
