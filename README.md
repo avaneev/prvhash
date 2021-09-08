@@ -40,7 +40,7 @@ Please see the `prvhash64.h` file for the details of the implementation (the
 `64` refers to core hash function's variable size.
 
 The default `prvhash64.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `7a7eaffdaa6f213e`.
+the bag` is `ecdcccb4f86e3569`.
 
 A proposed short name for hashes created with `prvhash64.h` is `PRH64-N`,
 where `N` is the hash length in bits (e.g. `PRH64-256`).
@@ -192,18 +192,18 @@ The file `prvhash64s.h` implements a relatively fast streamed hashing
 function by utilizing a parallel `prvhash64` structure. Please take a look
 at the `prvhash64s_oneshot()` function for usage example. The `prvhash64s`
 offers an increased security and hashing speed. The amount of entropy mixing
-and "compression" going on in this implementation is substantial.
+going on in this implementation is substantial.
 
 The default `prvhash64s.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `a43be1734f86f2fb`.
+the bag` is `b793a03cfd9bf663`.
 
 The default `prvhash64s.h`-based 256-bit hash of the string
 `Only a toilet bowl does not leak` is
-`07854cd0916957e4958e3f3cf6e9c34910c911c68b927edb47de25742aba140e`.
+`9345e404f0f6ba409aa68c2f23126326f2da65e0f7b17994760abd94f99fd15e`.
 
 The default prvhash64s 256-bit hash of the string
 `Only a toilet bowl does not leaj` is
-`22d33e6df1100835588fdda159fe9f573a06b21b7f8e48bfc15fce7e7560e049`.
+`22a2435ab3c6c00547201c4687e4a96c1ead0756a0bd18b638619177198ca131`.
 
 This demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect).
 On a set of 216553 English words, pair-wise hash comparisons give average
@@ -323,7 +323,7 @@ outcome. Beside that as the core hash function naturally eliminates the bias
 from the external entropy of any statistical quality and frequency, its
 control may be fruitless. Note that to reduce such "control risks", the
 entropy input should use as fewer bits as possible, and augment the upper half
-of `lcg`.
+of `lcg` like demonstrated in `prvrng.h`.
 
 P.S. The reason the InitVec in the `prvhash64` hash function has the value
 constraints, and an initial state, is that otherwise the function would
@@ -344,9 +344,9 @@ to reduced instruction parallelism.
 	Seed ^= Hash ^ lcg;
 	Seed *= lcg - ~lcg;
 	lcg += ~Seed;
-	rs = Seed >> 32 | Seed << 32;
+	const uint64_t rs = Seed >> 32 | Seed << 32;
 	Hash += rs;
-	out = lcg ^ rs;
+	const uint64_t out = lcg ^ rs;
 
 You may wonder, what's the quality difference between this "ideal" function
 and the "production" one, currently implemented in the `prvhash_core.h` file?
@@ -359,6 +359,9 @@ passes. However, if 16-bit state variables are used, there is no practical
 difference between the "ideal" and "production" functions. This equality is
 further strengthened when 64-bit state variables are used (larger state
 variables have better shuffling statistics).
+
+This variant of the core hash function offers the best possible statistical
+quality of random number generation.
 
 ## The Stalled State of the Hash Function ##
 

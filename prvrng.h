@@ -1,7 +1,9 @@
 /**
- * prvrng.h version 3.6
+ * prvrng.h version 3.6.1
  *
  * The inclusion file for the "prvrng" entropy pseudo-random number generator.
+ * This is mostly an example PRNG that demonstrates use of infrequent external
+ * entropy injections in the course of random number generation.
  *
  * Description is available at https://github.com/avaneev/prvhash
  *
@@ -108,7 +110,7 @@ inline uint8_t prvrng_gen64p2( PRVRNG_CTX* const ctx )
 		{
 			const uint16_t v = (uint16_t) prvrng_gen_entropy( ctx, 2 );
 			ctx -> EntCtr = ( v & 0xFF ) + 1;
-			ctx -> lcg[ 0 ] ^= ( v >> 8 ) + 1;
+			ctx -> lcg[ 0 ] ^= (uint64_t) (( v >> 8 ) + 1 ) << 55;
 		}
 
 		uint64_t* const Hash = ctx -> Hash + ctx -> HashPos;

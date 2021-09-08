@@ -1,5 +1,5 @@
 /**
- * prvhash64s.h version 3.6
+ * prvhash64s.h version 3.6.1
  *
  * The inclusion file for the "prvhash64s" hash function. Efficient on large
  * data blocks, more secure, streamed. Implements a parallel variant of the
@@ -38,6 +38,7 @@
 
 #define PRVHASH64S_PAR 4 // PRVHASH parallelism.
 #define PRVHASH64S_LEN 32 // Intermediate block's length, in bytes.
+#define PRVHASH64S_MAX 512 // Maximal supported hash length, in bytes.
 
 /**
  * The context structure of the "prvhash64s_X" functions.
@@ -47,9 +48,10 @@ typedef struct {
 	uint64_t SeedP, lcgP, HashP; ///< "Padding" PRNG.
 	uint64_t Seed[ PRVHASH64S_PAR ]; ///< Current parallel "Seed" values.
 	uint64_t lcg[ PRVHASH64S_PAR ]; ///< Current parallel "lcg" values.
+	uint8_t Hash[ PRVHASH64S_MAX ]; ///< Working hash buffer.
 	uint8_t Block[ PRVHASH64S_LEN ]; ///< Intermediate input data block.
 	size_t BlockFill; ///< The number of bytes filled in the Block.
-	uint8_t* Hash; ///< Pointer to the hash buffer.
+	uint8_t* HashOut; ///< Pointer to the output hash buffer.
 	size_t HashLen; ///< Hash buffer length, in bytes, >= 8, increments of 8.
 	size_t HashPos; ///< Hash buffer position.
 	size_t InitBytePos; ///< Initial input byte position, does not accumulate.
@@ -71,7 +73,7 @@ typedef struct {
  * relevant, this address should be aligned to 64 bits. This pointer will be
  * stored in the "ctx" structure.
  * @param HashLen The required hash length, in bytes, should be >= 8, in
- * increments of 8.
+ * increments of 8. Should not exceed PRVHASH64S_MAX.
  * @param SeedXOR Optional values, to XOR the default seeds with. To use the
  * default seeds, set to 0. If InitVec is non-NULL, this SeedXOR is ignored
  * and should be set to 0. Otherwise, the SeedXOR values can have any bit
@@ -90,7 +92,7 @@ inline void prvhash64s_init( PRVHASH64S_CTX* ctx, uint8_t* const Hash,
 
 	if( InitVec == 0 )
 	{
-		memset( Hash, 0, HashLen );
+		memset( ctx -> Hash, 0, HashLen );
 		ctx -> HashP = 0;
 
 		if( SeedXOR == 0 )
@@ -118,7 +120,8 @@ inline void prvhash64s_init( PRVHASH64S_CTX* ctx, uint8_t* const Hash,
 	}
 	else
 	{
-		prvhash_ec64( Hash, HashLen );
+		memcpy( ctx -> Hash, Hash, HashLen );
+		prvhash_ec64( ctx -> Hash, HashLen );
 		ctx -> HashP = 0;
 
 		for( i = 0; i < PRVHASH64S_PAR; i++ )
@@ -132,7 +135,7 @@ inline void prvhash64s_init( PRVHASH64S_CTX* ctx, uint8_t* const Hash,
 	}
 
 	ctx -> BlockFill = 0;
-	ctx -> Hash = Hash;
+	ctx -> HashOut = Hash;
 	ctx -> HashLen = HashLen;
 	ctx -> HashPos = 0;
 	ctx -> InitBytePos = 0;
@@ -342,13 +345,19 @@ inline void prvhash64s_final( PRVHASH64S_CTX* ctx )
 		}
 	}
 
-	for( k = 0; k < ctx -> HashLen; k += sizeof( uint64_t ))
+	uint8_t* ho = ctx -> HashOut;
+
+	for( k = 0; k < ctx -> HashLen; k += sizeof( uint16_t ))
 	{
 		Seed1 ^= prvhash_core64( &SeedP, &lcgP, &HashP );
 		prvhash_core64( &Seed1, &lcg1, hc );
 		prvhash_core64( &Seed2, &lcg2, hc );
 		prvhash_core64( &Seed3, &lcg3, hc );
-		*hc = prvhash_core64( &Seed4, &lcg4, hc );
+		const uint64_t r = prvhash_core64( &Seed4, &lcg4, hc );
+
+		ho[ 0 ] = (uint8_t) r;
+		ho[ 1 ] = (uint8_t) ( r >> 8 );
+		ho += 2;
 
 		hc++;
 
@@ -357,8 +366,6 @@ inline void prvhash64s_final( PRVHASH64S_CTX* ctx )
 			hc = (uint64_t*) ctx -> Hash;
 		}
 	}
-
-	prvhash_ec64( ctx -> Hash, ctx -> HashLen );
 
 	memset( ctx, 0, sizeof( PRVHASH64S_CTX ));
 }
