@@ -63,6 +63,11 @@ Note that such minimal 1-hashword PRNG is most definitely not
 cryptographically secure: its state can be solved by a SAT solver pretty fast.
 However, security against SAT solver attack of larger hash arrays and
 different structuring (parallel, daisy-chained, fused) is yet to be checked.
+The same applies to full PRVHASH-based hash function implemenations: their
+cryptographic security is undecided at the moment. For example, while isolated
+cryptographic "privimites" (round functions) can usually be solved by a SAT
+solver fast, a complete, multi-round, cryptographic function cannot be solved
+with a current state-of-the-art SAT solvers.
 
 ```
 #include "prvhash_core.h"
