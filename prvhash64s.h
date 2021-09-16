@@ -69,9 +69,8 @@ typedef struct {
  * reset to the default values, and it should be pre-initialized with
  * uniformly-random bytes (there are no restrictions on which values to use
  * for initialization: even an all-zero value can be used). The provided hash
- * will be automatically endianness-corrected. On systems where this is
- * relevant, this address should be aligned to 64 bits. This pointer will be
- * stored in the "ctx" structure.
+ * will be automatically endianness-corrected. The alignment of this buffer is
+ * unimportant. This pointer will be stored in the "ctx" structure.
  * @param HashLen The required hash length, in bytes, should be >= 8, in
  * increments of 8. Should not exceed PRVHASH64S_MAX.
  * @param SeedXOR Optional values, to XOR the default seeds with. To use the
