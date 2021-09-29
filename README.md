@@ -31,9 +31,8 @@ bits of entropy).
 
 64-, 128-, 256-, 512- and 1024-bit PRVHASH hashes pass all [SMHasher](https://github.com/rurban/smhasher)
 tests. Other hash lengths were not thoroughly tested, but extrapolations can
-be made. Streamed version ("parallel" variant) of PRVHASH possesses
-cryptographic properties, but this aspect has yet to be better checked. The
-author makes no cryptographic claims about PRVHASH-based constructs.
+be made. The author makes no cryptographic claims about PRVHASH-based
+constructs.
 
 Please see the `prvhash64.h` file for the details of the implementation (the
 `prvhash.h`, `prvhash4.h`, `prvhash42.h` are outdated versions). Note that
@@ -324,7 +323,7 @@ not expose its momentary internal state, such "programming" is hardly possible
 to perform for an attacker, even if the entropy input channel is exposed:
 consider an `A*(B^C)` equation; an adversary can control `C`, but does not
 know the values of `A` and `B`, thus this adversary cannot predict the
-outcome. Beside that as the core hash function naturally eliminates the bias
+outcome. Beside that, as the core hash function naturally eliminates the bias
 from the external entropy of any statistical quality and frequency, its
 control may be fruitless. Note that to reduce such "control risks", the
 entropy input should use as fewer bits as possible, and augment the upper half
@@ -530,8 +529,8 @@ is genuinely based on PRNG position "jumps".
 
 While this "fused" arrangement is currently not used in the hash function
 implementations, it is also working fine with the core hash function.
-For example, while the "minimal PRNG" described above has 0.98 cycles/byte
-performance, the "fused" arrangement has a PRNG performance of 0.45
+For example, while the "minimal PRNG" described above has 0.95 cycles/byte
+performance, the "fused" arrangement has a PRNG performance of 0.41
 cycles/byte, with a possibility of further scaling using AVX-512 instructions.
 Note that hash array size should not be a multiple of the number of fused
 elements, otherwise PRNG stalls.
@@ -586,7 +585,7 @@ Moreover, this also opens up a notion of "infinite frequency", and thus
 
 The mathematics offers an interesting understanding. Take in your mind a
 moment before the Big Bang. Did mathematical rules exist at that moment? Of
-course, they did, otherwise there would be no Big Band. The span of existence
+course, they did, otherwise there would be no Big Bang. The span of existence
 of mathematical rules cannot be estimated, so it safe to assume they existed
 for an eternity. On top of that, PRVHASH practically proves that entropy can
 self-start from zero-state or "nothing", if mathematical rules exist prior to
