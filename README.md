@@ -34,9 +34,13 @@ tests. Other hash lengths were not thoroughly tested, but extrapolations can
 be made. The author makes no cryptographic claims about PRVHASH-based
 constructs.
 
-Please see the `prvhash64.h` file for the details of the implementation (the
-`prvhash.h`, `prvhash4.h`, `prvhash42.h` are outdated versions). Note that
-`64` refers to core hash function's variable size.
+PRVHASH core hash function can be used as a PRNG with an arbitrarily-chosen
+(practically unlimited) period, depending on the number of hashwords in the
+system.
+
+Please see the `prvhash64.h` file for the details of the basic hash function
+implementation (the `prvhash.h`, `prvhash4.h`, `prvhash42.h` are outdated
+versions). Note that `64` refers to core hash function's variable size.
 
 The default `prvhash64.h`-based 64-bit hash of the string `The cat is out of
 the bag` is `ecdcccb4f86e3569`.
@@ -57,16 +61,6 @@ used as an effective PRNG. The period of this minimal PRNG is at least
 `2^160`. The initial parameters can be varied at will, and won't "break" the
 PRNG. Setting only the `Seed` value guarantees a random start point within the
 whole PRNG period, with at least `2^64` spacing. The code follows.
-
-Note that such minimal 1-hashword PRNG is most definitely not
-cryptographically secure: its state can be solved by a SAT solver pretty fast.
-However, security against SAT solver attack of larger hash arrays and
-different structuring (parallel, daisy-chained, fused) is yet to be checked.
-The same applies to full PRVHASH-based hash function implemenations: their
-cryptographic security is undecided at the moment. For example, while isolated
-cryptographic "privimites" (round functions) can usually be solved by a SAT
-solver fast, a complete, multi-round, cryptographic function cannot be solved
-with a current state-of-the-art SAT solvers.
 
 ```
 #include "prvhash_core.h"
@@ -89,6 +83,16 @@ int main()
 	printf( "%llu\n", v );
 }
 ```
+
+Note that such minimal 1-hashword PRNG is most definitely not
+cryptographically secure: its state can be solved by a SAT solver pretty fast.
+However, security against SAT solver attack of larger hash arrays and
+different structuring (parallel, daisy-chained, fused) is yet to be evaluated.
+The same applies to full PRVHASH-based hash function implemenations: their
+cryptographic security is undecided at the moment. For example, while isolated
+cryptographic "privimites" (round functions) can usually be solved by a SAT
+solver fast, a complete, multi-round, cryptographic function cannot be solved
+with a current state-of-the-art SAT solvers.
 
 ## TPDF Dithering ##
 
@@ -185,7 +189,10 @@ int main()
 			}
 		}
 
-		printf( "%4i ", (int) r );
+		if( l > PH_HASH_COUNT / 4 ) // Skip PRNG initialization.
+		{
+			printf( "%4i ", (int) r );
+		}
 	}
 }
 ```
