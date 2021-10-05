@@ -521,17 +521,6 @@ is composed of two halves, both of them practically being independent PRNG
 outputs with period exponents smaller by half the state variable size. This
 additionally complicates system's reversal.
 
-## PRVHASH16 ##
-
-PRVHASH16 demonstrates the quality of the core hash function. While the state
-variables are 16-bit, they are enough to perform hashing: this hash function
-passes all SMHasher tests, like 64-bit PRVHASH function do, for any hash
-length. This function is very slow, and is provided for demonstration purposes
-only, to assure that the core hash function works in principle, independent of
-state variable size. This hash function variant demonstrates that PRVHASH's
-method does not rely on bit shuffling alone (shuffles are purely local), but
-is genuinely based on PRNG position "jumps".
-
 ## Fused PRNG ##
 
 While this "fused" arrangement is currently not used in the hash function
@@ -582,6 +571,24 @@ int main()
 }
 ```
 
+## PRVHASH16 ##
+
+PRVHASH16 demonstrates the quality of the core hash function. While the state
+variables are 16-bit, they are enough to perform hashing: this hash function
+passes all SMHasher tests, like 64-bit PRVHASH function do, for any hash
+length. This function is very slow, and is provided for demonstration purposes
+only, to assure that the core hash function works in principle, independent of
+state variable size. This hash function variant demonstrates that PRVHASH's
+method does not rely on bit shuffling alone (shuffles are purely local), but
+is genuinely based on PRNG position "jumps".
+
+## TANGO642 ##
+
+This is an efficient implementation of a PRVHASH PRNG-based streamed XOR
+function. Since no cryptanalysis nor certification of this function was
+performed yet, it cannot be called a "cipher", but rather a cipher-like random
+number generator.
+
 ## Other Thoughts ##
 
 PRVHASH, being scalable, potentially allows to apply "infinite" state variable
@@ -611,9 +618,10 @@ auto-limits the "sparseness" of random bit sequences it generates since
 "too sparse" bit sequence cannot be statistically called as uniformly-random.
 Thus, "combinatorial capacity" of a system, when applied to random number
 generation, transforms into a notion of ability of a system to generate
-independent uniformly-random number sequences. This is what happens in
-PRVHASH: on entropy input the system may "jump" or "converge" into an
-unrelated random sub-sequence.
+independent uniformly-random number sequences. Which means that two different
+initial states of a PRNG system may refer to different "isolated" PRNG
+sequences. This is what happens in PRVHASH: on entropy input the system may
+"jump" or "converge" into an unrelated random sub-sequence.
 
 During the course of PRVHASH development, the author has found that the
 simplest sinewave oscillator with period being a multiple of PI, can be used

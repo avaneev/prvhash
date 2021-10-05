@@ -35,10 +35,6 @@
 #include "prvhash_aux.h"
 #include "prvhash_core.h"
 
-/**
- * Tango642 context structure.
- */
-
 #define TANGO642_T uint64_t // PRVHASH state variable type.
 #define TANGO642_HASH_COUNT 16 // Hashwords in keyed PRNG's hasharray.
 #define TANGO642_HASH_SIZE ( TANGO642_HASH_COUNT * sizeof( TANGO642_T ))
@@ -51,7 +47,8 @@
 	{ TANGO642_T t = v1; v1 = v2; v2 = v3; v3 = v4; v4 = t; } // 4-value shift macro.
 
 /**
- * tango642 context structure, can be placed on stack.
+ * tango642 context structure, can be placed on stack. On systems where this
+ * is relevant, the structure should be aligned to sizeof( TANGO642_T ) bytes.
  */
 
 typedef struct
