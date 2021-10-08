@@ -1,5 +1,5 @@
 /**
- * tango642.h version 3.6
+ * tango642.h version 3.6.1
  *
  * The inclusion file for the "tango642" PRVHASH PRNG-based streamed XOR
  * function.
@@ -232,15 +232,9 @@ inline void tango642_xor( TANGO642_CTX* ctx, uint8_t* msg, size_t msglen )
 
 			TANGO642_SH4( HashF1, HashF2, HashF3, HashF4 );
 
-			ctx -> RndBytes[ 0 ] = TANGO642_EC(
-				TANGO642_FN( &SeedF1, &lcgF1, &HashF1 ));
-
-			ctx -> RndBytes[ 1 ] = TANGO642_EC(
-				TANGO642_FN( &SeedF2, &lcgF2, &HashF2 ));
-
-			ctx -> RndBytes[ 2 ] = TANGO642_EC(
-				TANGO642_FN( &SeedF3, &lcgF3, &HashF3 ));
-
+			ctx -> RndBytes[ 0 ] = TANGO642_FN( &SeedF1, &lcgF1, &HashF1 );
+			ctx -> RndBytes[ 1 ] = TANGO642_FN( &SeedF2, &lcgF2, &HashF2 );
+			ctx -> RndBytes[ 2 ] = TANGO642_FN( &SeedF3, &lcgF3, &HashF3 );
 			ctx -> RndLeft[ 0 ] = sizeof( TANGO642_T );
 			ctx -> RndLeft[ 1 ] = sizeof( TANGO642_T );
 			ctx -> RndLeft[ 2 ] = sizeof( TANGO642_T );
