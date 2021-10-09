@@ -90,19 +90,19 @@ However, security against SAT solver attack of larger hash arrays and
 different structuring (parallel, daisy-chained, fused) is yet to be evaluated.
 The same applies to full PRVHASH-based hash function implemenations: their
 cryptographic security is undecided at the moment. For example, while isolated
-cryptographic "privimites" (round functions) can usually be solved by a SAT
+cryptographic "primitives" (round functions) can usually be solved by a SAT
 solver fast, a complete, multi-round, cryptographic function cannot be solved
 with a current state-of-the-art SAT solvers.
 
 ## TPDF Dithering ##
 
-The core hash function can be used to implement a "statistically-good"
-dithering noise for audio signal: both floating point to fixed point
-conversions, and bit depth reductions.
+The core hash function can be used to implement a "statistically-good" and
+"neutrally-sounding" dithering noise for audio signal; for both floating-point
+to fixed-point, and bit-depth conversions.
 
 	static const double m = 0.5 / ( 1UL << 31 );
-	uint64_t rng = prvhash_core64( &Seed, &lcg, &Hash );
-	double tpdf = ( (int64_t) (uint32_t) rng - (int64_t) ( rng >> 32 )) * m;
+	uint64_t rv = prvhash_core64( &Seed, &lcg, &Hash );
+	double tpdf = ( (int64_t) (uint32_t) rv - (int64_t) ( rv >> 32 )) * m;
 
 ## Entropy PRNG ##
 
@@ -152,7 +152,7 @@ entropy source (however, structurally, they can accept just about any entropy
 quality), the message can be sparsely-random: even an increasing counter can
 be considered as having a suitable sparse entropy.
 
-## Two-bit PRNG ##
+## Two-Bit PRNG ##
 
 This is a "just for fun" example, but it passes 128 MB PractRand threshold.
 You CAN generate pseudo-random numbers by using 2-bit shuffles; moreover, you
@@ -395,7 +395,7 @@ into a stalled state.
 This does not affect PRNG usage of the core hash function, when `lcg` is never
 augmented.
 
-## Method's Philosophy ##
+## Hashing Method's Philosophy ##
 
 Any external entropy (message) that enters this PRNG system acts as a
 high-frequency and high-quality re-seeding which changes the random number
