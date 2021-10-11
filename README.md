@@ -85,14 +85,11 @@ int main()
 ```
 
 Note that such minimal 1-hashword PRNG is most definitely not
-cryptographically secure: its state can be solved by a SAT solver pretty fast.
-However, security against SAT solver attack of larger hash arrays and
-different structuring (parallel, daisy-chained, fused) is yet to be evaluated.
-The same applies to full PRVHASH-based hash function implemenations: their
-cryptographic security is undecided at the moment. For example, while isolated
-cryptographic "primitives" (round functions) can usually be solved by a SAT
-solver fast, a complete, multi-round, cryptographic function cannot be solved
-with a current state-of-the-art SAT solvers.
+cryptographically secure: its state can be solved by a SAT solver pretty fast;
+this applies to other structuring (parallel, daisy-chained, fused, multiple
+hashwords). The known way to make PRNG considerably harder to solve for a SAT
+solver, with complexity corresponding to system's size, is to combine two
+adjacent PRNG outputs via a XOR operation; this obviously has a speed impact.
 
 ## TPDF Dithering ##
 
@@ -202,19 +199,18 @@ int main()
 The file `prvhash64s.h` implements a relatively fast streamed hashing
 function by utilizing a parallel `prvhash64` structure. Please take a look
 at the `prvhash64s_oneshot()` function for usage example. The `prvhash64s`
-offers an increased security and hashing speed. The amount of entropy mixing
-going on in this implementation is substantial.
+offers an increased security and hashing speed.
 
 The default `prvhash64s.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `b793a03cfd9bf663`.
+the bag` is `17afe4c036361242`.
 
 The default `prvhash64s.h`-based 256-bit hash of the string
 `Only a toilet bowl does not leak` is
-`9345e404f0f6ba409aa68c2f23126326f2da65e0f7b17994760abd94f99fd15e`.
+`7741fbb44cae6a674ab6e1ca48631927168931653842d389403437820e6b5eb8`.
 
 The default prvhash64s 256-bit hash of the string
 `Only a toilet bowl does not leaj` is
-`22a2435ab3c6c00547201c4687e4a96c1ead0756a0bd18b638619177198ca131`.
+`61f8e1e292e0278473c362a84c7dce715b66a8a6f3b622492e885614550e114c`.
 
 This demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect).
 On a set of 216553 English words, pair-wise hash comparisons give average
@@ -525,7 +521,7 @@ additionally complicates system's reversal.
 
 While this "fused" arrangement is currently not used in the hash function
 implementations, it is also working fine with the core hash function.
-For example, while the "minimal PRNG" described above has 0.95 cycles/byte
+For example, while the "minimal PRNG" described earlier has 0.95 cycles/byte
 performance, the "fused" arrangement has a PRNG performance of 0.41
 cycles/byte, with a possibility of further scaling using AVX-512 instructions.
 Note that hash array size should not be a multiple of the number of fused
@@ -664,6 +660,15 @@ svalue2 = sin( ph - si );
 std::string get_name() const {return "SINEWAVE";}
 };
 ```
+
+## Thanks ##
+
+The author would like to thank Reini Urban for [his SMHasher
+fork](https://github.com/rurban/smhasher), Chris Doty-Humphrey for
+[PractRand](http://pracrand.sourceforge.net/), and 
+Peter Schmidt-Nielsen for [AutoSat](https://github.com/petersn/autosat).
+Without these tools it would not be possible to create PRVHASH which stands
+the state-of-the-art statistical tests.
 
 ## Other ##
 

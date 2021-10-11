@@ -1,5 +1,5 @@
 /**
- * tango642.h version 3.6.1
+ * tango642.h version 3.6.2
  *
  * The inclusion file for the "tango642" PRVHASH PRNG-based streamed XOR
  * function.
@@ -142,13 +142,19 @@ inline void tango642_init( TANGO642_CTX* ctx, const uint8_t* key,
 		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + i ));
 	}
 
+	size_t HashPos = 0;
+
 	for( i = 0; i < TANGO642_HASH_SIZE; i += sizeof( TANGO642_T ))
 	{
-		SeedF3 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + i ));
-		TANGO642_SH4( HashF1, HashF2, HashF3, HashF4 );
+		SeedF3 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + HashPos ));
+		HashPos = ( HashPos + sizeof( TANGO642_T )) & TANGO642_HASH_MASK;
+		SeedF3 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + HashPos ));
+		HashPos = ( HashPos + sizeof( TANGO642_T )) & TANGO642_HASH_MASK;
+
 		TANGO642_FN( &SeedF1, &lcgF1, &HashF1 );
 		TANGO642_FN( &SeedF2, &lcgF2, &HashF2 );
 		TANGO642_FN( &SeedF3, &lcgF3, &HashF3 );
+		TANGO642_SH4( HashF1, HashF2, HashF3, HashF4 );
 	}
 
 	ctx -> Seed = Seed;
@@ -163,6 +169,7 @@ inline void tango642_init( TANGO642_CTX* ctx, const uint8_t* key,
 	ctx -> HashF[ 1 ] = HashF2;
 	ctx -> HashF[ 2 ] = HashF3;
 	ctx -> HashF[ 3 ] = HashF4;
+	ctx -> HashPos = HashPos;
 }
 
 /**
@@ -204,7 +211,11 @@ inline void tango642_xor( TANGO642_CTX* ctx, uint8_t* msg, size_t msglen )
 				HashPos = ( HashPos + sizeof( TANGO642_T )) &
 					TANGO642_HASH_MASK;
 
-				TANGO642_SH4( HashF1, HashF2, HashF3, HashF4 );
+				SeedF3 ^= TANGO642_FN( &Seed, &lcg,
+					(TANGO642_T*) ( ha + HashPos ));
+
+				HashPos = ( HashPos + sizeof( TANGO642_T )) &
+					TANGO642_HASH_MASK;
 
 				TANGO642_T mx1, mx2, mx3;
 				memcpy( &mx1, msg, sizeof( mx1 ));
@@ -222,6 +233,8 @@ inline void tango642_xor( TANGO642_CTX* ctx, uint8_t* msg, size_t msglen )
 				memcpy( msg, &mx3, sizeof( mx3 ));
 				msg += sizeof( mx3 );
 
+				TANGO642_SH4( HashF1, HashF2, HashF3, HashF4 );
+
 				msglen -= sizeof( TANGO642_T ) * TANGO642_FUSE;
 			}
 
@@ -230,7 +243,10 @@ inline void tango642_xor( TANGO642_CTX* ctx, uint8_t* msg, size_t msglen )
 
 			HashPos = ( HashPos + sizeof( TANGO642_T )) & TANGO642_HASH_MASK;
 
-			TANGO642_SH4( HashF1, HashF2, HashF3, HashF4 );
+			SeedF3 ^= TANGO642_FN( &Seed, &lcg,
+				(TANGO642_T*) ( ha + HashPos ));
+
+			HashPos = ( HashPos + sizeof( TANGO642_T )) & TANGO642_HASH_MASK;
 
 			ctx -> RndBytes[ 0 ] = TANGO642_FN( &SeedF1, &lcgF1, &HashF1 );
 			ctx -> RndBytes[ 1 ] = TANGO642_FN( &SeedF2, &lcgF2, &HashF2 );
@@ -238,6 +254,8 @@ inline void tango642_xor( TANGO642_CTX* ctx, uint8_t* msg, size_t msglen )
 			ctx -> RndLeft[ 0 ] = sizeof( TANGO642_T );
 			ctx -> RndLeft[ 1 ] = sizeof( TANGO642_T );
 			ctx -> RndLeft[ 2 ] = sizeof( TANGO642_T );
+
+			TANGO642_SH4( HashF1, HashF2, HashF3, HashF4 );
 
 			ctx -> Seed = Seed;
 			ctx -> lcg = lcg;

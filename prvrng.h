@@ -1,5 +1,5 @@
 /**
- * prvrng.h version 3.6.1
+ * prvrng.h version 3.6.2
  *
  * The inclusion file for the "prvrng" entropy pseudo-random number generator.
  * This is mostly an example PRNG that demonstrates use of infrequent external
@@ -113,24 +113,30 @@ inline uint8_t prvrng_gen64p2( PRVRNG_CTX* const ctx )
 			ctx -> lcg[ 0 ] ^= (uint64_t) (( v >> 8 ) + 1 ) << 55;
 		}
 
-		uint64_t* const Hash = ctx -> Hash + ctx -> HashPos;
-		int i;
+		uint64_t lo = 0;
+		int k;
 
-		for( i = 0; i < PRVRNG_PAR_COUNT - 1; i++ )
+		for( k = 0; k < 2; k++ )
 		{
-			prvhash_core64( &ctx -> Seed[ i ], &ctx -> lcg[ i ], Hash );
+			uint64_t* const Hash = ctx -> Hash + ctx -> HashPos;
+			int i;
+
+			for( i = 0; i < PRVRNG_PAR_COUNT - 1; i++ )
+			{
+				prvhash_core64( &ctx -> Seed[ i ], &ctx -> lcg[ i ], Hash );
+			}
+
+			lo ^= prvhash_core64( &ctx -> Seed[ i ], &ctx -> lcg[ i ], Hash );
+
+			ctx -> HashPos++;
+
+			if( ctx -> HashPos == PRVRNG_HASH_COUNT )
+			{
+				ctx -> HashPos = 0;
+			}
 		}
 
-		ctx -> LastOut =
-			prvhash_core64( &ctx -> Seed[ i ], &ctx -> lcg[ i ], Hash );
-
-		ctx -> HashPos++;
-
-		if( ctx -> HashPos == PRVRNG_HASH_COUNT )
-		{
-			ctx -> HashPos = 0;
-		}
-
+		ctx -> LastOut = lo;
 		ctx -> OutLeft = sizeof( ctx -> LastOut );
 		ctx -> EntCtr--;
 	}

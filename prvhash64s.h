@@ -1,9 +1,9 @@
 /**
- * prvhash64s.h version 3.6.1
+ * prvhash64s.h version 3.6.2
  *
  * The inclusion file for the "prvhash64s" hash function. Efficient on large
  * data blocks, more secure, streamed. Implements a parallel variant of the
- * "prvhash64" hash function.
+ * "prvhash64" hash function, with a padding PRNG and output PRNG XORing.
  *
  * Description is available at https://github.com/avaneev/prvhash
  *
@@ -79,7 +79,7 @@ typedef struct {
  * length, up to four 64-bit values can be supplied, and are used only as an
  * additional entropy source. They should be endianness-corrected.
  * @param InitVec If non-NULL, an "initialization vector" for internal "Seed"
- * and "lcg" variables. Full 64-byte uniformly-random value should be supplied
+ * and "lcg" variables. Full 80-byte uniformly-random value should be supplied
  * in this case, preferrably with a good entropy quantity estimate.
  */
 
@@ -294,7 +294,7 @@ inline void prvhash64s_update( PRVHASH64S_CTX* ctx, const uint8_t* Msg,
  * applies endianness correction automatically (on little- and big-endian
  * processors).
  *
- * @param ctx Context structure.
+ * @param ctx Context structure. Zeroed on function's return.
  */
 
 inline void prvhash64s_final( PRVHASH64S_CTX* ctx )
@@ -346,17 +346,29 @@ inline void prvhash64s_final( PRVHASH64S_CTX* ctx )
 
 	uint8_t* ho = ctx -> HashOut;
 
-	for( k = 0; k < ctx -> HashLen; k += sizeof( uint16_t ))
+	for( k = 0; k < ctx -> HashLen; k += sizeof( uint64_t ))
 	{
 		Seed1 ^= prvhash_core64( &SeedP, &lcgP, &HashP );
 		prvhash_core64( &Seed1, &lcg1, hc );
 		prvhash_core64( &Seed2, &lcg2, hc );
 		prvhash_core64( &Seed3, &lcg3, hc );
-		const uint64_t r = prvhash_core64( &Seed4, &lcg4, hc );
+		const uint64_t r1 = prvhash_core64( &Seed4, &lcg4, hc );
 
-		ho[ 0 ] = (uint8_t) r;
-		ho[ 1 ] = (uint8_t) ( r >> 8 );
-		ho += 2;
+		hc++;
+
+		if( hc == HashEnd )
+		{
+			hc = (uint64_t*) ctx -> Hash;
+		}
+
+		Seed1 ^= prvhash_core64( &SeedP, &lcgP, &HashP );
+		prvhash_core64( &Seed1, &lcg1, hc );
+		prvhash_core64( &Seed2, &lcg2, hc );
+		prvhash_core64( &Seed3, &lcg3, hc );
+		const uint64_t r2 = PRVHASH_EC64(
+			r1 ^ prvhash_core64( &Seed4, &lcg4, hc ));
+
+		memcpy( ho + k, &r2, sizeof( r2 ));
 
 		hc++;
 
@@ -377,10 +389,10 @@ inline void prvhash64s_final( PRVHASH64S_CTX* ctx )
  * @param Msg The message to produce hash from. The alignment of the message
  * is unimportant.
  * @param MsgLen Message's length, in bytes.
- * @param[out] Hash The hash buffer, length = HashLen. On systems where this
- * is relevant, this address should be aligned to 64 bits.
+ * @param[out] Hash The hash buffer, length = HashLen. The alignment of this
+ * buffer is unimportant.
  * @param HashLen The required hash length, in bytes, should be >= 8, in
- * increments of 8.
+ * increments of 8, not exceeding PRVHASH64S_MAX.
  */
 
 inline void prvhash64s_oneshot( const uint8_t* const Msg, const size_t MsgLen,
