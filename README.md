@@ -91,6 +91,14 @@ hashwords). The known way to make PRNG considerably harder to solve for a SAT
 solver, with complexity corresponding to system's size, is to combine two
 adjacent PRNG outputs via a XOR operation; this obviously has a speed impact.
 
+So, the basic PRNG with at least some security would be as follows (XOR two
+adjacent outputs to produce a single "compressed" PRNG output):
+
+```
+		v = prvhash_core64( &Seed, &lcg, &Hash );
+		v ^= prvhash_core64( &Seed, &lcg, &Hash );
+```
+
 ## TPDF Dithering ##
 
 The core hash function can be used to implement a "statistically-good" and
@@ -376,8 +384,9 @@ If the state of the hashing function ever reaches all-zeroes in `Seed` and
 `Hash` and at the same time all `lcg` values will be equal to -1, any
 subsequent continuous external entropy input of -1 will result in a stalled
 state: the hash function will produce the same hash value. This may happen
-if a precisely-crafted message is created. Various other very rare
-combinations of entropy input may also produce a stalled state.
+if a precisely-crafted message is created (e.g. with a SAT solver). Various
+other very rare repeating combinations of entropy input may also produce a
+stalled state.
 
 To avoid stalled state, only the higher part of the `lcg` should be augmented:
 this obviously offers a lot less control over the internal state of the core
