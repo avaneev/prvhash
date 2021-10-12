@@ -21,13 +21,11 @@ only on message length. A streamed hashing implementation is available.
 
 PRVHASH is solely based on the butterfly effect, inspired by [LCG](https://en.wikipedia.org/wiki/Linear_congruential_generator)
 pseudo-random number generators. The generated hashes have good avalanche
-properties. For best results, a random seed should be supplied to the hash
-function, but this is not a requirement. When each message in a set is given a
-random seed, this allows hashes of such set to have a greater statistical
-distance from each other. In practice, the `InitVec` (instead of `SeedXOR`),
-and initial hash, can both be randomly seeded (see the suggestions in
-`prvhash64.h`), adding useful initial entropy (`InitVec` plus `Hash` total
-bits of entropy).
+properties. For best security, a random seed should be supplied to the hash
+function, but this is not a requirement. In practice, the `InitVec` (instead
+of `SeedXOR`), and initial hash, can both be randomly seeded (see the
+suggestions in `prvhash64.h`), adding useful initial entropy (`InitVec` plus
+`Hash` total bits of entropy).
 
 64-, 128-, 256-, 512- and 1024-bit PRVHASH hashes pass all [SMHasher](https://github.com/rurban/smhasher)
 tests. Other hash lengths were not thoroughly tested, but extrapolations can
@@ -89,10 +87,11 @@ cryptographically secure: its state can be solved by a SAT solver pretty fast;
 this applies to other structuring (parallel, daisy-chained, fused, multiple
 hashwords). The known way to make PRNG considerably harder to solve for a SAT
 solver, with complexity corresponding to system's size, is to combine two
-adjacent PRNG outputs via a XOR operation; this obviously has a speed impact.
+adjacent PRNG outputs via XOR operation; this obviously has a speed impact.
 
-So, the basic PRNG with at least some security would be as follows (XOR two
-adjacent outputs to produce a single "compressed" PRNG output):
+So, the basic PRNG with some, currently not hard-proven, security is as
+follows (XOR two adjacent outputs to produce a single "compressed" PRNG
+output):
 
 ```
 		v = prvhash_core64( &Seed, &lcg, &Hash );
@@ -102,8 +101,8 @@ adjacent outputs to produce a single "compressed" PRNG output):
 ## TPDF Dithering ##
 
 The core hash function can be used to implement a "statistically-good" and
-"neutrally-sounding" dithering noise for audio signal; for both floating-point
-to fixed-point, and bit-depth conversions.
+"neutrally-sounding" dithering noise for audio signals; for both
+floating-point to fixed-point, and bit-depth, conversions.
 
 	static const double m = 0.5 / ( 1UL << 31 );
 	uint64_t rv = prvhash_core64( &Seed, &lcg, &Hash );
@@ -111,12 +110,12 @@ to fixed-point, and bit-depth conversions.
 
 ## Entropy PRNG ##
 
-PRVHASH can be also used as a very efficient general-purpose PRNG with an
-external entropy source injections (like how the `/dev/urandom` works on
-Unix): this was tested, and works well when 8-bit true entropy injections are
-done inbetween 8 to 2048 generated random bytes (delay is also obtained via
-the entropy source). An example generator is implemented in the `prvrng.h`
-file: simply call the `prvrng_test64p2()` function.
+PRVHASH can be also used as an efficient general-purpose PRNG with an external
+entropy source injections (like how the `/dev/urandom` works on Unix): this
+was tested, and works well when 8-bit true entropy injections are done
+inbetween 8 to 2048 generated random bytes (delay is also obtained via the
+entropy source). An example generator is implemented in the `prvrng.h` file:
+simply call the `prvrng_test64p2()` function.
 
 `prvrng_gen64p2()`-based generator passes [`PractRand`](http://pracrand.sourceforge.net/)
 32 TB threshold with rare non-systematic "unusual" evaluations. Which suggests
@@ -126,16 +125,16 @@ statistical quality, probably the first in the world.
 Note that due to the structure of the core hash function the probability of
 PRNG completely "stopping", or losing internal entropy, is absent.
 
-This function, without external entropy injections, with any initial
+This core hash function, without external entropy injections, with any initial
 combination of `lcg`, `Seed`, and `Hash` eventually converges into one of
 random number sub-sequences. These are mostly time-delayed versions of only a
 smaller set of unique sequences. There are structural limits in this PRNG
 system which can be reached if there is only a small number of hash words in
 the system. PRNG will continously produce non-repeating random sequences given
-external entropy injections, but their statistical quality on a larger frames
-will be limited by the size of `lcg` and `Seed` variables, the number of hash
-words in the system, and the combinatorial capacity of the external entropy.
-A way to increase the structural limit is to use a parallel PRNG structure
+external entropy input, but their statistical quality on a larger frames will
+be limited by the size of `lcg` and `Seed` variables, the number of hash words
+in the system, and the combinatorial capacity of the external entropy. A way
+to increase the structural limit is to use a parallel PRNG structure
 demonstrated in the `prvhash64s.h` file, which additionally increases the
 security exponentially. Also any non-constant entropy input usually increases
 the period of randomness, which, when extrapolated to hashing, means that the
@@ -148,7 +147,7 @@ in bits, minus the number of hash words in the system, minus 1/4 of `lcg` and
 Moreover, the PRVHASH systems can be freely daisy-chained by feeding their
 outputs to `Seed` inputs, adding some security firewalls, and increasing
 the PRNG period of the final output accordingly. Note that any external PRNG
-output should be inputted via `Seed`, not `lcg`, as to not be subject to
+output should be inputted via `Seed`, and not `lcg`, as to not be subject to
 interference with the feedback path. For hashing and external entropy, only
 input via `lcg` works in practice.
 
@@ -205,9 +204,9 @@ int main()
 ## Streamed Hashing ##
 
 The file `prvhash64s.h` implements a relatively fast streamed hashing
-function by utilizing a parallel `prvhash64` structure. Please take a look
-at the `prvhash64s_oneshot()` function for usage example. The `prvhash64s`
-offers an increased security and hashing speed.
+function by utilizing a parallel PRVHASH structure. Please take a look at the
+`prvhash64s_oneshot()` function for usage example. The `prvhash64s` offers an
+increased security and hashing speed.
 
 The default `prvhash64s.h`-based 64-bit hash of the string `The cat is out of
 the bag` is `17afe4c036361242`.
@@ -269,7 +268,7 @@ multiplication result and mixing of its bit-reversed and original version
 produce a uniformly-distributed value.
 
 The three instructions - `Seed ^= lcg`, `Seed *= lcg - ~lcg`, `lcg += ~Seed` -
-represent an "ideal" bit shuffler: this construction represents a "bivariable
+represent an "ideal" bit shuffler: this construct represents a "bivariable
 shuffler" which transforms input `lcg` and `Seed` variables into another pair
 of variables with 50% bit difference relative to input, and without
 collisions. The whole core hash function, however, uses a rearranged mixing,
@@ -336,24 +335,25 @@ consider an `A*(B^C)` equation; an adversary can control `C`, but does not
 know the values of `A` and `B`, thus this adversary cannot predict the
 outcome. Beside that, as the core hash function naturally eliminates the bias
 from the external entropy of any statistical quality and frequency, its
-control may be fruitless. Note that to reduce such "control risks", the
-entropy input should use as fewer bits as possible, and augment the upper half
-of `lcg` like demonstrated in `prvrng.h`.
+control may be fruitless. Note that to reduce or even eliminate such "control
+risks", the entropy input should use as fewer bits as possible, and augment
+the upper half of `lcg` like demonstrated in `prvrng.h`.
 
 P.S. The reason the InitVec in the `prvhash64` hash function has the value
-constraints, and an initial state, is that otherwise the function would
-require at least 5 "conditioning" preliminary rounds (core function calls), to
-neutralize any oddities (including zero values) in InitVec; that would reduce
-the performance of the hash function dramatically for table hash use. Note
-that the `prvhash64s` function starts from the "full zero" state and then
-performs acceptably.
+quality constraints, and an initial state, is that otherwise the function
+would require at least 5 "conditioning" preliminary rounds (core function
+calls), to neutralize any oddities (including zero values) in InitVec; that
+would reduce the performance of the hash function dramatically for table hash
+use. Note that the `prvhash64s` function starts from the "full zero" state and
+then performs acceptably.
 
 ## An Ideal Core Hash Function ##
 
 The author found a variant of the core hash function that can be considered
 "ideal" from PRNG/hashing point of view, as it features a minimal entropy
 propagation latency. However, this variant turned out to be a lot slower, due
-to reduced instruction parallelism.
+to reduced instruction parallelism. The implementation is available via the
+`prvhash_core64i` function.
 
 	lcg ^= msgw;
 	Seed ^= Hash ^ lcg;
@@ -364,16 +364,16 @@ to reduced instruction parallelism.
 	const uint64_t out = lcg ^ rs;
 
 You may wonder, what's the quality difference between this "ideal" function
-and the "production" one, currently implemented in the `prvhash_core.h` file?
+and the "production" one, currently in use by the various implementations?
 A short answer: there is no practical difference. The entropy propagation
 latency depends on the structure of the function and the state variable size.
 The "ideal" function having minimal latency gets a fast entropy propagation
 even with 8-bit state variables. The current "production" function propagates
 the entropy slower, and for 8-bit state variables requires more hash array
 passes. However, if 16-bit state variables are used, there is no practical
-difference between the "ideal" and "production" functions. This equality is
-further strengthened when 64-bit state variables are used (larger state
-variables have better shuffling statistics).
+difference present, between the "ideal" and "production" functions. This
+equality is further strengthened when 64-bit state variables are used (larger
+state variables have better shuffling statistics).
 
 This variant of the core hash function offers the best possible statistical
 quality of random number generation.
@@ -381,20 +381,20 @@ quality of random number generation.
 ## The Stalled State of the Hash Function ##
 
 If the state of the hashing function ever reaches all-zeroes in `Seed` and
-`Hash` and at the same time all `lcg` values will be equal to -1, any
-subsequent continuous external entropy input of -1 will result in a stalled
-state: the hash function will produce the same hash value. This may happen
-if a precisely-crafted message is created (e.g. with a SAT solver). Various
-other very rare repeating combinations of entropy input may also produce a
-stalled state.
+`Hash` and at the same time all `lcg` values are equal to -1, any subsequent
+continuous external entropy input of -1 will result in a stalled state: the
+hash function will produce the same hash value. This may happen if a
+precisely-crafted message is created (e.g. with a SAT solver). Various other
+very rare repeating combinations of entropy input may also produce a stalled
+state.
 
 To avoid stalled state, only the higher part of the `lcg` should be augmented:
 this obviously offers a lot less control over the internal state of the core
-hash function. However, this has a hashing speed impact, so `PRVHASH64` and
-`PRVHASH64_64M` should not be used at all, or not used without a seed, in
+hash function. However, this has a hashing speed impact, so `prvhash64` and
+`prvhash64_64m` should not be used at all, or not used without a seed, in
 cases when an external collision attack is possible.
 
-PRVHASH64S, however, uses a "padding" PRNG to avoid turning function's state
+`prvhash64s`, however, uses a "padding" PRNG to avoid turning function's state
 into a stalled state.
 
 This does not affect PRNG usage of the core hash function, when `lcg` is never
@@ -416,7 +416,7 @@ all lengths.
 Alternatively, the method can be viewed from the standpoint of classic
 bit mixers/shufflers: the hash array can be seen as a "working buffer" whose
 state is passed back into the "bivariable shuffler" continuously, and the new
-shuffled values stored in such working buffer for later use.
+shuffled values stored in such working buffer for the next pass.
 
 ## PRNG Period Assessment ##
 
@@ -528,7 +528,7 @@ additionally complicates system's reversal.
 
 ## Fused PRNG ##
 
-While this "fused" arrangement is currently not used in the hash function
+While this "fused-3" arrangement is currently not used in the hash function
 implementations, it is also working fine with the core hash function.
 For example, while the "minimal PRNG" described earlier has 0.95 cycles/byte
 performance, the "fused" arrangement has a PRNG performance of 0.41
@@ -578,14 +578,14 @@ int main()
 
 ## PRVHASH16 ##
 
-PRVHASH16 demonstrates the quality of the core hash function. While the state
-variables are 16-bit, they are enough to perform hashing: this hash function
-passes all SMHasher tests, like 64-bit PRVHASH function do, for any hash
-length. This function is very slow, and is provided for demonstration purposes
-only, to assure that the core hash function works in principle, independent of
-state variable size. This hash function variant demonstrates that PRVHASH's
-method does not rely on bit shuffling alone (shuffles are purely local), but
-is genuinely based on PRNG position "jumps".
+`prvhash16` demonstrates the quality of the core hash function. While the
+state variables are 16-bit, they are enough to perform hashing: this hash
+function passes all SMHasher tests, like `prvhash64` function does, for any
+hash length. This function is very slow, and is provided for demonstration
+purposes only, to assure that the core hash function works in principle,
+independent of state variable size. This hash function variant demonstrates
+that PRVHASH's method does not rely on bit shuffling alone (shuffles are
+purely local), but is genuinely based on PRNG position "jumps".
 
 ## TANGO642 ##
 
