@@ -1,5 +1,5 @@
 /**
- * prvhash_core.h version 3.6
+ * prvhash_core.h version 3.6.1
  *
  * The inclusion file for the "prvhash_core64", "prvhash_core32",
  * "prvhash_core16", "prvhash_core8", "prvhash_core4", "prvhash_core2" PRVHASH
@@ -159,6 +159,42 @@ inline uint8_t prvhash_core2( uint8_t* const Seed0, uint8_t* const lcg0,
 	Hash &= 3;
 	Seed = (uint8_t) ( Hash ^ plcg );
 	const uint8_t out = (uint8_t) ( lcg ^ rs );
+
+	*Seed0 = Seed; *lcg0 = lcg; *Hash0 = Hash;
+
+	return( out );
+}
+
+/**
+ * This function runs a single PRVHASH random number generation round, an
+ * "ideal" core hash function variant. This function can be used both as a
+ * hash generator and as a general-purpose random number generator. In the
+ * latter case, it is advisable to initially run this function 5 times before
+ * using its random output, to neutralize any possible oddities of "Seed"'s
+ * and "lcg"'s initial values.
+ *
+ * To generate hashes, the "lcg" variable should be XORed with entropy input
+ * prior to calling this function.
+ *
+ * @param[in,out] Seed0 The current "Seed" value. Can be initialized to any
+ * value.
+ * @param[in,out] lcg0 The current "lcg" value. Can be initialized to any
+ * value.
+ * @param[in,out] Hash0 Current hash word in a hash word array.
+ * @return Current random value.
+ */
+
+inline uint64_t prvhash_core64i( uint64_t* const Seed0, uint64_t* const lcg0,
+	uint64_t* const Hash0 )
+{
+	uint64_t Seed = *Seed0; uint64_t lcg = *lcg0; uint64_t Hash = *Hash0;
+
+	Seed ^= Hash ^ lcg;
+	Seed *= lcg - ~lcg;
+	lcg += ~Seed;
+	const uint64_t rs = Seed >> 32 | Seed << 32;
+	Hash += rs;
+	const uint64_t out = lcg ^ rs;
 
 	*Seed0 = Seed; *lcg0 = lcg; *Hash0 = Hash;
 
