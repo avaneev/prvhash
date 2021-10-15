@@ -87,7 +87,9 @@ cryptographically secure: its state can be solved by a SAT solver pretty fast;
 this applies to other structuring (parallel, daisy-chained, fused, multiple
 hashwords). The known way to make PRNG considerably harder to solve for a SAT
 solver, with complexity corresponding to system's size, is to combine two
-adjacent PRNG outputs via XOR operation; this obviously has a speed impact.
+adjacent PRNG outputs via XOR operation; this obviously has a speed impact;
+and produces output with more than 1 solution, thus slightly increasing
+probability of PRNG output overlap.
 
 So, the basic PRNG with some, currently not hard-proven, security is as
 follows (XOR two adjacent outputs to produce a single "compressed" PRNG
