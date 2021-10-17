@@ -56,9 +56,10 @@ hashes of this quality level, it is very useful for hash tables.
 
 The core hash function can be easily integrated into your applications, to be
 used as an effective PRNG. The period of this minimal PRNG is at least
-`2^160`. The initial parameters can be varied at will, and won't "break" the
-PRNG. Setting only the `Seed` value guarantees a random start point within the
-whole PRNG period, with at least `2^64` spacing. The code follows.
+`2<sup>160</sup>`. The initial parameters can be varied at will, and won't
+"break" the PRNG. Setting only the `Seed` value guarantees a random start
+point within the whole PRNG period, with at least `2<sup>64</sup>` spacing.
+The code follows.
 
 ```
 #include "prvhash_core.h"
@@ -88,8 +89,9 @@ this applies to other structuring (parallel, daisy-chained, fused, multiple
 hashwords). The known way to make PRNG considerably harder to solve for a SAT
 solver, with complexity corresponding to system's size, is to combine two
 adjacent PRNG outputs via XOR operation; this obviously has a speed impact;
-and produces output with more than 1 solution, thus slightly increasing
-probability of PRNG output overlap.
+and produces output with more than 1 solution (most probably, 2), thus
+slightly increasing probability of PRNG output overlap (practically, from
+1/2<sup>system_size</sup> to 2/2<sup>system_size</sup>).
 
 So, the basic PRNG with some, currently not hard-proven, security is as
 follows (XOR two adjacent outputs to produce a single "compressed" PRNG
@@ -141,10 +143,10 @@ demonstrated in the `prvhash64s.h` file, which additionally increases the
 security exponentially. Also any non-constant entropy input usually increases
 the period of randomness, which, when extrapolated to hashing, means that the
 period increases by message's combinatorial capacity (or the number of various
-combinations of its bits). The maximal PRNG period's `2^N` exponent is hard to
-approximate exactly, but in most tests it was equal to at least system's size
-in bits, minus the number of hash words in the system, minus 1/4 of `lcg` and
-`Seed` variables' size.
+combinations of its bits). The maximal PRNG period's `2<sup>N</sup>` exponent
+is hard to approximate exactly, but in most tests it was equal to at least
+system's size in bits, minus the number of hash words in the system, minus
+1/4 of `lcg` and `Seed` variables' size.
 
 Moreover, the PRVHASH systems can be freely daisy-chained by feeding their
 outputs to `Seed` inputs, adding some security firewalls, and increasing
@@ -280,17 +282,18 @@ Thus it can be said that the system does not lose any input entropy. In
 3-dimensional analysis, when `Seed`, `lcg` and `msgw` values are scanned, and
 transformed into output `Seed` and `Hash` value pairs, this system exhibits
 state change-related collision statistics: on a fully random `msgw` input it
-is adequate for 16-bit, and excellent for 64-bit variables (`5.47^-18` percent
-chance, which far exceeds collision resistance requirements for 64-bit range
-of bits). To further decrease state change collisions between `lcg` and `Seed`
-with entropy input, the byte-reversal should be implemented as bit-reversal:
-in this case the system reaches its optimal state, but this is
-unimplementable in an efficient manner on modern processors. If the initial
-state of the system has little or zero entropy (less than state variable size
-bits of entropy), on very sparse `msgw` input (in the order of 1 bit per 80),
-this system may initially exhibit local correlations between adjacent bits, so
-in such case this system requires preliminary "conditioning" rounds (2 for
-16-bit, and 5 for 64-bit state variables).
+is adequate for 16-bit, and excellent for 64-bit variables
+(`5.47<sup>-18</sup>` percent chance, which far exceeds collision resistance
+requirements for 64-bit range of bits). To further decrease state change
+collisions between `lcg` and `Seed` with entropy input, the byte-reversal
+should be implemented as bit-reversal: in this case the system reaches its
+optimal state, but this is unimplementable in an efficient manner on modern
+processors. If the initial state of the system has little or zero entropy
+(less than state variable size bits of entropy), on very sparse `msgw` input
+(in the order of 1 bit per 80), this system may initially exhibit local
+correlations between adjacent bits, so in such case this system requires
+preliminary "conditioning" rounds (2 for 16-bit, and 5 for 64-bit state
+variables).
 
 Another important aspect of this system, especially from the cryptography
 standpoint, is entropy input to output latency. The base latency for
@@ -503,13 +506,6 @@ public:
 
 ## PRVHASH Cryptanalysis Basics ##
 
-When the internal momentary state of PRVHASH is known, its reversal poses a
-serious computational problem since the message that enters the system becomes
-indistinguishable from system's own random state. Moreover, each reversal
-round's complexity increases exponentially, depending on the used PRVHASH
-parallelism (the `lcg - ~lcg` instruction assures this: it naturally reduces
-bit size of `lcg` by 1 and thus induces uncertainty about system's state).
-
 When the system state is not known, when PRVHASH acts as a black-box, one has
 to consider core hash function's statistical properties. All internal
 variables - `Seed`, `lcg`, and `Hash` - are random: they are uncorrelated to
@@ -520,7 +516,7 @@ generators: they can even be interleaved after each round.
 
 When the message enters the system as `lcg ^= msgw`, it works like mixing a
 message with an one-time-pad used in symmetric cryptography. This operation
-completely hides the message in `lcg`'s entropy. Beside that the output of
+completely hides the message in `lcg`'s entropy. Beside that, the output of
 PRVHASH uses mix of two variables: statistically, this means the mixing of two
 unrelated random variables, with such summary output never appearing in
 system's state. It's worth noting the `lcg ^ rs` expression: the `rs` variable
