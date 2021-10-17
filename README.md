@@ -56,9 +56,9 @@ hashes of this quality level, it is very useful for hash tables.
 
 The core hash function can be easily integrated into your applications, to be
 used as an effective PRNG. The period of this minimal PRNG is at least
-`2<sup>160</sup>`. The initial parameters can be varied at will, and won't
+2<sup>160</sup>. The initial parameters can be varied at will, and won't
 "break" the PRNG. Setting only the `Seed` value guarantees a random start
-point within the whole PRNG period, with at least `2<sup>64</sup>` spacing.
+point within the whole PRNG period, with at least 2<sup>64</sup> spacing.
 The code follows.
 
 ```
@@ -143,7 +143,7 @@ demonstrated in the `prvhash64s.h` file, which additionally increases the
 security exponentially. Also any non-constant entropy input usually increases
 the period of randomness, which, when extrapolated to hashing, means that the
 period increases by message's combinatorial capacity (or the number of various
-combinations of its bits). The maximal PRNG period's `2<sup>N</sup>` exponent
+combinations of its bits). The maximal PRNG period's 2<sup>N</sup> exponent
 is hard to approximate exactly, but in most tests it was equal to at least
 system's size in bits, minus the number of hash words in the system, minus
 1/4 of `lcg` and `Seed` variables' size.
@@ -283,7 +283,7 @@ Thus it can be said that the system does not lose any input entropy. In
 transformed into output `Seed` and `Hash` value pairs, this system exhibits
 state change-related collision statistics: on a fully random `msgw` input it
 is adequate for 16-bit, and excellent for 64-bit variables
-(`5.47<sup>-18</sup>` percent chance, which far exceeds collision resistance
+(5.47<sup>-18</sup> percent chance, which far exceeds collision resistance
 requirements for 64-bit range of bits). To further decrease state change
 collisions between `lcg` and `Seed` with entropy input, the byte-reversal
 should be implemented as bit-reversal: in this case the system reaches its
