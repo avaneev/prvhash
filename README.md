@@ -627,8 +627,9 @@ sequences. This is what happens in PRVHASH: on entropy input the system may
 "jump" or "converge" into an unrelated random sub-sequence.
 
 During the course of PRVHASH development, the author has found that the
-simplest sinewave oscillator with period being a multiple of PI, can be used
-as a pseudo-random number generator.
+simplest low-frequency sinewave oscillator can be used as a pseudo-random
+number generator, if its mantissa is treated as an integer number. Which means
+that every point on a sinusoid has properties of a random bit-sequence.
 
 ```
 #include <math.h>
@@ -642,7 +643,7 @@ double svalue1;
 double svalue2;
 
 DummyRNG() {
-si = 0.01 / 3.14159265358979324;
+si = 0.001;
 sincr = 2.0 * cos( si );
 seed( 0 );
 }
@@ -658,7 +659,7 @@ Uint16 raw16() {
 }
 void walk_state(PractRand::StateWalkingObject *walker) {}
 void seed(Uint64 sv) {
-const double ph = sv * 3.40612158008655459e-19;
+const double ph = sv * 3.40612158008655459e-19; // Random seed to phase.
 
 svalue1 = sin( ph );
 svalue2 = sin( ph - si );
