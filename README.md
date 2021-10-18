@@ -589,8 +589,8 @@ purely local), but is genuinely based on PRNG position "jumps".
 
 This is an efficient implementation of a PRVHASH PRNG-based streamed XOR
 function. Since no cryptanalysis nor certification of this function was
-performed yet, it cannot be called a "cipher", but rather a cipher-like random
-number generator.
+performed yet, it cannot be called a "cipher", but rather a cipher-alike
+random number generator.
 
 ## Other Thoughts ##
 
@@ -603,10 +603,10 @@ Moreover, this also opens up a notion of "infinite frequency", and thus
 The mathematics offers an interesting understanding. Take in your mind a
 moment before the Big Bang. Did mathematical rules exist at that moment? Of
 course, they did, otherwise there would be no Big Bang. The span of existence
-of mathematical rules cannot be estimated, so it safe to assume they existed
-for an eternity. On top of that, PRVHASH practically proves that entropy can
-self-start from zero-state or "nothing", if mathematical rules exist prior to
-that.
+of mathematical rules cannot be estimated, so it is safe to assume they
+existed for an eternity. On top of that, PRVHASH practically proves that
+entropy can self-start from zero-state or "nothing", if mathematical rules
+exist prior to that.
 
 I, as the author of PRVHASH, would like to point out at some long-standing
 misconception in relating "combinatorics" to "random numbers". Historically,
