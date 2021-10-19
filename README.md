@@ -103,6 +103,10 @@ output):
 		v ^= prvhash_core64( &Seed, &lcg, &Hash );
 ```
 
+A similar approach is to simply skip the next generated random number, but it
+is slightly less secure. It is likely that PRVHASH's k-equidistribution is
+implicitly secure.
+
 ## TPDF Dithering ##
 
 The core hash function can be used to implement a "statistically-good" and
@@ -153,8 +157,10 @@ Moreover, the PRVHASH systems can be freely daisy-chained by feeding their
 outputs to `Seed` inputs, adding some security firewalls, and increasing
 the PRNG period of the final output accordingly. Note that any external PRNG
 output should be inputted via `Seed`, and not `lcg`, as to not be subject to
-interference with the feedback path. For hashing and external entropy, only
-input via `lcg` works in practice.
+interference with the feedback path (input via `lcg` is possible, but in this
+case PRNG period exponent summation won't occur, for "production" core hash
+function). For hashing and external entropy, only input via `lcg` works in
+practice.
 
 While `lcg`, `Seed`, and `Hash` variables are best initialized with good
 entropy source (however, structurally, they can accept just about any entropy
@@ -211,18 +217,27 @@ int main()
 The file `prvhash64s.h` implements a relatively fast streamed hashing
 function by utilizing a parallel PRVHASH structure. Please take a look at the
 `prvhash64s_oneshot()` function for usage example. The `prvhash64s` offers an
-increased security and hashing speed.
+increased security.
+
+This function has an increased preimage resistance compared to the basic
+hash function implementation. Preimage resistance cannot be currently
+estimated exactly, but the hash length affects it exponentially. Also,
+resistance is usually subject to exchange of forged symbols to "trash"
+symbols; substitutions usually end up as being quite random, possibly damaging
+for any compressed or otherwise structured file. Time complexity for preimage
+attack fluctuates greatly as preimage resistance likely has a logarithmic PDF
+of timing.
 
 The default `prvhash64s.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `17afe4c036361242`.
+the bag` is `bdb9cdad4117ee4e`.
 
 The default `prvhash64s.h`-based 256-bit hash of the string
 `Only a toilet bowl does not leak` is
-`7741fbb44cae6a674ab6e1ca48631927168931653842d389403437820e6b5eb8`.
+`684e1785eb0e0f39123fe709bd07334031d7fddf6c07eb7abdb2c4683611bfd8`.
 
 The default prvhash64s 256-bit hash of the string
 `Only a toilet bowl does not leaj` is
-`61f8e1e292e0278473c362a84c7dce715b66a8a6f3b622492e885614550e114c`.
+`18966a9d2d8461e151d9e7142e1a35f66ce5dd454901c083b0cdc727a2e1b74d`.
 
 This demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect).
 On a set of 216553 English words, pair-wise hash comparisons give average
@@ -232,8 +247,8 @@ avalanche criterion.
 This streamed hash function produces hash values that are different to the
 `prvhash64` hash function. It is incorrect to use both of these hash function
 implementations on the same data set. While the `prvhash64` can be used as
-a fast hash for tables, it is not so fast on large data blocks. The
-`prvhash64s` can be used to create hashes of large data blocks like files.
+a hash for tables and in-memory data blocks, the `prvhash64s` can be used to
+create hashes of large data blocks like files, in streamed mode.
 
 A proposed short name for hashes created with `prvhash64s.h` is `PRH64S-N`,
 where `N` is the hash length in bits (e.g. `PRH64S-256`).
@@ -293,7 +308,7 @@ processors. If the initial state of the system has little or zero entropy
 (less than state variable size bits of entropy), on very sparse `msgw` input
 (in the order of 1 bit per 80), this system may initially exhibit local
 correlations between adjacent bits, so in such case this system requires
-preliminary "conditioning" rounds (2 for 16-bit, and 5 for 64-bit state
+preliminary "conditioning" rounds (3 for 16-bit, and 5 for 64-bit state
 variables).
 
 Another important aspect of this system, especially from the cryptography
@@ -394,14 +409,17 @@ precisely-crafted message is created (e.g. with a SAT solver). Various other
 very rare repeating combinations of entropy input may also produce a stalled
 state.
 
-To avoid stalled state, only the higher part of the `lcg` should be augmented:
-this obviously offers a lot less control over the internal state of the core
-hash function. However, this has a hashing speed impact, so `prvhash64` and
+To reduce occurrence of a stalled state, only the higher part of the `lcg`
+should be augmented: this obviously offers a lot less control over the
+internal state of the core hash function, but a SAT solver can still find a
+stalled state; also, this has a hashing speed impact. So, `prvhash64` and
 `prvhash64_64m` should not be used at all, or not used without a seed, in
 cases when an external collision attack is possible.
 
 `prvhash64s`, however, uses a "padding" PRNG to avoid turning function's state
-into a stalled state.
+into a stalled state. This "padding" PRNG is injected in an interleaved
+manner, and it cannot be avoided due to k-equdistribution's implicit security;
+it acts as a "firewall"; it also "encodes" message's length, implicitly.
 
 This does not affect PRNG usage of the core hash function, when `lcg` is never
 augmented.
