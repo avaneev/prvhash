@@ -30,7 +30,8 @@ suggestions in `prvhash64.h`), adding useful initial entropy (`InitVec` plus
 64-, 128-, 256-, 512- and 1024-bit PRVHASH hashes pass all [SMHasher](https://github.com/rurban/smhasher)
 tests. Other hash lengths were not thoroughly tested, but extrapolations can
 be made. The author makes no cryptographic claims about PRVHASH-based
-constructs.
+constructs. Currently, it is likely that PRVHASH-based hashing should not be
+used in open systems, without a secret seed.
 
 PRVHASH core hash function can be used as a PRNG with an arbitrarily-chosen
 (practically unlimited) period, depending on the number of hashwords in the
