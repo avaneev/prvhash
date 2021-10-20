@@ -270,7 +270,10 @@ It was especially hard to find a better "hashing finalization" solution.
 
 (This core function can be arbitrarily scaled to any even-size variables:
 2-, 4-, 8-, 16-, 32-, 64-bit variable sizes were tested, with similar
-statistical results).
+statistical results; since mathematical structure of the function does not
+depend on the variable size, statistical analysis can be performed using
+smaller variable sizes, with the results being extrapolatable to larger
+variable sizes, with a high probability).
 
 How does it work? First of all, this PRNG system, represented by the core hash
 function, does not work with numbers in a common sense: it works with [entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)),
@@ -397,7 +400,8 @@ equality is further strengthened when 64-bit state variables are used (larger
 state variables have better shuffling statistics).
 
 This variant of the core hash function offers the best possible statistical
-quality of random number generation.
+quality of random number generation. However, it is only evident (slightly)
+with 2-bit state variable size.
 
 ## The Stalled State of the Hash Function ##
 
