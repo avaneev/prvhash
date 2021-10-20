@@ -229,15 +229,15 @@ attack fluctuates greatly as preimage resistance likely has a logarithmic PDF
 of timing.
 
 The default `prvhash64s.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `bdb9cdad4117ee4e`.
+the bag` is `0f0788947e44cc0a`.
 
 The default `prvhash64s.h`-based 256-bit hash of the string
 `Only a toilet bowl does not leak` is
-`684e1785eb0e0f39123fe709bd07334031d7fddf6c07eb7abdb2c4683611bfd8`.
+`2134b00e3dce98da7235f869475718211861e89e59f492b897d563253e3d2e5e`.
 
 The default prvhash64s 256-bit hash of the string
 `Only a toilet bowl does not leaj` is
-`18966a9d2d8461e151d9e7142e1a35f66ce5dd454901c083b0cdc727a2e1b74d`.
+`ce70257b235627a8a8649ae77f3d2ee3cc8898c416ce95afefe331184b6688d0`.
 
 This demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect).
 On a set of 216553 English words, pair-wise hash comparisons give average

@@ -1,5 +1,5 @@
 /**
- * prvhash64s.h version 3.6.4
+ * prvhash64s.h version 3.6.5
  *
  * The inclusion file for the "prvhash64s" hash function. More secure,
  * streamed. Implements a parallel variant of the "prvhash64" hash function,
@@ -382,10 +382,10 @@ inline void prvhash64s_final( PRVHASH64S_CTX* ctx )
 
 	for( k = 0; k < ctx -> HashLen; k += sizeof( uint64_t ))
 	{
-		prvhash_core64( &Seed1, &lcg1, hc );
+		const uint64_t r1 = prvhash_core64( &Seed1, &lcg1, hc );
 		prvhash_core64( &Seed2, &lcg2, hc );
 		prvhash_core64( &Seed3, &lcg3, hc );
-		const uint64_t r1 = prvhash_core64( &Seed4, &lcg4, hc );
+		prvhash_core64( &Seed4, &lcg4, hc );
 
 		hc++;
 
@@ -406,11 +406,12 @@ inline void prvhash64s_final( PRVHASH64S_CTX* ctx )
 			hc = (uint64_t*) ctx -> Hash;
 		}
 
-		prvhash_core64( &Seed1, &lcg1, hc );
+		const uint64_t r2 = PRVHASH_EC64(
+			r1 ^ prvhash_core64( &Seed1, &lcg1, hc ));
+
 		prvhash_core64( &Seed2, &lcg2, hc );
 		prvhash_core64( &Seed3, &lcg3, hc );
-		const uint64_t r2 = PRVHASH_EC64(
-			r1 ^ prvhash_core64( &Seed4, &lcg4, hc ));
+		prvhash_core64( &Seed4, &lcg4, hc );
 
 		memcpy( ho + k, &r2, sizeof( r2 ));
 
