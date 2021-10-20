@@ -1,5 +1,5 @@
 /**
- * prvhash64s.h version 3.6.3
+ * prvhash64s.h version 3.6.4
  *
  * The inclusion file for the "prvhash64s" hash function. More secure,
  * streamed. Implements a parallel variant of the "prvhash64" hash function,
@@ -139,33 +139,32 @@ inline void prvhash64s_init( PRVHASH64S_CTX* ctx, uint8_t* const Hash,
 	ctx -> BlockFill = 0;
 	ctx -> HashOut = Hash;
 	ctx -> HashLen = HashLen;
-	ctx -> HashPos = 0;
 	ctx -> InitBytePos = 0;
 	ctx -> IsHashFilled = 0;
 	ctx -> fb = 1;
 
+	size_t HashPos = 0;
+
 	for( i = 0; i < 6; i++ )
 	{
 		prvhash_core64( &ctx -> SeedP, &ctx -> lcgP, &ctx -> HashP );
-	}
 
-	for( i = 0; i < 6; i++ )
-	{
-		int k;
+		uint64_t* const hc = (uint64_t*) ( ctx -> Hash + HashPos );
 
-		for( k = 0; k < PRVHASH64S_PAR; k++ )
+		prvhash_core64( &ctx -> Seed[ 0 ], &ctx -> lcg[ 0 ], hc );
+		prvhash_core64( &ctx -> Seed[ 1 ], &ctx -> lcg[ 1 ], hc );
+		prvhash_core64( &ctx -> Seed[ 2 ], &ctx -> lcg[ 2 ], hc );
+		prvhash_core64( &ctx -> Seed[ 3 ], &ctx -> lcg[ 3 ], hc );
+
+		HashPos += sizeof( uint64_t );
+
+		if( HashPos == ctx -> HashLen )
 		{
-			prvhash_core64( &ctx -> Seed[ k ], &ctx -> lcg[ k ],
-				(uint64_t*) ( ctx -> Hash + ctx -> HashPos ));
-		}
-
-		ctx -> HashPos += sizeof( uint64_t );
-
-		if( ctx -> HashPos == ctx -> HashLen )
-		{
-			ctx -> HashPos = 0;
+			HashPos = 0;
 		}
 	}
+
+	ctx -> HashPos = HashPos;
 }
 
 /**
@@ -268,6 +267,8 @@ inline void prvhash64s_update( PRVHASH64S_CTX* ctx, const uint8_t* Msg,
 			lcg3 ^= prvhash_lu64ec( Msg + 16 );
 			lcg4 ^= prvhash_lu64ec( Msg + 24 );
 
+			Msg += PRVHASH64S_LEN;
+
 			prvhash_core64( &Seed1, &lcg1, hc );
 			prvhash_core64( &Seed2, &lcg2, hc );
 			prvhash_core64( &Seed3, &lcg3, hc );
@@ -294,8 +295,8 @@ inline void prvhash64s_update( PRVHASH64S_CTX* ctx, const uint8_t* Msg,
 				hc = (uint64_t*) ctx -> Hash;
 			}
 
-			Msg += PRVHASH64S_LEN;
 			MsgLen -= PRVHASH64S_LEN;
+
 		} while( MsgLen >= PRVHASH64S_LEN );
 
 		ctx -> Seed[ 0 ] = Seed1;
