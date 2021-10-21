@@ -1,5 +1,5 @@
 /**
- * prvhash64.h version 3.6.1
+ * prvhash64.h version 3.6.2
  *
  * The inclusion file for the "prvhash64" and "prvhash64_64m" hash functions.
  *
@@ -78,7 +78,7 @@ inline void prvhash64( const uint8_t* Msg, const size_t MsgLen,
 	{
 		memset( Hash, 0, HashLen );
 
-		Seed = 12905183526369792234ULL;
+		Seed = 0xC90FDAA22168C23; // The first 60 bits of PI.
 		lcg = 0;
 		*(state_t*) Hash = UseSeed;
 	}
@@ -181,9 +181,9 @@ inline uint64_t prvhash64_64m( const uint8_t* Msg, const size_t MsgLen,
 {
 	typedef uint64_t state_t;
 
-	state_t Seed = 12905183526369792234ULL;
+	state_t Seed = 0xC90FDAA22168C23; // The first 60 bits of PI.
 	state_t lcg = 0;
-	state_t HashVal = UseSeed;
+	state_t Hash = UseSeed;
 
 	state_t fb = 1;
 
@@ -204,15 +204,15 @@ inline uint64_t prvhash64_64m( const uint8_t* Msg, const size_t MsgLen,
 		{
 			if( Msg > MsgEnd )
 			{
-				prvhash_core64( &Seed, &lcg, &HashVal );
+				prvhash_core64( &Seed, &lcg, &Hash );
 
-				return( prvhash_core64( &Seed, &lcg, &HashVal ));
+				return( prvhash_core64( &Seed, &lcg, &Hash ));
 			}
 
 			lcg ^= prvhash_lpu64_f( Msg, MsgEnd, fb );
 		}
 
-		prvhash_core64( &Seed, &lcg, &HashVal );
+		prvhash_core64( &Seed, &lcg, &Hash );
 
 		Msg += sizeof( state_t );
 	}
