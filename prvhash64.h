@@ -1,5 +1,5 @@
 /**
- * prvhash64.h version 3.6
+ * prvhash64.h version 3.6.1
  *
  * The inclusion file for the "prvhash64" and "prvhash64_64m" hash functions.
  *
@@ -51,22 +51,23 @@
  * should be aligned to 64 bits.
  * @param HashLen The required hash length, in bytes, should be >= 8, in
  * increments of 8.
- * @param SeedXOR Optional value, to XOR the default seed with. To use the
- * default seed, set to 0. If InitVec is non-NULL, this SeedXOR is ignored and
- * should be set to 0. Otherwise, the SeedXOR value can have any bit length,
- * and is used only as an additional entropy source. It should be
- * endianness-corrected.
+ * @param UseSeed Optional value, to use instead of the default seed. To use
+ * the default seed, set to 0. If InitVec is non-NULL, this UseSeed is ignored
+ * and should be set to 0. Otherwise, the UseSeed value can have any bit
+ * length and statistical quality, and is used only as an additional entropy
+ * source. It should be endianness-corrected.
  * @param InitVec If non-NULL, an "initialization vector" for internal "Seed"
  * and "lcg" variables. Full 16-byte uniformly-random value should be supplied
  * in this case. Since it is imperative that the initialization vector is
- * non-zero, the best strategies to generate it are: 1) compose the vector
- * from 16-bit random values that have 4 to 12 random bits set; 2) compose the
- * vector from 64-bit random values that have 28-36 random bits set.
+ * non-zero and non-sparse, the best strategies to generate it are: 1) compose
+ * the vector from 16-bit random values that have 4 to 12 random bits set;
+ * 2) compose the vector from 64-bit random values that have 28-36 random bits
+ * set. This vector's address alignment is unimportant.
  */
 
 inline void prvhash64( const uint8_t* Msg, const size_t MsgLen,
-	uint8_t* const Hash, const size_t HashLen, const uint64_t SeedXOR,
-	const uint8_t InitVec[ 16 ])
+	uint8_t* const Hash, const size_t HashLen, const uint64_t UseSeed,
+	const uint8_t InitVec[ sizeof( uint64_t ) * 2 ])
 {
 	typedef uint64_t state_t;
 
@@ -79,7 +80,7 @@ inline void prvhash64( const uint8_t* Msg, const size_t MsgLen,
 
 		Seed = 12905183526369792234ULL;
 		lcg = 0;
-		*(state_t*) Hash = SeedXOR;
+		*(state_t*) Hash = UseSeed;
 	}
 	else
 	{
@@ -170,19 +171,19 @@ inline void prvhash64( const uint8_t* Msg, const size_t MsgLen,
  * @param Msg The message to produce hash from. The alignment of the message
  * is unimportant.
  * @param MsgLen Message's length, in bytes.
- * @param SeedXOR Optional value, to XOR the default seed with. To use the
- * default seed, set to 0. The SeedXOR value can have any bit length, and is
- * used only as an additional entropy source.
+ * @param UseSeed Optional value, to use instead of the default seed. To use
+ * the default seed, set to 0. The UseSeed value can have any bit length and
+ * statistical quality, and is used only as an additional entropy source.
  */
 
 inline uint64_t prvhash64_64m( const uint8_t* Msg, const size_t MsgLen,
-	const uint64_t SeedXOR )
+	const uint64_t UseSeed )
 {
 	typedef uint64_t state_t;
 
 	state_t Seed = 12905183526369792234ULL;
 	state_t lcg = 0;
-	state_t HashVal = SeedXOR;
+	state_t HashVal = UseSeed;
 
 	state_t fb = 1;
 

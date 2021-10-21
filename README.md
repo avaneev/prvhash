@@ -23,7 +23,7 @@ PRVHASH is solely based on the butterfly effect, inspired by [LCG](https://en.wi
 pseudo-random number generators. The generated hashes have good avalanche
 properties. For best security, a random seed should be supplied to the hash
 function, but this is not a requirement. In practice, the `InitVec` (instead
-of `SeedXOR`), and initial hash, can both be randomly seeded (see the
+of `UseSeed`), and initial hash, can both be randomly seeded (see the
 suggestions in `prvhash64.h`), adding useful initial entropy (`InitVec` plus
 `Hash` total bits of entropy).
 
@@ -229,15 +229,15 @@ attack fluctuates greatly as preimage resistance likely has a logarithmic PDF
 of timing.
 
 The default `prvhash64s.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `0f0788947e44cc0a`.
+the bag` is `c57b9d8063ba6363`.
 
 The default `prvhash64s.h`-based 256-bit hash of the string
 `Only a toilet bowl does not leak` is
-`2134b00e3dce98da7235f869475718211861e89e59f492b897d563253e3d2e5e`.
+`6528915ce1fedfc27c2f024767336ad3162082125ff2b3a46e519b10a53126f6`.
 
 The default prvhash64s 256-bit hash of the string
 `Only a toilet bowl does not leaj` is
-`ce70257b235627a8a8649ae77f3d2ee3cc8898c416ce95afefe331184b6688d0`.
+`9e7403faa58692e3d33202f79aa00f73c4dc07fcb02cf0bca9e20984412aa795`.
 
 This demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect).
 On a set of 216553 English words, pair-wise hash comparisons give average

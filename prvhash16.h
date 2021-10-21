@@ -1,5 +1,5 @@
 /**
- * prvhash16.h version 3.6
+ * prvhash16.h version 3.6.1
  *
  * The inclusion file for the "prvhash16" hash function. For demonstration
  * purposes, not practically useful.
@@ -48,13 +48,13 @@
  * aligned to 16 bits.
  * @param HashLen The required hash length, in bytes, should be >= 4, in
  * increments of 2.
- * @param SeedXOR Optional value, to XOR the default seed with. To use the
- * default seed, set to 0. The SeedXOR value can have any bit length,
- * and is used only as an additional entropy source.
+ * @param UseSeed Optional value, to use instead of the default seed. To use
+ * the default seed, set to 0. The UseSeed value can have any bit length and
+ * any statistical quality, and is used only as an additional entropy source.
  */
 
 inline void prvhash16( const uint8_t* Msg, const size_t MsgLen,
-	uint8_t* const Hash, const size_t HashLen, const uint32_t SeedXOR )
+	uint8_t* const Hash, const size_t HashLen, const uint32_t UseSeed )
 {
 	memset( Hash, 0, HashLen );
 
@@ -62,7 +62,7 @@ inline void prvhash16( const uint8_t* Msg, const size_t MsgLen,
 
 	state_t Seed = 48976;
 	state_t lcg = 0;
-	*(uint32_t*) Hash = SeedXOR;
+	*(uint32_t*) Hash = UseSeed;
 
 	const state_t* const HashEnd = (state_t*) ( Hash + HashLen );
 	state_t* hc = (state_t*) Hash;

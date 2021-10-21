@@ -1,5 +1,5 @@
 /**
- * prvhash64s.h version 3.6.5
+ * prvhash64s.h version 3.6.6
  *
  * The inclusion file for the "prvhash64s" hash function. More secure,
  * streamed. Implements a parallel variant of the "prvhash64" hash function,
@@ -75,20 +75,19 @@ typedef struct {
  * unimportant. This pointer will be stored in the "ctx" structure.
  * @param HashLen The required hash length, in bytes, should be >= 8, in
  * increments of 8. Should not exceed PRVHASH64S_MAX.
- * @param SeedXOR Optional values, to XOR the default seeds with. To use the
- * default seeds, set to 0. If InitVec is non-NULL, this SeedXOR is ignored
- * and should be set to 0. Otherwise, the SeedXOR values can have any bit
- * length and statistical quality, up to five 64-bit values can be supplied,
- * and are used only as an additional entropy source. They should be
- * endianness-corrected.
+ * @param UseSeeds Optional values, to use instead of the default seeds. To
+ * use the default seeds, set to 0. If InitVec is non-NULL, this UseSeed is
+ * ignored, and should be set to 0. Otherwise, the UseSeeds values can have
+ * any bit length and statistical quality, up to five 64-bit values can be
+ * supplied (others can be set to 0). They should be endianness-corrected.
  * @param InitVec If non-NULL, an "initialization vector" for internal "Seed"
  * and "lcg" variables. Any 80-byte value can be supplied, even zeroed-out
- * partially.
+ * partially. This vector's address alignment is unimportant.
  */
 
 inline void prvhash64s_init( PRVHASH64S_CTX* ctx, uint8_t* const Hash,
-	const size_t HashLen, const uint64_t SeedXOR[ PRVHASH64S_PAR + 1 ],
-	const uint8_t InitVec[( PRVHASH64S_PAR + 1 ) * 16 ])
+	const size_t HashLen, const uint64_t UseSeeds[ PRVHASH64S_PAR + 1 ],
+	const uint8_t InitVec[( PRVHASH64S_PAR + 1 ) * sizeof( uint64_t ) * 2 ])
 {
 	int i;
 
@@ -97,7 +96,7 @@ inline void prvhash64s_init( PRVHASH64S_CTX* ctx, uint8_t* const Hash,
 		memset( ctx -> Hash, 0, HashLen );
 		ctx -> HashP = 0;
 
-		if( SeedXOR == 0 )
+		if( UseSeeds == 0 )
 		{
 			for( i = 0; i < PRVHASH64S_PAR; i++ )
 			{
@@ -112,11 +111,11 @@ inline void prvhash64s_init( PRVHASH64S_CTX* ctx, uint8_t* const Hash,
 		{
 			for( i = 0; i < PRVHASH64S_PAR; i++ )
 			{
-				ctx -> Seed[ i ] = SeedXOR[ i ];
+				ctx -> Seed[ i ] = UseSeeds[ i ];
 				ctx -> lcg[ i ] = 0;
 			}
 
-			ctx -> SeedP = SeedXOR[ i ];
+			ctx -> SeedP = UseSeeds[ i ];
 			ctx -> lcgP = 0;
 		}
 	}
@@ -145,7 +144,7 @@ inline void prvhash64s_init( PRVHASH64S_CTX* ctx, uint8_t* const Hash,
 
 	size_t HashPos = 0;
 
-	for( i = 0; i < 6; i++ )
+	for( i = 0; i < 5; i++ )
 	{
 		prvhash_core64( &ctx -> SeedP, &ctx -> lcgP, &ctx -> HashP );
 
@@ -348,9 +347,6 @@ inline void prvhash64s_final( PRVHASH64S_CTX* ctx )
 	uint64_t lcg2 = ctx -> lcg[ 1 ];
 	uint64_t lcg3 = ctx -> lcg[ 2 ];
 	uint64_t lcg4 = ctx -> lcg[ 3 ];
-	uint64_t SeedP = ctx -> SeedP;
-	uint64_t lcgP = ctx -> lcgP;
-	uint64_t HashP = ctx -> HashP;
 
 	size_t fc = sizeof( uint64_t ) +
 		( ctx -> HashLen == sizeof( uint64_t ) ? 0 : ctx -> HashLen +
@@ -382,57 +378,26 @@ inline void prvhash64s_final( PRVHASH64S_CTX* ctx )
 
 	for( k = 0; k < ctx -> HashLen; k += sizeof( uint64_t ))
 	{
-		const uint64_t r1 = prvhash_core64( &Seed1, &lcg1, hc );
-		prvhash_core64( &Seed2, &lcg2, hc );
-		prvhash_core64( &Seed3, &lcg3, hc );
-		prvhash_core64( &Seed4, &lcg4, hc );
+		uint64_t res = 0;
+		int i;
 
-		hc++;
-
-		if( hc == HashEnd )
+		for( i = 0; i < 4; i++ )
 		{
-			hc = (uint64_t*) ctx -> Hash;
+			prvhash_core64( &Seed1, &lcg1, hc );
+			prvhash_core64( &Seed2, &lcg2, hc );
+			prvhash_core64( &Seed3, &lcg3, hc );
+			res ^= prvhash_core64( &Seed4, &lcg4, hc );
+
+			hc++;
+
+			if( hc == HashEnd )
+			{
+				hc = (uint64_t*) ctx -> Hash;
+			}
 		}
 
-		prvhash_core64( &Seed1, &lcg1, hc );
-		prvhash_core64( &Seed2, &lcg2, hc );
-		prvhash_core64( &Seed3, &lcg3, hc );
-		prvhash_core64( &Seed4, &lcg4, hc );
-
-		hc++;
-
-		if( hc == HashEnd )
-		{
-			hc = (uint64_t*) ctx -> Hash;
-		}
-
-		const uint64_t r2 = PRVHASH_EC64(
-			r1 ^ prvhash_core64( &Seed1, &lcg1, hc ));
-
-		prvhash_core64( &Seed2, &lcg2, hc );
-		prvhash_core64( &Seed3, &lcg3, hc );
-		prvhash_core64( &Seed4, &lcg4, hc );
-
-		memcpy( ho + k, &r2, sizeof( r2 ));
-
-		hc++;
-
-		if( hc == HashEnd )
-		{
-			hc = (uint64_t*) ctx -> Hash;
-		}
-
-		prvhash_core64( &Seed1, &lcg1, hc );
-		prvhash_core64( &Seed2, &lcg2, hc );
-		prvhash_core64( &Seed3, &lcg3, hc );
-		prvhash_core64( &Seed4, &lcg4, hc );
-
-		hc++;
-
-		if( hc == HashEnd )
-		{
-			hc = (uint64_t*) ctx -> Hash;
-		}
+		res = PRVHASH_EC64( res );
+		memcpy( ho + k, &res, sizeof( res ));
 	}
 
 	memset( ctx, 0, sizeof( PRVHASH64S_CTX ));
