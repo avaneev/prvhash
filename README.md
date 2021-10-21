@@ -86,13 +86,14 @@ int main()
 
 Note that such minimal 1-hashword PRNG is most definitely not
 cryptographically secure: its state can be solved by a SAT solver pretty fast;
-this applies to other structuring (parallel, daisy-chained, fused, multiple
-hashwords). The known way to make PRNG considerably harder to solve for a SAT
-solver, with complexity corresponding to system's size, is to combine two
-adjacent PRNG outputs via XOR operation; this obviously has a speed impact;
-and produces output with more than 1 solution (most probably, 2), thus
-slightly increasing probability of PRNG output overlap (practically, from
-1/2<sup>system_size</sup> to 2/2<sup>system_size</sup>).
+this applies to other structuring (parallel, fused, multiple hashwords; with
+daisy-chaining being harder to solve). The known way to make PRNG considerably
+harder to solve for a SAT solver, with complexity corresponding to system's
+size, is to combine two adjacent PRNG outputs via XOR operation; this
+obviously has a speed impact, and produces output with more than 1 solution
+(most probably, 2). This, however, does not measurably increase the
+probability of PRNG output overlap, which stays below
+1/2<sup>sys_size_bits</sup>; in tests, practically undetectable.
 
 So, the basic PRNG with some, currently not hard-proven, security is as
 follows (XOR two adjacent outputs to produce a single "compressed" PRNG
@@ -138,10 +139,10 @@ This core hash function, without external entropy injections, with any initial
 combination of `lcg`, `Seed`, and `Hash` eventually converges into one of
 random number sub-sequences. These are mostly time-delayed versions of only a
 smaller set of unique sequences. There are structural limits in this PRNG
-system which can be reached if there is only a small number of hash words in
+system which can be reached if there is only a small number of hashwords in
 the system. PRNG will continously produce non-repeating random sequences given
 external entropy input, but their statistical quality on a larger frames will
-be limited by the size of `lcg` and `Seed` variables, the number of hash words
+be limited by the size of `lcg` and `Seed` variables, the number of hashwords
 in the system, and the combinatorial capacity of the external entropy. A way
 to increase the structural limit is to use a parallel PRNG structure
 demonstrated in the `prvhash64s.h` file, which additionally increases the
@@ -150,7 +151,7 @@ the period of randomness, which, when extrapolated to hashing, means that the
 period increases by message's combinatorial capacity (or the number of various
 combinations of its bits). The maximal PRNG period's 2<sup>N</sup> exponent
 is hard to approximate exactly, but in most tests it was equal to at least
-system's size in bits, minus the number of hash words in the system, minus
+system's size in bits, minus the number of hashwords in the system, minus
 1/4 of `lcg` and `Seed` variables' size.
 
 Moreover, the PRVHASH systems can be freely daisy-chained by feeding their
@@ -268,7 +269,7 @@ It was especially hard to find a better "hashing finalization" solution.
 	const uint64_t mx = Seed * ( lcg - ~lcg ); // Multiply random by random, without multiply by zero.
 	const uint64_t rs = mx >> 32 | mx << 32; // Produce reversed copy (ideally, bit-reversed).
 	lcg += ~mx; // Internal entropy mixing.
-	Hash += rs; // Update hash word (summation produces uniform distribution).
+	Hash += rs; // Update hashword (summation produces uniform distribution).
 	Seed = Hash ^ plcg; // Mix new reversed seed value with hash and previous `lcg`. Entropy feedback.
 	const uint64_t out = lcg ^ rs; // Produce "compressed" output.
 
@@ -287,7 +288,7 @@ variable - `lcg`, - which is also a random value. This result is then
 bit-reversed, and is accumulated in the `Hash`. The `lcg` variable accumulates
 the result with bit-inversion. The `Seed` is then updated with a mix of the
 bit-reversed multiplication result, previous `lcg`'s value (that includes the
-message input), and the hash word produced on previous rounds. The reason the
+message input), and the hashword produced on previous rounds. The reason the
 message's entropy (which may be sparse or non-random) does not destabilize the
 system is because the message becomes hidden in a mix of internal entropy;
 message's distribution becomes irrelevant. Both the accumulation of the
@@ -325,7 +326,7 @@ and at the same time, 1 in hash-to-hash direction: this means that PRVHASH
 additionally requires a full pass through the hash array for the entropy to
 propagate. However, hashing also requires a pass to the end of the hash array
 if message's length is shorter than the output hash, to "mix in" the initial
-hash value. When there is only 1 hash word in use, for larger state variable
+hash value. When there is only 1 hashword in use, for larger state variable
 sizes there is practically no added delay, and thus the entropy propagation is
 only subject to base latency. Empirically, however, entropy propagation speed
 depends on the state variable size: for 8-bit variables 4 full hash array
@@ -475,7 +476,7 @@ Depending on the initial seed value, the period may fluctuate.
 #include <string.h>
 
 #define PH_PAR_COUNT 1 // PRVHASH parallelism.
-#define PH_HASH_COUNT 4 // Hash array word count.
+#define PH_HASH_COUNT 4 // Hashword count.
 #define PH_STATE_TYPE uint8_t // State variable physical type.
 #define PH_FN prvhash_core4 // Core hash function name.
 #define PH_BITS 4 // State variable size in bits.
