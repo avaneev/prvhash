@@ -222,11 +222,15 @@ increased security.
 This function has an increased preimage resistance compared to the basic
 hash function implementation. Preimage resistance cannot be currently
 estimated exactly, but the hash length affects it exponentially. Also,
-resistance is usually subject to exchange of forged symbols to "trash"
-symbols; substitutions usually end up as being quite random, possibly damaging
-for any compressed or otherwise structured file. Time complexity for preimage
-attack fluctuates greatly as preimage resistance likely has a logarithmic PDF
-of timing.
+preimage attack usually boils down to exchange of forged symbols to "trash"
+symbols (at any place of the data stream); substitutions usually end up as
+being quite random, possibly damaging for any compressed or otherwise
+structured file. Which means that data compression software and libraries
+should always check any left-over, "unused", data beyond the valid compressed
+stream, for security reasons.
+
+Time complexity for preimage attack fluctuates greatly as preimage resistance
+likely has a logarithmic PDF of timing.
 
 The default `prvhash64s.h`-based 64-bit hash of the string `The cat is out of
 the bag` is `c57b9d8063ba6363`.
