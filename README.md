@@ -204,7 +204,7 @@ int main()
 			}
 		}
 
-		if( l > PH_HASH_COUNT / 4 ) // Skip PRNG initialization.
+		if( l > PH_HASH_COUNT / 3 ) // Skip PRNG initialization.
 		{
 			printf( "%4i ", (int) r );
 		}
@@ -230,7 +230,7 @@ should always check any left-over, "unused", data beyond the valid compressed
 stream, for security reasons.
 
 Time complexity for preimage attack fluctuates greatly as preimage resistance
-likely has a logarithmic PDF of timing.
+likely has a random-logarithmic PDF of timing.
 
 The default `prvhash64s.h`-based 64-bit hash of the string `The cat is out of
 the bag` is `c57b9d8063ba6363`.
