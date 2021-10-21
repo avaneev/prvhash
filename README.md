@@ -169,7 +169,7 @@ be considered as having a suitable sparse entropy.
 
 ## Two-Bit PRNG ##
 
-This is a "just for fun" example, but it passes 128 MB PractRand threshold.
+This is a "just for fun" example, but it passes 256 MB PractRand threshold.
 You CAN generate pseudo-random numbers by using 2-bit shuffles; moreover, you
 can input external entropy into the system.
 
@@ -194,7 +194,7 @@ int main()
 		for( k = 0; k < 4; k++ )
 		{
 			r <<= 2;
-			r |= prvhash_core2( &Seed, &lcg, Hash + HashPos );
+			r |= prvhash_core2i( &Seed, &lcg, Hash + HashPos );
 
 			HashPos++;
 
@@ -295,7 +295,7 @@ multiplication result and mixing of its bit-reversed and original version
 produce a uniformly-distributed value.
 
 The three instructions - `Seed ^= lcg`, `Seed *= lcg - ~lcg`, `lcg += ~Seed` -
-represent an "ideal" bit shuffler: this construct represents a "bivariable
+represent an "ideal" bit-shuffler: this construct represents a "bivariable
 shuffler" which transforms input `lcg` and `Seed` variables into another pair
 of variables with 50% bit difference relative to input, and without
 collisions. The whole core hash function, however, uses a rearranged mixing,
@@ -405,7 +405,9 @@ state variables have better shuffling statistics).
 
 This variant of the core hash function offers the best possible statistical
 quality of random number generation. However, it is only evident (slightly)
-with 2-bit state variable size.
+with 2-bit and 4-bit state variable sizes. To go to the maximal quality,
+`Seed`'s halves-reversal in `rs` should be changed to bit-reversal (but this
+is extremely inefficient computationally).
 
 ## The Stalled State of the Hash Function ##
 
@@ -446,7 +448,7 @@ hashes of any length, while meeting collision resistance specifications for
 all lengths.
 
 Alternatively, the method can be viewed from the standpoint of classic
-bit mixers/shufflers: the hash array can be seen as a "working buffer" whose
+bit-mixers/shufflers: the hash array can be seen as a "working buffer" whose
 state is passed back into the "bivariable shuffler" continuously, and the new
 shuffled values stored in such working buffer for the next pass.
 
@@ -609,7 +611,7 @@ function passes all SMHasher tests, like `prvhash64` function does, for any
 hash length. This function is very slow, and is provided for demonstration
 purposes only, to assure that the core hash function works in principle,
 independent of state variable size. This hash function variant demonstrates
-that PRVHASH's method does not rely on bit shuffling alone (shuffles are
+that PRVHASH's method does not rely on bit-shuffling alone (shuffles are
 purely local), but is genuinely based on PRNG position "jumps".
 
 ## TANGO642 ##
@@ -623,7 +625,7 @@ random number generator.
 
 PRVHASH, being scalable, potentially allows to apply "infinite" state variable
 size in its system, at least in mathematical analysis. This reasoning makes
-PRVHASH comparable to PI in its reach of "infinite" bit sequence length.
+PRVHASH comparable to PI in its reach of "infinite" bit-sequence length.
 Moreover, this also opens up a notion of "infinite frequency", and thus
 "infinite energy".
 
@@ -644,8 +646,8 @@ the number of bit combinations a given system may have, and combining this
 understanding with "random permutations", it may give a false understanding
 that "uniform randomness" may generate any combination within the limits of
 "combinatorial capacity", with some probability. In fact, "uniform randomness"
-auto-limits the "sparseness" of random bit sequences it generates since
-"too sparse" bit sequence cannot be statistically called as uniformly-random.
+auto-limits the "sparseness" of random bit-sequences it generates since
+"too sparse" bit-sequence cannot be statistically called as uniformly-random.
 Thus, "combinatorial capacity" of a system, when applied to random number
 generation, transforms into a notion of ability of a system to generate
 independent uniformly-random number sequences. Which means that two different
