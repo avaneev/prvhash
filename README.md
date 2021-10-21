@@ -240,7 +240,7 @@ The default `prvhash64s.h`-based 256-bit hash of the string
 `Only a toilet bowl does not leak` is
 `6528915ce1fedfc27c2f024767336ad3162082125ff2b3a46e519b10a53126f6`.
 
-The default prvhash64s 256-bit hash of the string
+The default `prvhash64s.h`-based 256-bit hash of the string
 `Only a toilet bowl does not leaj` is
 `9e7403faa58692e3d33202f79aa00f73c4dc07fcb02cf0bca9e20984412aa795`.
 
@@ -284,16 +284,19 @@ How does it work? First of all, this PRNG system, represented by the core hash
 function, does not work with numbers in a common sense: it works with [entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)),
 or random sequences of bits. The current "expression" of system's overall
 internal entropy - the `Seed` - gets multiplied ("smeared") by a supportive
-variable - `lcg`, - which is also a random value. This result is then
-bit-reversed, and is accumulated in the `Hash`. The `lcg` variable accumulates
-the result with bit-inversion. The `Seed` is then updated with a mix of the
-bit-reversed multiplication result, previous `lcg`'s value (that includes the
-message input), and the hashword produced on previous rounds. The reason the
-message's entropy (which may be sparse or non-random) does not destabilize the
-system is because the message becomes hidden in a mix of internal entropy;
-message's distribution becomes irrelevant. Both the accumulation of the
-multiplication result and mixing of its bit-reversed and original version
-produce a uniformly-distributed value.
+variable - `lcg`, - which is also a random value. As a result, a new random
+value is produced which represents two independent random variables (in lower
+and higher parts of the register), a sort of "entropy stream sub-division"
+happens. This result is then bit-reversed, and is accumulated in the `Hash`.
+The `lcg` variable accumulates the result with bit-inversion. The `Seed` is
+then updated with a mix of the bit-reversed multiplication result, previous
+`lcg`'s value (that includes the message input), and the hashword produced on
+previous rounds. The reason the message's entropy (which may be sparse or
+non-random) does not destabilize the system is because the message becomes
+hidden in a mix of internal entropy; message's distribution becomes
+irrelevant. Both the accumulation of the multiplication result and mixing of
+its bit-reversed and original version produce a uniformly-distributed value
+in the corresponding variables; a sort of "de-sub-division" happens.
 
 The three instructions - `Seed ^= lcg`, `Seed *= lcg - ~lcg`, `lcg += ~Seed` -
 represent an "ideal" bit-shuffler: this construct represents a "bivariable
@@ -309,7 +312,7 @@ state change-related collision statistics: on a fully random `msgw` input it
 is adequate for 16-bit, and excellent for 64-bit variables
 (5.47<sup>-18</sup> percent chance, which far exceeds collision resistance
 requirements for 64-bit range of bits). To further decrease state change
-collisions between `lcg` and `Seed` with entropy input, the byte-reversal
+collisions between `lcg` and `Seed` with entropy input, the halves-reversal
 should be implemented as bit-reversal: in this case the system reaches its
 optimal state, but this is unimplementable in an efficient manner on modern
 processors. If the initial state of the system has little or zero entropy
