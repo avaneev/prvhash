@@ -1,5 +1,5 @@
 /**
- * prvhash_core.h version 3.6.2
+ * prvhash_core.h version 3.6.3
  *
  * The inclusion file for the "prvhash_core64", "prvhash_core32",
  * "prvhash_core16", "prvhash_core8", "prvhash_core4", "prvhash_core2" PRVHASH
@@ -206,15 +206,15 @@ inline uint8_t prvhash_core2i( uint8_t* const Seed0, uint8_t* const lcg0,
 {
 	uint8_t Seed = *Seed0; uint8_t lcg = *lcg0; uint8_t Hash = *Hash0;
 
-	Seed ^= Hash ^ lcg;
-	Seed *= lcg - ~lcg;
+	Seed ^= (uint8_t) ( Hash ^ lcg );
+	Seed *= (uint8_t) ( lcg - ~lcg );
 	Seed &= 3;
-	lcg += ~Seed;
+	lcg += (uint8_t) ~Seed;
 	lcg &= 3;
-	const uint8_t rs = ( Seed >> 1 | Seed << 1 ) & 3;
+	const uint8_t rs = (uint8_t) (( Seed >> 1 | Seed << 1 ) & 3 );
 	Hash += rs;
 	Hash &= 3;
-	const uint8_t out = lcg ^ rs;
+	const uint8_t out = (uint8_t) ( lcg ^ rs );
 
 	*Seed0 = Seed; *lcg0 = lcg; *Hash0 = Hash;
 
