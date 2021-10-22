@@ -279,8 +279,8 @@ statistical results. Since mathematical structure of the function does not
 depend on the variable size, statistical analysis can be performed using
 smaller variable sizes, with the results being extrapolatable to larger
 variable sizes, with a high probability. The `lcg - ~lcg` operation is
-equivalent to `lcg << 1 | 1`, but the former variant is slightly more
-efficient on average, in several use-cases.
+equivalent to `lcg << 1 | 1` (or `lcg * 2 + 1`), but the former variant is
+slightly more efficient on average, in several use-cases.
 
 How does it work? First of all, this PRNG system, represented by the core hash
 function, does not work with numbers in a common sense: it works with [entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)),
