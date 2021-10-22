@@ -135,7 +135,7 @@ statistical quality, probably the first in the world.
 Note that due to the structure of the core hash function the probability of
 PRNG completely "stopping", or losing internal entropy, is absent.
 
-This core hash function, without external entropy injections, with any initial
+The core hash function, without external entropy injections, with any initial
 combination of `lcg`, `Seed`, and `Hash` eventually converges into one of
 random number sub-sequences. These are mostly time-delayed versions of only a
 smaller set of unique sequences. There are structural limits in this PRNG
