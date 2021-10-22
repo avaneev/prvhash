@@ -1,5 +1,5 @@
 /**
- * tango642.h version 3.6.2
+ * tango642.h version 4.0
  *
  * The inclusion file for the "tango642" PRVHASH PRNG-based streamed XOR
  * function.
@@ -32,7 +32,6 @@
 #ifndef TANGO642_INCLUDED
 #define TANGO642_INCLUDED
 
-#include "prvhash_aux.h"
 #include "prvhash_core.h"
 
 #define TANGO642_T uint64_t // PRVHASH state variable type.

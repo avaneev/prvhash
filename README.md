@@ -312,7 +312,7 @@ state change-related collision statistics: on a fully random `msgw` input it
 is adequate for 16-bit, and excellent for 64-bit variables
 (5.47<sup>-18</sup> percent chance, which far exceeds collision resistance
 requirements for 64-bit range of bits). To further decrease state change
-collisions between `lcg` and `Seed` with entropy input, the halves-reversal
+collisions between `lcg` and `Seed` with entropy input, the halves-swapping
 should be implemented as bit-reversal: in this case the system reaches its
 optimal state, but this is unimplementable in an efficient manner on modern
 processors. If the initial state of the system has little or zero entropy
@@ -410,8 +410,10 @@ state variables have better shuffling statistics).
 This variant of the core hash function offers the best possible statistical
 quality of random number generation. However, it is only evident (slightly)
 with 2-bit and 4-bit state variable sizes. To go to the maximal quality,
-`Seed`'s halves-reversal in `rs` should be changed to bit-reversal (but this
-is extremely inefficient computationally).
+`Seed`'s halves-swapping in `rs` should be changed to bit-reversal (but this
+is extremely inefficient, computationally). As a compromise, a `byteswap`
+instruction can be also used, which is still not optimal, but better than the
+halves-swapping.
 
 ## The Stalled State of the Hash Function ##
 

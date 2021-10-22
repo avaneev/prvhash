@@ -1,9 +1,10 @@
 /**
- * prvhash_core.h version 3.6.3
+ * prvhash_core.h version 4.0
  *
  * The inclusion file for the "prvhash_core64", "prvhash_core32",
- * "prvhash_core16", "prvhash_core8", "prvhash_core4", "prvhash_core2" PRVHASH
- * core functions for various state variable sizes.
+ * "prvhash_core16", "prvhash_core8", "prvhash_core4", "prvhash_core2"
+ * PRVHASH core functions for various state variable sizes. Also includes
+ * several auxiliary functions, for endianness-correction.
  *
  * Description is available at https://github.com/avaneev/prvhash
  *
@@ -34,6 +35,7 @@
 #define PRVHASH_CORE_INCLUDED
 
 #include <stdint.h>
+#include <string.h>
 
 /**
  * This function runs a single PRVHASH random number generation round. This
@@ -165,6 +167,32 @@ inline uint8_t prvhash_core2( uint8_t* const Seed0, uint8_t* const lcg0,
 	return( out );
 }
 
+#if defined( __GNUC__ ) || defined( __clang__ )
+
+/**
+ * A macro that applies byte-swapping.
+ */
+
+#define PRVHASH_BYTESW64( v ) __builtin_bswap64( v )
+
+#elif defined( _MSC_VER ) || defined( __INTEL_COMPILER )
+
+#define PRVHASH_BYTESW64( v ) _byteswap_uint64( v )
+
+#else // defined( _MSC_VER ) || defined( __INTEL_COMPILER )
+
+#define PRVHASH_BYTESW64( v ) ( \
+	( v & 0xFF00000000000000 ) >> 56 | \
+	( v & 0x00FF000000000000 ) >> 40 | \
+	( v & 0x0000FF0000000000 ) >> 24 | \
+	( v & 0x000000FF00000000 ) >> 8 | \
+	( v & 0x00000000FF000000 ) << 8 | \
+	( v & 0x0000000000FF0000 ) << 24 | \
+	( v & 0x000000000000FF00 ) << 40 | \
+	( v & 0x00000000000000FF ) << 56 )
+
+#endif // defined( _MSC_VER ) || defined( __INTEL_COMPILER )
+
 /**
  * This function runs a single PRVHASH random number generation round, an
  * "ideal" core hash function variant. This function can be used both as a
@@ -192,7 +220,7 @@ inline uint64_t prvhash_core64i( uint64_t* const Seed0, uint64_t* const lcg0,
 	Seed ^= Hash ^ lcg;
 	Seed *= lcg - ~lcg;
 	lcg += ~Seed;
-	const uint64_t rs = Seed >> 32 | Seed << 32;
+	const uint64_t rs = PRVHASH_BYTESW64( Seed );
 	Hash += rs;
 	const uint64_t out = lcg ^ rs;
 
@@ -219,6 +247,141 @@ inline uint8_t prvhash_core2i( uint8_t* const Seed0, uint8_t* const lcg0,
 	*Seed0 = Seed; *lcg0 = lcg; *Hash0 = Hash;
 
 	return( out );
+}
+
+#if defined( _WIN32 ) || defined( __LITTLE_ENDIAN__ ) || ( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ )
+	#define PRVHASH_LITTLE_ENDIAN 1
+#elif defined( __BIG_ENDIAN__ ) || ( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ )
+	#define PRVHASH_LITTLE_ENDIAN 0
+#else // endianness check
+	#error PRVHASH: cannot obtain endianness
+#endif // endianness check
+
+#if PRVHASH_LITTLE_ENDIAN
+
+/**
+ * A macro that applies byte-swapping used for endianness-correction.
+ */
+
+#define PRVHASH_EC64( v ) ( v )
+
+#else // PRVHASH_LITTLE_ENDIAN
+
+#if defined( __GNUC__ ) || defined( __clang__ )
+
+#define PRVHASH_EC64( v ) __builtin_bswap64( v )
+
+#elif defined( _MSC_VER ) || defined( __INTEL_COMPILER )
+
+#define PRVHASH_EC64( v ) _byteswap_uint64( v )
+
+#endif // defined( _MSC_VER ) || defined( __INTEL_COMPILER )
+
+#endif // PRVHASH_LITTLE_ENDIAN
+
+/**
+ * An auxiliary function that returns an unsigned 64-bit value created out of
+ * individual bytes in a buffer. This function is used to convert endianness
+ * of supplied 64-bit unsigned values, and to avoid unaligned memory accesses.
+ *
+ * @param p 8-byte buffer. Alignment is unimportant.
+ */
+
+inline uint64_t prvhash_lu64ec( const uint8_t* const p )
+{
+	uint64_t v;
+	memcpy( &v, p, 8 );
+
+	return( PRVHASH_EC64( v ));
+}
+
+#if PRVHASH_LITTLE_ENDIAN
+
+/**
+ * This function corrects (inverses) endianness of the specified hash value,
+ * based on 64-bit words.
+ *
+ * @param[in,out] Hash The hash to correct endianness of. On systems where
+ * this is relevant, this address should be aligned to 64 bits.
+ * @param HashLen The required hash length, in bytes, should be >= 8, in
+ * increments of 8. 
+ */
+
+inline void prvhash_ec64( uint8_t* const Hash, const size_t HashLen )
+{
+}
+
+#else // PRVHASH_LITTLE_ENDIAN
+
+inline void prvhash_ec64( uint8_t* const Hash, const size_t HashLen )
+{
+	size_t k;
+
+	for( k = 0; k < HashLen; k += sizeof( uint64_t ))
+	{
+		*(uint64_t*) ( Hash + k ) = PRVHASH_EC64( *(uint64_t*) ( Hash + k ));
+	}
+}
+
+#endif // PRVHASH_LITTLE_ENDIAN
+
+/**
+ * Function loads 64-bit message word and pads it with the "final byte". This
+ * function should only be called if there is less than 8 bytes left to read.
+ *
+ * @param Msg Message pointer, alignment is unimportant. Should be below or
+ * equal to MsgEnd.
+ * @param MsgEnd Message's end pointer.
+ * @param fb Final byte used for padding.
+ */
+
+inline uint64_t prvhash_lpu64_f( const uint8_t* Msg,
+	const uint8_t* const MsgEnd, const uint64_t fb )
+{
+	uint64_t r = fb << (( MsgEnd - Msg ) << 3 );
+
+	if( Msg < MsgEnd )
+	{
+		r |= *Msg;
+		Msg++;
+
+		if( Msg < MsgEnd )
+		{
+			r |= (uint64_t) *Msg << 8;
+			Msg++;
+
+			if( Msg < MsgEnd )
+			{
+				r |= (uint64_t) *Msg << 16;
+				Msg++;
+
+				if( Msg < MsgEnd )
+				{
+					r |= (uint64_t) *Msg << 24;
+					Msg++;
+
+					if( Msg < MsgEnd )
+					{
+						r |= (uint64_t) *Msg << 32;
+						Msg++;
+
+						if( Msg < MsgEnd )
+						{
+							r |= (uint64_t) *Msg << 40;
+							Msg++;
+
+							if( Msg < MsgEnd )
+							{
+								r |= (uint64_t) *Msg << 48;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return( r );
 }
 
 #endif // PRVHASH_CORE_INCLUDED

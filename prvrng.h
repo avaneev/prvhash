@@ -1,5 +1,5 @@
 /**
- * prvrng.h version 3.6.2
+ * prvrng.h version 4.0
  *
  * The inclusion file for the "prvrng" entropy pseudo-random number generator.
  * This is mostly an example PRNG that demonstrates use of infrequent external
@@ -37,7 +37,6 @@
 
 #include <stdio.h>
 #include "prvhash_core.h"
-#include "prvhash_aux.h"
 
 #if defined( _WIN32 )
 	#include <windows.h>

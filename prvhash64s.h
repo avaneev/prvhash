@@ -1,5 +1,5 @@
 /**
- * prvhash64s.h version 3.6.6
+ * prvhash64s.h version 4.0
  *
  * The inclusion file for the "prvhash64s" hash function. More secure,
  * streamed. Implements a parallel variant of the "prvhash64" hash function,
@@ -34,7 +34,6 @@
 #define PRVHASH64S_INCLUDED
 
 #include "prvhash_core.h"
-#include "prvhash_aux.h"
 
 #define PRVHASH64S_PAR 4 // PRVHASH parallelism.
 #define PRVHASH64S_LEN 32 // Intermediate block's length, in bytes.

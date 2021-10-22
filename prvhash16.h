@@ -1,5 +1,5 @@
 /**
- * prvhash16.h version 3.6.1
+ * prvhash16.h version 4.0
  *
  * The inclusion file for the "prvhash16" hash function. For demonstration
  * purposes, not practically useful.
@@ -33,7 +33,6 @@
 #define PRVHASH16_INCLUDED
 
 #include "prvhash_core.h"
-#include "prvhash_aux.h"
 
 /**
  * PRVHASH hash function (16-bit variables). Produces hash of the specified

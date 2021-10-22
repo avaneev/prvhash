@@ -1,5 +1,5 @@
 /**
- * prvhash64.h version 3.6.2
+ * prvhash64.h version 4.0
  *
  * The inclusion file for the "prvhash64" and "prvhash64_64m" hash functions.
  *
@@ -32,7 +32,6 @@
 #define PRVHASH64_INCLUDED
 
 #include "prvhash_core.h"
-#include "prvhash_aux.h"
 
 /**
  * PRVHASH hash function (64-bit variables). Produces hash of the specified
