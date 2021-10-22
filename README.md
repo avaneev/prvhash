@@ -273,12 +273,14 @@ It was especially hard to find a better "hashing finalization" solution.
 	Seed = Hash ^ plcg; // Mix new reversed seed value with hash and previous `lcg`. Entropy feedback.
 	const uint64_t out = lcg ^ rs; // Produce "compressed" output.
 
-(This core function can be arbitrarily scaled to any even-size variables:
+This core function can be arbitrarily scaled to any even-size variables:
 2-, 4-, 8-, 16-, 32-, 64-bit variable sizes were tested, with similar
-statistical results; since mathematical structure of the function does not
+statistical results. Since mathematical structure of the function does not
 depend on the variable size, statistical analysis can be performed using
 smaller variable sizes, with the results being extrapolatable to larger
-variable sizes, with a high probability).
+variable sizes, with a high probability. The `lcg - ~lcg` operation is
+equivalent to `lcg << 1 | 1`, but the former variant is slightly more
+efficient on average, in several use-cases.
 
 How does it work? First of all, this PRNG system, represented by the core hash
 function, does not work with numbers in a common sense: it works with [entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)),
