@@ -1,5 +1,5 @@
 /**
- * tango642.h version 4.0.1
+ * tango642.h version 4.0.2
  *
  * The inclusion file for the "tango642" PRVHASH PRNG-based streamed XOR
  * function.
@@ -353,10 +353,10 @@ inline void tango642_final( TANGO642_CTX* ctx )
 inline void tango642_final_selfdestruct( TANGO642_CTX* ctx )
 {
 	TANGO642_CTX pad;
-	memset( &pad, 0, sizeof( pad ));
-	tango642_xor( ctx, (uint8_t*) &pad, sizeof( pad ));
+	memset( &pad, 0, sizeof( TANGO642_CTX ));
+	tango642_xor( ctx, (uint8_t*) &pad, sizeof( TANGO642_CTX ));
 
-	memcpy( ctx, (uint8_t*) &pad, sizeof( pad ));
+	memcpy( ctx, (uint8_t*) &pad, sizeof( TANGO642_CTX ));
 }
 
 #endif // TANGO642_INCLUDED
