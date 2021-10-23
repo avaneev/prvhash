@@ -319,7 +319,7 @@ requirements for 64-bit range of bits). To further decrease state change
 collisions between `lcg` and `Seed` with entropy input, the halves-swapping
 should be implemented as bit-reversal: in this case the system reaches its
 optimal state, but this is unimplementable in an efficient manner on modern
-processors. If the initial state of the system has little or zero entropy
+x86 processors. If the initial state of the system has little or zero entropy
 (less than state variable size bits of entropy), on very sparse `msgw` input
 (in the order of 1 bit per 80), this system may initially exhibit local
 correlations between adjacent bits, so in such case this system requires
@@ -415,9 +415,9 @@ This variant of the core hash function offers the best possible statistical
 quality of random number generation. However, it is only evident (slightly)
 with 2-bit and 4-bit state variable sizes. To go to the maximal quality,
 `Seed`'s halves-swapping in `rs` should be changed to bit-reversal (but this
-is extremely inefficient, computationally). As a compromise, a `byteswap`
-instruction can be also used, which is still not optimal, but better than the
-halves-swapping.
+is extremely inefficient on x86, computationally). As a compromise, a
+`byteswap` instruction can be also used, which is still not optimal, but
+better than the halves-swapping.
 
 ## The Stalled State of the Hash Function ##
 
