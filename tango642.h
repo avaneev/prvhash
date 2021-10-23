@@ -1,5 +1,5 @@
 /**
- * tango642.h version 4.0
+ * tango642.h version 4.0.1
  *
  * The inclusion file for the "tango642" PRVHASH PRNG-based streamed XOR
  * function.
@@ -340,6 +340,23 @@ inline void tango642_xor( TANGO642_CTX* ctx, uint8_t* msg, size_t msglen )
 inline void tango642_final( TANGO642_CTX* ctx )
 {
 	memset( ctx, 0, sizeof( TANGO642_CTX ));
+}
+
+/**
+ * This is a "fun concept" XOR session finalization function, to better stand
+ * yet unknown quantum-level challenges (then, increasing TANGO642_HASH_COUNT
+ * to some more serious numbers would not hurt).
+ *
+ * @param ctx Pointer to the context structure.
+ */
+
+inline void tango642_final_selfdestruct( TANGO642_CTX* ctx )
+{
+	TANGO642_CTX pad;
+	memset( &pad, 0, sizeof( pad ));
+	tango642_xor( ctx, (uint8_t*) &pad, sizeof( pad ));
+
+	memcpy( ctx, (uint8_t*) &pad, sizeof( pad ));
 }
 
 #endif // TANGO642_INCLUDED
