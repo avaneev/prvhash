@@ -45,7 +45,8 @@ The default `prvhash64.h`-based 64-bit hash of the string `The cat is out of
 the bag` is `4e9b816cf41be380`.
 
 A proposed short name for hashes created with `prvhash64.h` is `PRH64-N`,
-where `N` is the hash length in bits (e.g. `PRH64-256`).
+where `N` is the hash length in bits (e.g. `PRH64-256`). Or, simply, `SH4`,
+`Secure Hash 4`, if God permits.
 
 ## PRVHASH64_64M ##
 
