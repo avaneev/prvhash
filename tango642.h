@@ -1,5 +1,5 @@
 /**
- * tango642.h version 4.0.7
+ * tango642.h version 4.0.8
  *
  * The inclusion file for the "tango642" PRVHASH PRNG-based streamed XOR
  * function.
@@ -88,7 +88,7 @@ typedef struct
  * Should not exceed 80 bytes.
  */
 
-inline void tango642_init( TANGO642_CTX* ctx, const uint8_t* key,
+static inline void tango642_init( TANGO642_CTX* ctx, const uint8_t* key,
 	size_t keylen, const uint8_t* iv, size_t ivlen )
 {
 	memset( ctx, 0, sizeof( TANGO642_CTX ));
@@ -181,7 +181,8 @@ inline void tango642_init( TANGO642_CTX* ctx, const uint8_t* key,
  * @param msglen Message length, in bytes.
  */
 
-inline void tango642_xor( TANGO642_CTX* ctx, uint8_t* msg, size_t msglen )
+static inline void tango642_xor( TANGO642_CTX* ctx, uint8_t* msg,
+	size_t msglen )
 {
 	while( msglen > 0 )
 	{
@@ -337,7 +338,7 @@ inline void tango642_xor( TANGO642_CTX* ctx, uint8_t* msg, size_t msglen )
  * @param ctx Pointer to the context structure.
  */
 
-inline void tango642_final( TANGO642_CTX* ctx )
+static inline void tango642_final( TANGO642_CTX* ctx )
 {
 	memset( ctx, 0, sizeof( TANGO642_CTX ));
 }
@@ -351,7 +352,7 @@ inline void tango642_final( TANGO642_CTX* ctx )
  * @param ctx Pointer to the context structure.
  */
 
-inline void tango642_final_selfdestruct( TANGO642_CTX* ctx )
+static inline void tango642_final_selfdestruct( TANGO642_CTX* ctx )
 {
 	TANGO642_CTX pad;
 	memset( &pad, 0, sizeof( TANGO642_CTX ));

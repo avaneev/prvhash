@@ -1,5 +1,5 @@
 /**
- * prvhash64.h version 4.0
+ * prvhash64.h version 4.0.1
  *
  * The inclusion file for the "prvhash64" and "prvhash64_64m" hash functions.
  *
@@ -64,7 +64,7 @@
  * set. This vector's address alignment is unimportant.
  */
 
-inline void prvhash64( const uint8_t* Msg, const size_t MsgLen,
+static inline void prvhash64( const uint8_t* Msg, const size_t MsgLen,
 	uint8_t* const Hash, const size_t HashLen, const uint64_t UseSeed,
 	const uint8_t InitVec[ sizeof( uint64_t ) * 2 ])
 {
@@ -175,7 +175,7 @@ inline void prvhash64( const uint8_t* Msg, const size_t MsgLen,
  * statistical quality, and is used only as an additional entropy source.
  */
 
-inline uint64_t prvhash64_64m( const uint8_t* Msg, const size_t MsgLen,
+static inline uint64_t prvhash64_64m( const uint8_t* Msg, const size_t MsgLen,
 	const uint64_t UseSeed )
 {
 	typedef uint64_t state_t;

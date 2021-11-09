@@ -1,5 +1,5 @@
 /**
- * prvhash16.h version 4.0
+ * prvhash16.h version 4.0.1
  *
  * The inclusion file for the "prvhash16" hash function. For demonstration
  * purposes, not practically useful.
@@ -52,7 +52,7 @@
  * any statistical quality, and is used only as an additional entropy source.
  */
 
-inline void prvhash16( const uint8_t* Msg, const size_t MsgLen,
+static inline void prvhash16( const uint8_t* Msg, const size_t MsgLen,
 	uint8_t* const Hash, const size_t HashLen, const uint32_t UseSeed )
 {
 	memset( Hash, 0, HashLen );

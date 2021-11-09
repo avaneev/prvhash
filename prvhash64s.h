@@ -1,5 +1,5 @@
 /**
- * prvhash64s.h version 4.0
+ * prvhash64s.h version 4.0.1
  *
  * The inclusion file for the "prvhash64s" hash function. More secure,
  * streamed. Implements a parallel variant of the "prvhash64" hash function,
@@ -84,7 +84,7 @@ typedef struct {
  * partially. This vector's address alignment is unimportant.
  */
 
-inline void prvhash64s_init( PRVHASH64S_CTX* ctx, uint8_t* const Hash,
+static inline void prvhash64s_init( PRVHASH64S_CTX* ctx, uint8_t* const Hash,
 	const size_t HashLen, const uint64_t UseSeeds[ PRVHASH64S_PAR + 1 ],
 	const uint8_t InitVec[( PRVHASH64S_PAR + 1 ) * sizeof( uint64_t ) * 2 ])
 {
@@ -177,7 +177,7 @@ inline void prvhash64s_init( PRVHASH64S_CTX* ctx, uint8_t* const Hash,
  * @param MsgLen Message's length, in bytes.
  */
 
-inline void prvhash64s_update( PRVHASH64S_CTX* ctx, const uint8_t* Msg,
+static inline void prvhash64s_update( PRVHASH64S_CTX* ctx, const uint8_t* Msg,
 	size_t MsgLen )
 {
 	if( MsgLen == 0 )
@@ -325,7 +325,7 @@ inline void prvhash64s_update( PRVHASH64S_CTX* ctx, const uint8_t* Msg,
  * @param ctx Context structure. Zeroed on function's return.
  */
 
-inline void prvhash64s_final( PRVHASH64S_CTX* ctx )
+static inline void prvhash64s_final( PRVHASH64S_CTX* ctx )
 {
 	uint8_t fbytes[ PRVHASH64S_LEN ];
 	memset( fbytes, 0, PRVHASH64S_LEN );
@@ -416,8 +416,8 @@ inline void prvhash64s_final( PRVHASH64S_CTX* ctx )
  * increments of 8, not exceeding PRVHASH64S_MAX.
  */
 
-inline void prvhash64s_oneshot( const uint8_t* const Msg, const size_t MsgLen,
-	uint8_t* const Hash, const size_t HashLen )
+static inline void prvhash64s_oneshot( const uint8_t* const Msg,
+	const size_t MsgLen, uint8_t* const Hash, const size_t HashLen )
 {
 	PRVHASH64S_CTX ctx;
 

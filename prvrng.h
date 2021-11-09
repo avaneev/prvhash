@@ -1,5 +1,5 @@
 /**
- * prvrng.h version 4.0
+ * prvrng.h version 4.0.1
  *
  * The inclusion file for the "prvrng" entropy pseudo-random number generator.
  * This is mostly an example PRNG that demonstrates use of infrequent external
@@ -77,7 +77,8 @@ typedef struct
  * @param c The number of bytes to return, 1 to 8.
  */
 
-inline uint64_t prvrng_gen_entropy( PRVRNG_CTX* const ctx, const size_t c )
+static inline uint64_t prvrng_gen_entropy( PRVRNG_CTX* const ctx,
+	const size_t c )
 {
 	uint8_t val[ 8 ];
 	memset( val, 0, sizeof( val ));
@@ -101,7 +102,7 @@ inline uint64_t prvrng_gen_entropy( PRVRNG_CTX* const ctx, const size_t c )
  * @param ctx Pointer to the context structure.
  */
 
-inline uint8_t prvrng_gen64p2( PRVRNG_CTX* const ctx )
+static inline uint8_t prvrng_gen64p2( PRVRNG_CTX* const ctx )
 {
 	if( ctx -> OutLeft == 0 )
 	{
@@ -155,7 +156,7 @@ inline uint8_t prvrng_gen64p2( PRVRNG_CTX* const ctx )
  * @return 0 if failed.
  */
 
-inline int prvrng_init64p2( PRVRNG_CTX* const ctx )
+static inline int prvrng_init64p2( PRVRNG_CTX* const ctx )
 {
 	#if defined( PRVRNG_UNIX )
 
@@ -216,7 +217,7 @@ inline int prvrng_init64p2( PRVRNG_CTX* const ctx )
  * @param ctx Pointer to the context structure.
  */
 
-inline void prvrng_final64p2( PRVRNG_CTX* ctx )
+static inline void prvrng_final64p2( PRVRNG_CTX* ctx )
 {
 	#if defined( PRVRNG_UNIX )
 
@@ -233,7 +234,7 @@ inline void prvrng_final64p2( PRVRNG_CTX* ctx )
  * A test function for "prvrng", 32-bit hash-based. Prints 16 random bytes.
  */
 
-inline void prvrng_test64p2()
+static inline void prvrng_test64p2()
 {
 	PRVRNG_CTX ctx;
 

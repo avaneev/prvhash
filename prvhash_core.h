@@ -1,5 +1,5 @@
 /**
- * prvhash_core.h version 4.0
+ * prvhash_core.h version 4.0.1
  *
  * The inclusion file for the "prvhash_core64", "prvhash_core32",
  * "prvhash_core16", "prvhash_core8", "prvhash_core4", "prvhash_core2"
@@ -55,8 +55,8 @@
  * @return Current random value.
  */
 
-inline uint64_t prvhash_core64( uint64_t* const Seed0, uint64_t* const lcg0,
-	uint64_t* const Hash0 )
+static inline uint64_t prvhash_core64( uint64_t* const Seed0,
+	uint64_t* const lcg0, uint64_t* const Hash0 )
 {
 	uint64_t Seed = *Seed0; uint64_t lcg = *lcg0; uint64_t Hash = *Hash0;
 
@@ -73,8 +73,8 @@ inline uint64_t prvhash_core64( uint64_t* const Seed0, uint64_t* const lcg0,
 	return( out );
 }
 
-inline uint32_t prvhash_core32( uint32_t* const Seed0, uint32_t* const lcg0,
-	uint32_t* const Hash0 )
+static inline uint32_t prvhash_core32( uint32_t* const Seed0,
+	uint32_t* const lcg0, uint32_t* const Hash0 )
 {
 	uint32_t Seed = *Seed0; uint32_t lcg = *lcg0; uint32_t Hash = *Hash0;
 
@@ -91,8 +91,8 @@ inline uint32_t prvhash_core32( uint32_t* const Seed0, uint32_t* const lcg0,
 	return( out );
 }
 
-inline uint16_t prvhash_core16( uint16_t* const Seed0, uint16_t* const lcg0,
-	uint16_t* const Hash0 )
+static inline uint16_t prvhash_core16( uint16_t* const Seed0,
+	uint16_t* const lcg0, uint16_t* const Hash0 )
 {
 	uint16_t Seed = *Seed0; uint16_t lcg = *lcg0; uint16_t Hash = *Hash0;
 
@@ -109,8 +109,8 @@ inline uint16_t prvhash_core16( uint16_t* const Seed0, uint16_t* const lcg0,
 	return( out );
 }
 
-inline uint8_t prvhash_core8( uint8_t* const Seed0, uint8_t* const lcg0,
-	uint8_t* const Hash0 )
+static inline uint8_t prvhash_core8( uint8_t* const Seed0,
+	uint8_t* const lcg0, uint8_t* const Hash0 )
 {
 	uint8_t Seed = *Seed0; uint8_t lcg = *lcg0; uint8_t Hash = *Hash0;
 
@@ -127,8 +127,8 @@ inline uint8_t prvhash_core8( uint8_t* const Seed0, uint8_t* const lcg0,
 	return( out );
 }
 
-inline uint8_t prvhash_core4( uint8_t* const Seed0, uint8_t* const lcg0,
-	uint8_t* const Hash0 )
+static inline uint8_t prvhash_core4( uint8_t* const Seed0,
+	uint8_t* const lcg0, uint8_t* const Hash0 )
 {
 	uint8_t Seed = *Seed0; uint8_t lcg = *lcg0; uint8_t Hash = *Hash0;
 
@@ -147,8 +147,8 @@ inline uint8_t prvhash_core4( uint8_t* const Seed0, uint8_t* const lcg0,
 	return( out );
 }
 
-inline uint8_t prvhash_core2( uint8_t* const Seed0, uint8_t* const lcg0,
-	uint8_t* const Hash0 )
+static inline uint8_t prvhash_core2( uint8_t* const Seed0,
+	uint8_t* const lcg0, uint8_t* const Hash0 )
 {
 	uint8_t Seed = *Seed0; uint8_t lcg = *lcg0; uint8_t Hash = *Hash0;
 
@@ -212,8 +212,8 @@ inline uint8_t prvhash_core2( uint8_t* const Seed0, uint8_t* const lcg0,
  * @return Current random value.
  */
 
-inline uint64_t prvhash_core64i( uint64_t* const Seed0, uint64_t* const lcg0,
-	uint64_t* const Hash0 )
+static inline uint64_t prvhash_core64i( uint64_t* const Seed0,
+	uint64_t* const lcg0, uint64_t* const Hash0 )
 {
 	uint64_t Seed = *Seed0; uint64_t lcg = *lcg0; uint64_t Hash = *Hash0;
 
@@ -229,8 +229,8 @@ inline uint64_t prvhash_core64i( uint64_t* const Seed0, uint64_t* const lcg0,
 	return( out );
 }
 
-inline uint8_t prvhash_core2i( uint8_t* const Seed0, uint8_t* const lcg0,
-	uint8_t* const Hash0 )
+static inline uint8_t prvhash_core2i( uint8_t* const Seed0,
+	uint8_t* const lcg0, uint8_t* const Hash0 )
 {
 	uint8_t Seed = *Seed0; uint8_t lcg = *lcg0; uint8_t Hash = *Hash0;
 
@@ -267,15 +267,7 @@ inline uint8_t prvhash_core2i( uint8_t* const Seed0, uint8_t* const lcg0,
 
 #else // PRVHASH_LITTLE_ENDIAN
 
-#if defined( __GNUC__ ) || defined( __clang__ )
-
-#define PRVHASH_EC64( v ) __builtin_bswap64( v )
-
-#elif defined( _MSC_VER ) || defined( __INTEL_COMPILER )
-
-#define PRVHASH_EC64( v ) _byteswap_uint64( v )
-
-#endif // defined( _MSC_VER ) || defined( __INTEL_COMPILER )
+#define PRVHASH_EC64( v ) PRVHASH_BYTESW64( v )
 
 #endif // PRVHASH_LITTLE_ENDIAN
 
@@ -287,7 +279,7 @@ inline uint8_t prvhash_core2i( uint8_t* const Seed0, uint8_t* const lcg0,
  * @param p 8-byte buffer. Alignment is unimportant.
  */
 
-inline uint64_t prvhash_lu64ec( const uint8_t* const p )
+static inline uint64_t prvhash_lu64ec( const uint8_t* const p )
 {
 	uint64_t v;
 	memcpy( &v, p, 8 );
@@ -307,13 +299,13 @@ inline uint64_t prvhash_lu64ec( const uint8_t* const p )
  * increments of 8. 
  */
 
-inline void prvhash_ec64( uint8_t* const Hash, const size_t HashLen )
+static inline void prvhash_ec64( uint8_t* const Hash, const size_t HashLen )
 {
 }
 
 #else // PRVHASH_LITTLE_ENDIAN
 
-inline void prvhash_ec64( uint8_t* const Hash, const size_t HashLen )
+static inline void prvhash_ec64( uint8_t* const Hash, const size_t HashLen )
 {
 	size_t k;
 
@@ -335,7 +327,7 @@ inline void prvhash_ec64( uint8_t* const Hash, const size_t HashLen )
  * @param fb Final byte used for padding.
  */
 
-inline uint64_t prvhash_lpu64_f( const uint8_t* Msg,
+static inline uint64_t prvhash_lpu64_f( const uint8_t* Msg,
 	const uint8_t* const MsgEnd, const uint64_t fb )
 {
 	uint64_t r = fb << (( MsgEnd - Msg ) << 3 );
