@@ -30,8 +30,7 @@ suggestions in `prvhash64.h`), adding useful initial entropy (`InitVec` plus
 64-, 128-, 256-, 512- and 1024-bit PRVHASH hashes pass all [SMHasher](https://github.com/rurban/smhasher)
 tests. Other hash lengths were not thoroughly tested, but extrapolations can
 be made. The author makes no cryptographic claims about PRVHASH-based
-constructs. Currently, it is likely that PRVHASH-based hashing should not be
-used in open systems, without a secret seed.
+constructs.
 
 PRVHASH core hash function can be used as a PRNG with an arbitrarily-chosen
 (practically unlimited) period, depending on the number of hashwords in the
@@ -42,6 +41,7 @@ implementation (the `prvhash.h`, `prvhash4.h`, `prvhash42.h` are outdated
 versions). Note that `64` refers to core hash function's variable size.
 While this hash function is most likely irreversible, according to SAT
 solver-based testing, it does not feature implicit preimage resistance.
+This function should not be used in open systems, without a secret seed.
 
 The default `prvhash64.h`-based 64-bit hash of the string `The cat is out of
 the bag` is `4e9b816cf41be380`.
@@ -97,7 +97,7 @@ obviously has a speed impact, and produces output with more than 1 solution
 probability of PRNG output overlap, which stays below
 1/2<sup>sys_size_bits</sup>; in tests, practically undetectable.
 
-So, the basic PRNG with some, currently not hard-proven, security is as
+So, the basic PRNG with some, currently not formally-proven, security is as
 follows (XOR two adjacent outputs to produce a single "compressed" PRNG
 output):
 
@@ -116,9 +116,16 @@ The core hash function can be used to implement a "statistically-good" and
 "neutrally-sounding" dithering noise for audio signals; for both
 floating-point to fixed-point, and bit-depth, conversions.
 
-	static const double m = 0.5 / ( 1UL << 31 );
 	uint64_t rv = prvhash_core64( &Seed, &lcg, &Hash );
-	double tpdf = ( (int64_t) (uint32_t) rv - (int64_t) ( rv >> 32 )) * m;
+	double tpdf = ( (int64_t) (uint32_t) rv - (int64_t) ( rv >> 32 )) * 0x1p-32;
+
+## Floating-Point PRNG ##
+
+The following expression can be used to convert 64-bit unsigned value to
+full-mantissa floating-point value, without introducing a bias:
+
+	uint64_t rv = prvhash_core64( &Seed, &lcg, &Hash );
+	double v = ( rv >> 11 ) * 0x1p-53;
 
 ## Entropy PRNG ##
 
@@ -235,6 +242,12 @@ stream, for security reasons.
 Time complexity for preimage attack fluctuates greatly as preimage resistance
 likely has a random-logarithmic PDF of timing.
 
+Even though a formal proof is not yet available, the author assumes this
+hash function can compete with widely-used SHA2 and SHA3 family of hash
+functions, while at the same time offering a considerably higher performance
+and scalability. When working in open systems, supplying a secret seed is not
+a requirement for this hash function.
+
 The default `prvhash64s.h`-based 64-bit hash of the string `The cat is out of
 the bag` is `c57b9d8063ba6363`.
 
@@ -258,7 +271,7 @@ a hash for tables and in-memory data blocks, the `prvhash64s` can be used to
 create hashes of large data blocks like files, in streamed mode.
 
 A proposed short name for hashes created with `prvhash64s.h` is `PRH64S-N`,
-where `N` is the hash length in bits (e.g. `PRH64S-256`). Or simply, `SH4`,
+where `N` is the hash length in bits (e.g. `PRH64S-256`). Or simply, `SH4-N`,
 `Secure Hash 4`.
 
 ## Description ##
