@@ -1,5 +1,5 @@
 /**
- * prvhash16.h version 4.0.1
+ * prvhash16.h version 4.1
  *
  * The inclusion file for the "prvhash16" hash function. For demonstration
  * purposes, not practically useful.
@@ -39,12 +39,12 @@
  * message. This function does not apply endianness correction to the
  * resulting hash.
  *
- * @param Msg The message to produce hash from. The alignment of the message
+ * @param Msg0 The message to produce hash from. The alignment of the message
  * is unimportant.
  * @param MsgLen Message's length, in bytes.
- * @param[out] Hash The resulting hash. The length of this buffer should be
+ * @param[out] Hash0 The resulting hash. The length of this buffer should be
  * equal to HashLen. On systems where this is relevant, this address should be
- * aligned to 16 bits.
+ * aligned to 32 bits.
  * @param HashLen The required hash length, in bytes, should be >= 4, in
  * increments of 2.
  * @param UseSeed Optional value, to use instead of the default seed. To use
@@ -52,9 +52,12 @@
  * any statistical quality, and is used only as an additional entropy source.
  */
 
-static inline void prvhash16( const uint8_t* Msg, const size_t MsgLen,
-	uint8_t* const Hash, const size_t HashLen, const uint32_t UseSeed )
+static inline void prvhash16( const void* const Msg0, const size_t MsgLen,
+	void* const Hash0, const size_t HashLen, const uint32_t UseSeed )
 {
+	const uint8_t* Msg = (const uint8_t*) Msg0;
+	uint8_t* const Hash = (uint8_t*) Hash0;
+
 	memset( Hash, 0, HashLen );
 
 	typedef uint16_t state_t;
@@ -88,9 +91,9 @@ static inline void prvhash16( const uint8_t* Msg, const size_t MsgLen,
 			fbm = 0;
 		}
 
-		if( Msg + 1 < MsgEnd )
+		if( Msg < MsgEnd - 1 )
 		{
-			msgw |= (state_t) ( (state_t) *( Msg + 1 ) << 8 );
+			msgw |= (state_t) ( (state_t) Msg[ 1 ] << 8 );
 		}
 		else
 		{
@@ -101,9 +104,7 @@ static inline void prvhash16( const uint8_t* Msg, const size_t MsgLen,
 		lcg ^= msgw;
 		prvhash_core16( &Seed, &lcg, hc );
 
-		hc++;
-
-		if( hc == HashEnd )
+		if( ++hc == HashEnd )
 		{
 			hc = (state_t*) Hash;
 		}
@@ -120,9 +121,7 @@ static inline void prvhash16( const uint8_t* Msg, const size_t MsgLen,
 	{
 		prvhash_core16( &Seed, &lcg, hc );
 
-		hc++;
-
-		if( hc == HashEnd )
+		if( ++hc == HashEnd )
 		{
 			hc = (state_t*) Hash;
 		}
@@ -132,9 +131,7 @@ static inline void prvhash16( const uint8_t* Msg, const size_t MsgLen,
 	{
 		*hc = prvhash_core16( &Seed, &lcg, hc );
 
-		hc++;
-
-		if( hc == HashEnd )
+		if( ++hc == HashEnd )
 		{
 			hc = (state_t*) Hash;
 		}

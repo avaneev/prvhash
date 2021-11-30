@@ -1,5 +1,5 @@
 /**
- * prvhash64.h version 4.0.1
+ * prvhash64.h version 4.1
  *
  * The inclusion file for the "prvhash64" and "prvhash64_64m" hash functions.
  *
@@ -33,132 +33,141 @@
 
 #include "prvhash_core.h"
 
+#define PRH64_T uint64_t // PRVHASH state variable type.
+#define PRH64_S sizeof( PRH64_T ) // State variable type's size.
+#define PRH64_Sm1 ( PRH64_S - 1 ) // = PRH64_S - 1.
+#define PRH64_FN prvhash_core64 // PRVHASH function name.
+#define PRH64_LUEC( v ) prvhash_lu64ec( v ) // Value load function, with EC.
+#define PRH64_LPUEC prvhash_lpu64ec // Value load function, pad, EC.
+#define PRH64_EC( v ) PRVHASH_EC64( v ) // Value endianness-correction.
+
 /**
  * PRVHASH hash function (64-bit variables). Produces hash of the specified
  * message. This function applies endianness correction to the resulting hash
  * automatically (on little- and big-endian processors).
  *
- * @param Msg The message to produce hash from. The alignment of the message
+ * @param Msg0 The message to produce hash from. The alignment of the message
  * is unimportant.
  * @param MsgLen Message's length, in bytes.
- * @param[in,out] Hash The resulting hash. The length of this buffer should be
- * equal to HashLen. If InitVec is non-NULL, the hash will not be initially
+ * @param[in,out] Hash0 The resulting hash. The length of this buffer should
+ * be equal to HashLen. If InitVec is non-NULL, the hash will not be initially
  * reset to 0, and it should be pre-initialized with uniformly-random bytes
  * (there are no restrictions on which values to use for initialization: even
  * an all-zero value can be used). The provided hash will be automatically
  * endianness-corrected. On systems where this is relevant, this address
- * should be aligned to 64 bits.
- * @param HashLen The required hash length, in bytes, should be >= 8, in
- * increments of 8.
+ * should be aligned to PRH64_S bytes.
+ * @param HashLen The required hash length, in bytes, should be >= PRH64_S,
+ * in increments of PRH64_S.
  * @param UseSeed Optional value, to use instead of the default seed. To use
  * the default seed, set to 0. If InitVec is non-NULL, this UseSeed is ignored
  * and should be set to 0. Otherwise, the UseSeed value can have any bit
  * length and statistical quality, and is used only as an additional entropy
- * source. It should be endianness-corrected.
- * @param InitVec If non-NULL, an "initialization vector" for internal "Seed"
+ * source. If this value is shared between big- and little-endian systems,
+ * it should be endianness-corrected.
+ * @param InitVec0 If non-NULL, an "initialization vector" for internal "Seed"
  * and "lcg" variables. Full 16-byte uniformly-random value should be supplied
  * in this case. Since it is imperative that the initialization vector is
  * non-zero and non-sparse, the best strategies to generate it are: 1) compose
  * the vector from 16-bit random values that have 4 to 12 random bits set;
  * 2) compose the vector from 64-bit random values that have 28-36 random bits
- * set. This vector's address alignment is unimportant.
+ * set. The provided values will be automatically endianness-corrected. This
+ * vector's address alignment is unimportant.
  */
 
-static inline void prvhash64( const uint8_t* Msg, const size_t MsgLen,
-	uint8_t* const Hash, const size_t HashLen, const uint64_t UseSeed,
-	const uint8_t InitVec[ sizeof( uint64_t ) * 2 ])
+static inline void prvhash64( const void* const Msg0, const size_t MsgLen,
+	void* const Hash0, const size_t HashLen, const PRH64_T UseSeed,
+	const void* const InitVec0 )
 {
-	typedef uint64_t state_t;
+	const uint8_t* Msg = (const uint8_t*) Msg0;
+	uint8_t* const Hash = (uint8_t*) Hash0;
+	const uint8_t* const InitVec = (const uint8_t*) InitVec0;
 
-	state_t Seed;
-	state_t lcg;
+	PRH64_T Seed;
+	PRH64_T lcg;
 
-	if( InitVec == 0 )
+	if( PRVHASH_LIKELY( InitVec == 0 ))
 	{
 		memset( Hash, 0, HashLen );
 
 		Seed = 0xC90FDAA22168C23; // The first 60 bits of PI.
 		lcg = 0;
-		*(state_t*) Hash = UseSeed;
+		*(PRH64_T*) Hash = UseSeed;
 	}
 	else
 	{
-		prvhash_ec64( Hash, HashLen );
+		size_t k;
 
-		Seed = prvhash_lu64ec( InitVec );
-		lcg = prvhash_lu64ec( InitVec + 8 );
+		for( k = 0; PRVHASH_LIKELY( k < HashLen ); k += PRH64_S )
+		{
+			*(PRH64_T*) ( Hash + k ) = PRH64_LUEC( Hash + k );
+		}
+
+		Seed = PRH64_LUEC( InitVec );
+		lcg = PRH64_LUEC( InitVec + PRH64_S );
 	}
 
 	const uint8_t* const MsgEnd = Msg + MsgLen;
-	const state_t* const HashEnd = (state_t*) ( Hash + HashLen );
-	state_t* hc = (state_t*) Hash;
+	const PRH64_T* const HashEnd = (PRH64_T*) ( Hash + HashLen );
+	PRH64_T* hc = (PRH64_T*) Hash;
 
-	state_t fb = 1;
+	PRH64_T fb = 1;
 
-	if( MsgLen > 0 )
+	if( PRVHASH_LIKELY( MsgLen != 0 ))
 	{
-		fb <<= ( Msg[ MsgLen - 1 ] >> 7 );
+		fb <<= ( MsgEnd[ -1 ] >> 7 );
 	}
 
 	while( 1 )
 	{
-		if( Msg < MsgEnd - 7 )
+		if( PRVHASH_LIKELY( Msg < MsgEnd - PRH64_Sm1 ))
 		{
-			lcg ^= prvhash_lu64ec( Msg );
+			lcg ^= PRH64_LUEC( Msg );
 		}
 		else
 		{
-			if( Msg > MsgEnd )
+			if( PRVHASH_UNLIKELY( Msg > MsgEnd ))
 			{
 				break;
 			}
 
-			lcg ^= prvhash_lpu64_f( Msg, MsgEnd, fb );
+			lcg ^= PRH64_LPUEC( Msg, MsgEnd, fb );
 		}
 
-		prvhash_core64( &Seed, &lcg, hc );
+		PRH64_FN( &Seed, &lcg, hc );
 
-		hc++;
-
-		if( hc == HashEnd )
+		if( PRVHASH_UNLIKELY( ++hc == HashEnd ))
 		{
-			hc = (state_t*) Hash;
+			hc = (PRH64_T*) Hash;
 		}
 
-		Msg += sizeof( state_t );
+		Msg += PRH64_S;
 	}
 
-	const size_t fc = ( HashLen == sizeof( state_t ) ? 0 : HashLen +
-		( MsgLen < HashLen - sizeof( state_t ) ?
+	const size_t fc = ( HashLen == PRH64_S ? 0 : HashLen +
+		( MsgLen < HashLen - PRH64_S ?
 		(uint8_t*) HashEnd - (uint8_t*) hc : 0 ));
 
 	size_t k;
 
-	for( k = 0; k <= fc; k += sizeof( state_t ))
+	for( k = 0; PRVHASH_LIKELY( k <= fc ); k += PRH64_S )
 	{
-		prvhash_core64( &Seed, &lcg, hc );
+		PRH64_FN( &Seed, &lcg, hc );
 
-		hc++;
-
-		if( hc == HashEnd )
+		if( PRVHASH_UNLIKELY( ++hc == HashEnd ))
 		{
-			hc = (state_t*) Hash;
+			hc = (PRH64_T*) Hash;
 		}
 	}
 
-	for( k = 0; k < HashLen; k += sizeof( state_t ))
+	for( k = 0; PRVHASH_LIKELY( k < HashLen ); k += PRH64_S )
 	{
-		*hc = prvhash_core64( &Seed, &lcg, hc );
+		*hc = PRH64_EC( PRH64_FN( &Seed, &lcg, hc ));
 
-		hc++;
-
-		if( hc == HashEnd )
+		if( PRVHASH_UNLIKELY( ++hc == HashEnd ))
 		{
-			hc = (state_t*) Hash;
+			hc = (PRH64_T*) Hash;
 		}
 	}
-
-	prvhash_ec64( Hash, HashLen );
 }
 
 /**
@@ -167,53 +176,55 @@ static inline void prvhash64( const uint8_t* Msg, const size_t MsgLen,
  * use. Equivalent to "prvhash64" function with HashLen == 8, but returns an
  * immediate result (endianness-correction is not required).
  *
- * @param Msg The message to produce hash from. The alignment of the message
+ * @param Msg0 The message to produce hash from. The alignment of the message
  * is unimportant.
  * @param MsgLen Message's length, in bytes.
  * @param UseSeed Optional value, to use instead of the default seed. To use
  * the default seed, set to 0. The UseSeed value can have any bit length and
- * statistical quality, and is used only as an additional entropy source.
+ * statistical quality, and is used only as an additional entropy source. If
+ * this value is shared between big- and little-endian systems, it should be
+ * endianness-corrected.
  */
 
-static inline uint64_t prvhash64_64m( const uint8_t* Msg, const size_t MsgLen,
-	const uint64_t UseSeed )
+static inline uint64_t prvhash64_64m( const void* const Msg0,
+	const size_t MsgLen, const PRH64_T UseSeed )
 {
-	typedef uint64_t state_t;
+	const uint8_t* Msg = (const uint8_t*) Msg0;
 
-	state_t Seed = 0xC90FDAA22168C23; // The first 60 bits of PI.
-	state_t lcg = 0;
-	state_t Hash = UseSeed;
-
-	state_t fb = 1;
-
-	if( MsgLen > 0 )
-	{
-		fb <<= ( Msg[ MsgLen - 1 ] >> 7 );
-	}
+	PRH64_T Seed = 0xC90FDAA22168C23; // The first 60 bits of PI.
+	PRH64_T lcg = 0;
+	PRH64_T Hash = UseSeed;
 
 	const uint8_t* const MsgEnd = Msg + MsgLen;
 
+	PRH64_T fb = 1;
+
+	if( PRVHASH_LIKELY( MsgLen != 0 ))
+	{
+		fb <<= ( MsgEnd[ -1 ] >> 7 );
+	}
+
 	while( 1 )
 	{
-		if( Msg < MsgEnd - 7 )
+		if( PRVHASH_LIKELY( Msg < MsgEnd - PRH64_Sm1 ))
 		{
-			lcg ^= prvhash_lu64ec( Msg );
+			lcg ^= PRH64_LUEC( Msg );
 		}
 		else
 		{
-			if( Msg > MsgEnd )
+			if( PRVHASH_UNLIKELY( Msg > MsgEnd ))
 			{
-				prvhash_core64( &Seed, &lcg, &Hash );
+				PRH64_FN( &Seed, &lcg, &Hash );
 
-				return( prvhash_core64( &Seed, &lcg, &Hash ));
+				return( PRH64_FN( &Seed, &lcg, &Hash ));
 			}
 
-			lcg ^= prvhash_lpu64_f( Msg, MsgEnd, fb );
+			lcg ^= PRH64_LPUEC( Msg, MsgEnd, fb );
 		}
 
-		prvhash_core64( &Seed, &lcg, &Hash );
+		PRH64_FN( &Seed, &lcg, &Hash );
 
-		Msg += sizeof( state_t );
+		Msg += PRH64_S;
 	}
 }
 

@@ -1,10 +1,9 @@
 /**
- * prvhash_core.h version 4.0.1
+ * prvhash_core.h version 4.1
  *
- * The inclusion file for the "prvhash_core64", "prvhash_core32",
- * "prvhash_core16", "prvhash_core8", "prvhash_core4", "prvhash_core2"
- * PRVHASH core functions for various state variable sizes. Also includes
- * several auxiliary functions, for endianness-correction.
+ * The inclusion file for the "prvhash_core*" PRVHASH core functions for
+ * various state variable sizes. Also includes several auxiliary functions,
+ * for endianness-correction.
  *
  * Description is available at https://github.com/avaneev/prvhash
  *
@@ -167,31 +166,53 @@ static inline uint8_t prvhash_core2( uint8_t* const Seed0,
 	return( out );
 }
 
-#if defined( __GNUC__ ) || defined( __clang__ )
+// Likelihood macros that are used for manually-guided optimization.
 
-/**
- * A macro that applies byte-swapping.
- */
+#if defined( __GNUC__ ) || defined( __clang__ ) || \
+	( defined( __GNUC__ ) && defined( __INTEL_COMPILER ))
 
-#define PRVHASH_BYTESW64( v ) __builtin_bswap64( v )
+	#define PRVHASH_LIKELY( x )  __builtin_expect( x, 1 )
+	#define PRVHASH_UNLIKELY( x )  __builtin_expect( x, 0 )
 
-#elif defined( _MSC_VER ) || defined( __INTEL_COMPILER )
+#else // likelihood macros
 
-#define PRVHASH_BYTESW64( v ) _byteswap_uint64( v )
+	#define PRVHASH_LIKELY( x ) ( x )
+	#define PRVHASH_UNLIKELY( x ) ( x )
 
-#else // defined( _MSC_VER ) || defined( __INTEL_COMPILER )
+#endif // likelihood macros
 
-#define PRVHASH_BYTESW64( v ) ( \
-	( v & 0xFF00000000000000 ) >> 56 | \
-	( v & 0x00FF000000000000 ) >> 40 | \
-	( v & 0x0000FF0000000000 ) >> 24 | \
-	( v & 0x000000FF00000000 ) >> 8 | \
-	( v & 0x00000000FF000000 ) << 8 | \
-	( v & 0x0000000000FF0000 ) << 24 | \
-	( v & 0x000000000000FF00 ) << 40 | \
-	( v & 0x00000000000000FF ) << 56 )
+// Macros that apply byte-swapping.
 
-#endif // defined( _MSC_VER ) || defined( __INTEL_COMPILER )
+#if defined( __GNUC__ ) || defined( __clang__ ) || \
+	( defined( __GNUC__ ) && defined( __INTEL_COMPILER ))
+
+	#define PRVHASH_BYTESW32( v ) __builtin_bswap32( v )
+	#define PRVHASH_BYTESW64( v ) __builtin_bswap64( v )
+
+#elif defined( _MSC_VER )
+
+	#define PRVHASH_BYTESW32( v ) _byteswap_ulong( v )
+	#define PRVHASH_BYTESW64( v ) _byteswap_uint64( v )
+
+#else // defined( _MSC_VER )
+
+	#define PRVHASH_BYTESW32( v ) ( \
+		( v & 0xFF000000 ) >> 24 | \
+		( v & 0x00FF0000 ) >> 8 | \
+		( v & 0x0000FF00 ) << 8 | \
+		( v & 0x000000FF ) << 24 )
+
+	#define PRVHASH_BYTESW64( v ) ( \
+		( v & 0xFF00000000000000 ) >> 56 | \
+		( v & 0x00FF000000000000 ) >> 40 | \
+		( v & 0x0000FF0000000000 ) >> 24 | \
+		( v & 0x000000FF00000000 ) >> 8 | \
+		( v & 0x00000000FF000000 ) << 8 | \
+		( v & 0x0000000000FF0000 ) << 24 | \
+		( v & 0x000000000000FF00 ) << 40 | \
+		( v & 0x00000000000000FF ) << 56 )
+
+#endif // defined( _MSC_VER )
 
 /**
  * This function runs a single PRVHASH random number generation round, an
@@ -249,27 +270,58 @@ static inline uint8_t prvhash_core2i( uint8_t* const Seed0,
 	return( out );
 }
 
-#if defined( _WIN32 ) || defined( __LITTLE_ENDIAN__ ) || ( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ )
-	#define PRVHASH_LITTLE_ENDIAN 1
-#elif defined( __BIG_ENDIAN__ ) || ( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ )
-	#define PRVHASH_LITTLE_ENDIAN 0
-#else // endianness check
-	#error PRVHASH: cannot obtain endianness
-#endif // endianness check
+// Endianness-definition macro, can be defined externally (e.g. =1, if
+// endianness-correction is unnecessary in any case).
+
+#if !defined( PRVHASH_LITTLE_ENDIAN )
+	#if defined( _WIN32 ) || defined( __LITTLE_ENDIAN__ ) || \
+		( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ )
+
+		#define PRVHASH_LITTLE_ENDIAN 1
+
+	#elif defined( __BIG_ENDIAN__ ) || \
+		( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ )
+
+		#define PRVHASH_LITTLE_ENDIAN 0
+
+	#else // defined( __BIG_ENDIAN__ )
+
+		#warning PRVHASH: cannot determine endianness, assuming little-endian.
+
+		#define PRVHASH_LITTLE_ENDIAN 1
+
+	#endif // defined( __BIG_ENDIAN__ )
+#endif // !defined( PRVHASH_LITTLE_ENDIAN )
+
+// Macros that apply byte-swapping, used for endianness-correction.
 
 #if PRVHASH_LITTLE_ENDIAN
 
-/**
- * A macro that applies byte-swapping used for endianness-correction.
- */
-
-#define PRVHASH_EC64( v ) ( v )
+	#define PRVHASH_EC32( v ) ( v )
+	#define PRVHASH_EC64( v ) ( v )
 
 #else // PRVHASH_LITTLE_ENDIAN
 
-#define PRVHASH_EC64( v ) PRVHASH_BYTESW64( v )
+	#define PRVHASH_EC32( v ) PRVHASH_BYTESW32( v )
+	#define PRVHASH_EC64( v ) PRVHASH_BYTESW64( v )
 
 #endif // PRVHASH_LITTLE_ENDIAN
+
+/**
+ * An auxiliary function that returns an unsigned 32-bit value created out of
+ * individual bytes in a buffer. This function is used to convert endianness
+ * of supplied 32-bit unsigned values, and to avoid unaligned memory accesses.
+ *
+ * @param p 4-byte buffer. Alignment is unimportant.
+ */
+
+static inline uint32_t prvhash_lu32ec( const uint8_t* const p )
+{
+	uint32_t v;
+	memcpy( &v, p, 4 );
+
+	return( PRVHASH_EC32( v ));
+}
 
 /**
  * An auxiliary function that returns an unsigned 64-bit value created out of
@@ -287,39 +339,10 @@ static inline uint64_t prvhash_lu64ec( const uint8_t* const p )
 	return( PRVHASH_EC64( v ));
 }
 
-#if PRVHASH_LITTLE_ENDIAN
-
-/**
- * This function corrects (inverses) endianness of the specified hash value,
- * based on 64-bit words.
- *
- * @param[in,out] Hash The hash to correct endianness of. On systems where
- * this is relevant, this address should be aligned to 64 bits.
- * @param HashLen The required hash length, in bytes, should be >= 8, in
- * increments of 8. 
- */
-
-static inline void prvhash_ec64( uint8_t* const Hash, const size_t HashLen )
-{
-}
-
-#else // PRVHASH_LITTLE_ENDIAN
-
-static inline void prvhash_ec64( uint8_t* const Hash, const size_t HashLen )
-{
-	size_t k;
-
-	for( k = 0; k < HashLen; k += sizeof( uint64_t ))
-	{
-		*(uint64_t*) ( Hash + k ) = PRVHASH_EC64( *(uint64_t*) ( Hash + k ));
-	}
-}
-
-#endif // PRVHASH_LITTLE_ENDIAN
-
 /**
  * Function loads 64-bit message word and pads it with the "final byte". This
  * function should only be called if there is less than 8 bytes left to read.
+ * Function performs endianness-correction automatically.
  *
  * @param Msg Message pointer, alignment is unimportant. Should be below or
  * equal to MsgEnd.
@@ -327,48 +350,46 @@ static inline void prvhash_ec64( uint8_t* const Hash, const size_t HashLen )
  * @param fb Final byte used for padding.
  */
 
-static inline uint64_t prvhash_lpu64_f( const uint8_t* Msg,
+static inline uint64_t prvhash_lpu64ec( const uint8_t* Msg,
 	const uint8_t* const MsgEnd, const uint64_t fb )
 {
-	uint64_t r = fb << (( MsgEnd - Msg ) << 3 );
+	const int l = (int) ( MsgEnd - Msg );
+	uint64_t r = fb << ( l << 3 );
 
-	if( Msg < MsgEnd )
+	if( l > 3 )
 	{
-		r |= *Msg;
-		Msg++;
+		r |= (uint64_t) prvhash_lu32ec( Msg );
+		Msg += 4;
 
 		if( Msg < MsgEnd )
 		{
-			r |= (uint64_t) *Msg << 8;
-			Msg++;
+			r |= (uint64_t) *Msg << 32;
 
-			if( Msg < MsgEnd )
+			if( ++Msg < MsgEnd )
+			{
+				r |= (uint64_t) *Msg << 40;
+
+				if( ++Msg < MsgEnd )
+				{
+					r |= (uint64_t) *Msg << 48;
+				}
+			}
+		}
+
+		return( r );
+	}
+
+	if( l != 0 )
+	{
+		r |= *Msg;
+
+		if( ++Msg < MsgEnd )
+		{
+			r |= (uint64_t) *Msg << 8;
+
+			if( ++Msg < MsgEnd )
 			{
 				r |= (uint64_t) *Msg << 16;
-				Msg++;
-
-				if( Msg < MsgEnd )
-				{
-					r |= (uint64_t) *Msg << 24;
-					Msg++;
-
-					if( Msg < MsgEnd )
-					{
-						r |= (uint64_t) *Msg << 32;
-						Msg++;
-
-						if( Msg < MsgEnd )
-						{
-							r |= (uint64_t) *Msg << 40;
-							Msg++;
-
-							if( Msg < MsgEnd )
-							{
-								r |= (uint64_t) *Msg << 48;
-							}
-						}
-					}
-				}
 			}
 		}
 	}

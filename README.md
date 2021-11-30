@@ -29,8 +29,8 @@ suggestions in `prvhash64.h`), adding useful initial entropy (`InitVec` plus
 
 64-, 128-, 256-, 512- and 1024-bit PRVHASH hashes pass all [SMHasher](https://github.com/rurban/smhasher)
 tests. Other hash lengths were not thoroughly tested, but extrapolations can
-be made. The author makes no cryptographic claims about PRVHASH-based
-constructs.
+be made. The author makes no cryptographic claims (neither positive nor
+negative) about PRVHASH-based constructs.
 
 PRVHASH core hash function can be used as a PRNG with an arbitrarily-chosen
 (practically unlimited) period, depending on the number of hashwords in the
@@ -40,7 +40,7 @@ Please see the `prvhash64.h` file for the details of the basic hash function
 implementation (the `prvhash.h`, `prvhash4.h`, `prvhash42.h` are outdated
 versions). Note that `64` refers to core hash function's variable size.
 While this hash function is most likely irreversible, according to SAT
-solver-based testing, it does not feature implicit preimage resistance.
+solver-based testing, it does not feature an implicit preimage resistance.
 This function should not be used in open systems, without a secret seed.
 
 The default `prvhash64.h`-based 64-bit hash of the string `The cat is out of
@@ -52,8 +52,8 @@ where `N` is the hash length in bits (e.g. `PRH64-256`).
 ## PRVHASH64_64M ##
 
 This is a minimized implementation of the `prvhash64` hash function. Since
-arguably it's the smallest hash function in the world, that produces 64-bit
-hashes of this quality level, it is very useful for hash tables.
+arguably it's the smallest hash function in the world, which produces 64-bit
+hashes of this quality level, it is very useful for hash-tables.
 
 ## Minimal PRNG for Everyday Use ##
 
@@ -248,6 +248,10 @@ functions, while at the same time offering a considerably higher performance
 and scalability. When working in open systems, supplying a secret seed is not
 a requirement for this hash function.
 
+The performance (expressed in cycles/byte) of this hash function on various
+platforms can be evaluated at the
+[ECRYPT/eBASH project](https://bench.cr.yp.to/results-hash.html).
+
 The default `prvhash64s.h`-based 64-bit hash of the string `The cat is out of
 the bag` is `c57b9d8063ba6363`.
 
@@ -267,8 +271,8 @@ avalanche criterion.
 This streamed hash function produces hash values that are different to the
 `prvhash64` hash function. It is incorrect to use both of these hash function
 implementations on the same data set. While the `prvhash64` can be used as
-a hash for tables and in-memory data blocks, the `prvhash64s` can be used to
-create hashes of large data blocks like files, in streamed mode.
+a hash for hash-tables and in-memory data blocks, the `prvhash64s` can be used
+to create hashes of large data blocks like files, in streamed mode.
 
 A proposed short name for hashes created with `prvhash64s.h` is `PRH64S-N`,
 where `N` is the hash length in bits (e.g. `PRH64S-256`). Or simply, `SH4-N`,
@@ -398,9 +402,9 @@ P.S. The reason the InitVec in the `prvhash64` hash function has the value
 quality constraints, and an initial state, is that otherwise the function
 would require at least 5 "conditioning" preliminary rounds (core function
 calls), to neutralize any oddities (including zero values) in InitVec; that
-would reduce the performance of the hash function dramatically for table hash
-use. Note that the `prvhash64s` function starts from the "full zero" state and
-then performs acceptably.
+would reduce the performance of the hash function dramatically for hash-table
+uses. Note that the `prvhash64s` function starts from the "full zero" state
+and then performs acceptably.
 
 ## An Ideal Core Hash Function ##
 
@@ -448,17 +452,20 @@ precisely-crafted message is created (e.g. with a SAT solver). Various other
 very rare repeating combinations of entropy input may also produce a stalled
 state.
 
-To reduce occurrence of a stalled state, only the higher part of the `lcg`
+To eliminate occurrence of a stalled state, only the higher part of the `lcg`
 should be augmented: this obviously offers a lot less control over the
-internal state of the core hash function, but a SAT solver can still find a
-stalled state; also, this has a hashing speed impact. So, `prvhash64` and
-`prvhash64_64m` should not be used at all, or not used without a seed, in
-cases when an external collision attack is possible.
+internal state of the core hash function, but this has a hashing speed impact.
+Anyway, for `prvhash64` and `prvhash64_64m` functions a SAT solver can find
+any preimage quickly, thus these functions should not be used without a seed,
+when an external collision attack is possible (in open systems).
 
 `prvhash64s`, however, uses a "padding" PRNG to avoid turning function's state
-into a stalled state. This "padding" PRNG is injected in an interleaved
-manner, and it cannot be avoided due to k-equdistribution's implicit security;
-it acts as a "firewall"; it also "encodes" message's length, implicitly.
+into a stalled state, and to provide preimage resistance. This "padding" PRNG
+is injected in an interleaved manner during hashing. Since `lcg`'s
+augmentation affects 1/2 of the state variables at most, such interleaved
+padding makes achieving a required state impossible: "padding" PRNG acts as a
+"firewall" that blocks "hash programming"; it also "encodes" message's length,
+implicitly.
 
 This does not affect PRNG usage of the core hash function, when `lcg` is never
 augmented.
@@ -504,10 +511,10 @@ Depending on the initial seed value, the period may fluctuate.
 #include <string.h>
 
 #define PH_PAR_COUNT 1 // PRVHASH parallelism.
-#define PH_HASH_COUNT 4 // Hashword count.
-#define PH_STATE_TYPE uint8_t // State variable physical type.
+#define PH_HASH_COUNT 4 // Hashword count (any positive number).
+#define PH_STATE_TYPE uint8_t // State variable's physical type.
 #define PH_FN prvhash_core4 // Core hash function name.
-#define PH_BITS 4 // State variable size in bits.
+#define PH_BITS 4 // State variable's size in bits.
 #define PH_RAW_BITS 8 // Raw output bits.
 #define PH_RAW_ROUNDS ( PH_RAW_BITS / PH_BITS ) // Rounds per raw output.
 
@@ -646,9 +653,13 @@ purely local), but is genuinely based on PRNG position "jumps".
 ## TANGO642 ##
 
 This is an efficient implementation of a PRVHASH PRNG-based streamed XOR
-function. Since no cryptanalysis nor certification of this function was
+function. Since no cryptanalysis nor certification of this function were
 performed yet, it cannot be called a "cipher", but rather a cipher-alike
 random number generator.
+
+The performance (expressed in cycles/byte) of this function on various
+platforms can be evaluated at the
+[ECRYPT/eBASC project](https://bench.cr.yp.to/results-stream.html).
 
 ## Other Thoughts ##
 
@@ -717,11 +728,10 @@ Uint16 raw16() {
 }
 void walk_state(PractRand::StateWalkingObject *walker) {}
 void seed(Uint64 sv) {
-const double ph = sv * 3.40612158008655459e-19; // Random seed to phase.
+	const double ph = sv * 3.40612158008655459e-19; // Random seed to phase.
 
-svalue1 = sin( ph );
-svalue2 = sin( ph - si );
-
+	svalue1 = sin( ph );
+	svalue2 = sin( ph - si );
 }
 std::string get_name() const {return "SINEWAVE";}
 };
@@ -738,6 +748,7 @@ the state-of-the-art statistical tests.
 
 ## Other ##
 
-PRVHASH authorship and copyright was registered at the
-[Russian Patent Office](https://rospatent.gov.ru/) under reg.numbers
-2020661136, 2020666287, 2021615385.
+PRVHASH authorship and copyright were registered at the
+[Russian Patent Office](https://rospatent.gov.ru/en), under reg.numbers
+2020661136, 2020666287, 2021615385, 2021668070 (searchable via
+[fips.ru](https://new.fips.ru/en/).

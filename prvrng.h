@@ -1,5 +1,5 @@
 /**
- * prvrng.h version 4.0.1
+ * prvrng.h version 4.1
  *
  * The inclusion file for the "prvrng" entropy pseudo-random number generator.
  * This is mostly an example PRNG that demonstrates use of infrequent external
@@ -36,7 +36,6 @@
 #define PRVRNG_INCLUDED
 
 #include <stdio.h>
-#include "prvhash_core.h"
 
 #if defined( _WIN32 )
 	#include <windows.h>
@@ -44,6 +43,8 @@
 #else // defined( _WIN32 )
 	#define PRVRNG_UNIX 1
 #endif // defined( _WIN32 )
+
+#include "prvhash_core.h"
 
 /**
  * prvrng context structure.
@@ -71,13 +72,13 @@ typedef struct
 
 /**
  * Internal function returns a "true" entropy value. This is simulated
- * by obtaining a byte from /dev/random or Windows' CryptGenRandom().
+ * by obtaining a byte from "/dev/random" or Windows' CryptGenRandom().
  *
  * @param ctx Pointer to the context structure.
  * @param c The number of bytes to return, 1 to 8.
  */
 
-static inline uint64_t prvrng_gen_entropy( PRVRNG_CTX* const ctx,
+static inline uint64_t prvrng_get_entropy( PRVRNG_CTX* const ctx,
 	const size_t c )
 {
 	uint8_t val[ 8 ];
@@ -108,12 +109,12 @@ static inline uint8_t prvrng_gen64p2( PRVRNG_CTX* const ctx )
 	{
 		if( ctx -> EntCtr == 0 )
 		{
-			const uint16_t v = (uint16_t) prvrng_gen_entropy( ctx, 2 );
+			const uint16_t v = (uint16_t) prvrng_get_entropy( ctx, 2 );
 			ctx -> EntCtr = ( v & 0xFF ) + 1;
 			ctx -> lcg[ 0 ] ^= (uint64_t) (( v >> 8 ) + 1 ) << 55;
 		}
 
-		uint64_t lo = 0;
+		uint64_t rv = 0;
 		int k;
 
 		for( k = 0; k < 2; k++ )
@@ -126,17 +127,15 @@ static inline uint8_t prvrng_gen64p2( PRVRNG_CTX* const ctx )
 				prvhash_core64( &ctx -> Seed[ i ], &ctx -> lcg[ i ], Hash );
 			}
 
-			lo ^= prvhash_core64( &ctx -> Seed[ i ], &ctx -> lcg[ i ], Hash );
+			rv ^= prvhash_core64( &ctx -> Seed[ i ], &ctx -> lcg[ i ], Hash );
 
-			ctx -> HashPos++;
-
-			if( ctx -> HashPos == PRVRNG_HASH_COUNT )
+			if( ++ctx -> HashPos == PRVRNG_HASH_COUNT )
 			{
 				ctx -> HashPos = 0;
 			}
 		}
 
-		ctx -> LastOut = lo;
+		ctx -> LastOut = rv;
 		ctx -> OutLeft = sizeof( ctx -> LastOut );
 		ctx -> EntCtr--;
 	}
@@ -181,13 +180,13 @@ static inline int prvrng_init64p2( PRVRNG_CTX* const ctx )
 
 	for( i = 0; i < PRVRNG_PAR_COUNT; i++ )
 	{
-		ctx -> Seed[ i ] = prvrng_gen_entropy( ctx, sizeof( uint64_t ));
-		ctx -> lcg[ i ] = prvrng_gen_entropy( ctx, sizeof( uint64_t ));
+		ctx -> Seed[ i ] = prvrng_get_entropy( ctx, sizeof( uint64_t ));
+		ctx -> lcg[ i ] = prvrng_get_entropy( ctx, sizeof( uint64_t ));
 	}
 
 	for( i = 0; i < PRVRNG_HASH_COUNT; i++ )
 	{
-		ctx -> Hash[ i ] = prvrng_gen_entropy( ctx, sizeof( uint64_t ));
+		ctx -> Hash[ i ] = prvrng_get_entropy( ctx, sizeof( uint64_t ));
 	}
 
 	ctx -> HashPos = 0;
@@ -217,7 +216,7 @@ static inline int prvrng_init64p2( PRVRNG_CTX* const ctx )
  * @param ctx Pointer to the context structure.
  */
 
-static inline void prvrng_final64p2( PRVRNG_CTX* ctx )
+static inline void prvrng_final64p2( PRVRNG_CTX* const ctx )
 {
 	#if defined( PRVRNG_UNIX )
 
