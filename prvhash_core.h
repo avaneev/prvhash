@@ -1,5 +1,5 @@
 /**
- * prvhash_core.h version 4.1
+ * prvhash_core.h version 4.2
  *
  * The inclusion file for the "prvhash_core*" PRVHASH core functions for
  * various state variable sizes. Also includes several auxiliary functions,
@@ -40,11 +40,16 @@
  * This function runs a single PRVHASH random number generation round. This
  * function can be used both as a hash generator and as a general-purpose
  * random number generator. In the latter case, it is advisable to initially
- * run this function 5 times before using its random output, to neutralize any
- * possible oddities of "Seed"'s and "lcg"'s initial values.
+ * run this function 4 times (independent of state variables' size), before
+ * using its random output, to neutralize any possible oddities of state
+ * variables' initial values (including zero values); 5 times for "parallel"
+ * arrangement.
  *
- * To generate hashes, the "lcg" variable should be XORed with entropy input
- * prior to calling this function.
+ * To generate hashes, the "Seed" and "lcg" variables should be simultaneously
+ * XORed with the same entropy input, prior to calling this function.
+ * Additionally, the "Seed" can be XORed with a good-quality uniformly-random
+ * entropy (including output of another PRVHASH system): this is called
+ * "daisy-chaining", it does not interfere with hashing.
  *
  * @param[in,out] Seed0 The current "Seed" value. Can be initialized to any
  * value.
@@ -59,12 +64,11 @@ static inline uint64_t prvhash_core64( uint64_t* const Seed0,
 {
 	uint64_t Seed = *Seed0; uint64_t lcg = *lcg0; uint64_t Hash = *Hash0;
 
-	const uint64_t plcg = lcg;
-	const uint64_t mx = Seed * ( lcg - ~lcg );
-	const uint64_t rs = mx >> 32 | mx << 32;
-	lcg += ~mx;
-	Hash += rs;
-	Seed = Hash ^ plcg;
+	Seed *= lcg - ~lcg; // Equivalent to "lcg * 2 + 1", but faster.
+	const uint64_t rs = Seed >> 32 | Seed << 32;
+	lcg += Seed;
+	Hash += rs + 0xAAAAAAAAAAAAAAAA;
+	Seed ^= Hash;
 	const uint64_t out = lcg ^ rs;
 
 	*Seed0 = Seed; *lcg0 = lcg; *Hash0 = Hash;
@@ -77,12 +81,11 @@ static inline uint32_t prvhash_core32( uint32_t* const Seed0,
 {
 	uint32_t Seed = *Seed0; uint32_t lcg = *lcg0; uint32_t Hash = *Hash0;
 
-	const uint32_t plcg = lcg;
-	const uint32_t mx = Seed * ( lcg - ~lcg );
-	const uint32_t rs = mx >> 16 | mx << 16;
-	lcg += ~mx;
-	Hash += rs;
-	Seed = Hash ^ plcg;
+	Seed *= lcg - ~lcg; // Equivalent to "lcg * 2 + 1".
+	const uint32_t rs = Seed >> 16 | Seed << 16;
+	lcg += Seed;
+	Hash += rs + 0xAAAAAAAA;
+	Seed ^= Hash;
 	const uint32_t out = lcg ^ rs;
 
 	*Seed0 = Seed; *lcg0 = lcg; *Hash0 = Hash;
@@ -95,12 +98,11 @@ static inline uint16_t prvhash_core16( uint16_t* const Seed0,
 {
 	uint16_t Seed = *Seed0; uint16_t lcg = *lcg0; uint16_t Hash = *Hash0;
 
-	const uint16_t plcg = lcg;
-	const uint16_t mx = (uint16_t) ( Seed * ( lcg - ~lcg ));
-	const uint16_t rs = (uint16_t) ( mx >> 8 | mx << 8 );
-	lcg += (uint16_t) ~mx;
-	Hash += rs;
-	Seed = (uint16_t) ( Hash ^ plcg );
+	Seed *= (uint16_t) ( lcg - ~lcg ); // Equivalent to "lcg * 2 + 1".
+	const uint16_t rs = (uint16_t) ( Seed >> 8 | Seed << 8 );
+	lcg += Seed;
+	Hash += (uint16_t) ( rs + 0xAAAA );
+	Seed ^= Hash;
 	const uint16_t out = (uint16_t) ( lcg ^ rs );
 
 	*Seed0 = Seed; *lcg0 = lcg; *Hash0 = Hash;
@@ -113,12 +115,11 @@ static inline uint8_t prvhash_core8( uint8_t* const Seed0,
 {
 	uint8_t Seed = *Seed0; uint8_t lcg = *lcg0; uint8_t Hash = *Hash0;
 
-	const uint8_t plcg = lcg;
-	const uint8_t mx = (uint8_t) ( Seed * ( lcg - ~lcg ));
-	const uint8_t rs = (uint8_t) ( mx >> 4 | mx << 4 );
-	lcg += (uint8_t) ~mx;
-	Hash += rs;
-	Seed = (uint8_t) ( Hash ^ plcg );
+	Seed *= (uint8_t) ( lcg - ~lcg ); // Equivalent to "lcg * 2 + 1".
+	const uint8_t rs = (uint8_t) ( Seed >> 4 | Seed << 4 );
+	lcg += Seed;
+	Hash += (uint8_t) ( rs + 0xAA );
+	Seed ^= Hash;
 	const uint8_t out = (uint8_t) ( lcg ^ rs );
 
 	*Seed0 = Seed; *lcg0 = lcg; *Hash0 = Hash;
@@ -131,14 +132,14 @@ static inline uint8_t prvhash_core4( uint8_t* const Seed0,
 {
 	uint8_t Seed = *Seed0; uint8_t lcg = *lcg0; uint8_t Hash = *Hash0;
 
-	const uint8_t plcg = lcg;
-	const uint8_t mx = (uint8_t) (( Seed * ( lcg - ~lcg )) & 15 );
-	const uint8_t rs = (uint8_t) (( mx >> 2 | mx << 2 ) & 15 );
-	lcg += (uint8_t) ~mx;
+	Seed *= (uint8_t) ( lcg - ~lcg ); // Equivalent to "lcg * 2 + 1".
+	Seed &= 15;
+	const uint8_t rs = (uint8_t) (( Seed >> 2 | Seed << 2 ) & 15 );
+	lcg += Seed;
 	lcg &= 15;
-	Hash += rs;
+	Hash += (uint8_t) ( rs + 0xA );
 	Hash &= 15;
-	Seed = (uint8_t) ( Hash ^ plcg );
+	Seed ^= Hash;
 	const uint8_t out = (uint8_t) ( lcg ^ rs );
 
 	*Seed0 = Seed; *lcg0 = lcg; *Hash0 = Hash;
@@ -151,14 +152,14 @@ static inline uint8_t prvhash_core2( uint8_t* const Seed0,
 {
 	uint8_t Seed = *Seed0; uint8_t lcg = *lcg0; uint8_t Hash = *Hash0;
 
-	const uint8_t plcg = lcg;
-	const uint8_t mx = (uint8_t) (( Seed * ( lcg - ~lcg )) & 3 );
-	const uint8_t rs = (uint8_t) (( mx >> 1 | mx << 1 ) & 3 );
-	lcg += (uint8_t) ~mx;
+	Seed *= (uint8_t) ( lcg - ~lcg ); // Equivalent to "lcg * 2 + 1".
+	Seed &= 3;
+	const uint8_t rs = (uint8_t) (( Seed >> 1 | Seed << 1 ) & 3 );
+	lcg += Seed;
 	lcg &= 3;
-	Hash += rs;
+	Hash += (uint8_t) ( rs + 0x2 );
 	Hash &= 3;
-	Seed = (uint8_t) ( Hash ^ plcg );
+	Seed ^= Hash;
 	const uint8_t out = (uint8_t) ( lcg ^ rs );
 
 	*Seed0 = Seed; *lcg0 = lcg; *Hash0 = Hash;
@@ -166,7 +167,7 @@ static inline uint8_t prvhash_core2( uint8_t* const Seed0,
 	return( out );
 }
 
-// Likelihood macros that are used for manually-guided optimization.
+// Likelihood macros that are used for manually-guided micro-optimization.
 
 #if defined( __GNUC__ ) || defined( __clang__ ) || \
 	( defined( __GNUC__ ) && defined( __INTEL_COMPILER ))
@@ -213,62 +214,6 @@ static inline uint8_t prvhash_core2( uint8_t* const Seed0,
 		( v & 0x00000000000000FF ) << 56 )
 
 #endif // defined( _MSC_VER )
-
-/**
- * This function runs a single PRVHASH random number generation round, an
- * "ideal" core hash function variant. This function can be used both as a
- * hash generator and as a general-purpose random number generator. In the
- * latter case, it is advisable to initially run this function 5 times before
- * using its random output, to neutralize any possible oddities of "Seed"'s
- * and "lcg"'s initial values.
- *
- * To generate hashes, the "lcg" variable should be XORed with entropy input
- * prior to calling this function.
- *
- * @param[in,out] Seed0 The current "Seed" value. Can be initialized to any
- * value.
- * @param[in,out] lcg0 The current "lcg" value. Can be initialized to any
- * value.
- * @param[in,out] Hash0 Current hash word in a hash word array.
- * @return Current random value.
- */
-
-static inline uint64_t prvhash_core64i( uint64_t* const Seed0,
-	uint64_t* const lcg0, uint64_t* const Hash0 )
-{
-	uint64_t Seed = *Seed0; uint64_t lcg = *lcg0; uint64_t Hash = *Hash0;
-
-	Seed ^= Hash ^ lcg;
-	Seed *= lcg - ~lcg;
-	lcg += ~Seed;
-	const uint64_t rs = PRVHASH_BYTESW64( Seed );
-	Hash += rs;
-	const uint64_t out = lcg ^ rs;
-
-	*Seed0 = Seed; *lcg0 = lcg; *Hash0 = Hash;
-
-	return( out );
-}
-
-static inline uint8_t prvhash_core2i( uint8_t* const Seed0,
-	uint8_t* const lcg0, uint8_t* const Hash0 )
-{
-	uint8_t Seed = *Seed0; uint8_t lcg = *lcg0; uint8_t Hash = *Hash0;
-
-	Seed ^= (uint8_t) ( Hash ^ lcg );
-	Seed *= (uint8_t) ( lcg - ~lcg );
-	Seed &= 3;
-	lcg += (uint8_t) ~Seed;
-	lcg &= 3;
-	const uint8_t rs = (uint8_t) (( Seed >> 1 | Seed << 1 ) & 3 );
-	Hash += rs;
-	Hash &= 3;
-	const uint8_t out = (uint8_t) ( lcg ^ rs );
-
-	*Seed0 = Seed; *lcg0 = lcg; *Hash0 = Hash;
-
-	return( out );
-}
 
 // Endianness-definition macro, can be defined externally (e.g. =1, if
 // endianness-correction is unnecessary in any case).

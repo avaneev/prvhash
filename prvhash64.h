@@ -1,5 +1,5 @@
 /**
- * prvhash64.h version 4.1
+ * prvhash64.h version 4.2
  *
  * The inclusion file for the "prvhash64" and "prvhash64_64m" hash functions.
  *
@@ -89,8 +89,8 @@ static inline void prvhash64( const void* const Msg0, const size_t MsgLen,
 	{
 		memset( Hash, 0, HashLen );
 
-		Seed = 0xC90FDAA22168C23; // The first 60 bits of PI.
-		lcg = 0;
+		Seed = 0x243F6A8885A308D3; // The first mantissa bits of PI.
+		lcg = 0x13198A2E03707344;
 		*(PRH64_T*) Hash = UseSeed;
 	}
 	else
@@ -121,7 +121,10 @@ static inline void prvhash64( const void* const Msg0, const size_t MsgLen,
 	{
 		if( PRVHASH_LIKELY( Msg < MsgEnd - PRH64_Sm1 ))
 		{
-			lcg ^= PRH64_LUEC( Msg );
+			const PRH64_T msgw = PRH64_LUEC( Msg );
+
+			Seed ^= msgw;
+			lcg ^= msgw;
 		}
 		else
 		{
@@ -130,7 +133,10 @@ static inline void prvhash64( const void* const Msg0, const size_t MsgLen,
 				break;
 			}
 
-			lcg ^= PRH64_LPUEC( Msg, MsgEnd, fb );
+			const PRH64_T msgw = PRH64_LPUEC( Msg, MsgEnd, fb );
+
+			Seed ^= msgw;
+			lcg ^= msgw;
 		}
 
 		PRH64_FN( &Seed, &lcg, hc );
@@ -191,8 +197,8 @@ static inline uint64_t prvhash64_64m( const void* const Msg0,
 {
 	const uint8_t* Msg = (const uint8_t*) Msg0;
 
-	PRH64_T Seed = 0xC90FDAA22168C23; // The first 60 bits of PI.
-	PRH64_T lcg = 0;
+	PRH64_T Seed = 0x243F6A8885A308D3; // The first mantissa bits of PI.
+	PRH64_T lcg = 0x13198A2E03707344;
 	PRH64_T Hash = UseSeed;
 
 	const uint8_t* const MsgEnd = Msg + MsgLen;
@@ -208,7 +214,10 @@ static inline uint64_t prvhash64_64m( const void* const Msg0,
 	{
 		if( PRVHASH_LIKELY( Msg < MsgEnd - PRH64_Sm1 ))
 		{
-			lcg ^= PRH64_LUEC( Msg );
+			const PRH64_T msgw = PRH64_LUEC( Msg );
+
+			Seed ^= msgw;
+			lcg ^= msgw;
 		}
 		else
 		{
@@ -219,7 +228,10 @@ static inline uint64_t prvhash64_64m( const void* const Msg0,
 				return( PRH64_FN( &Seed, &lcg, &Hash ));
 			}
 
-			lcg ^= PRH64_LPUEC( Msg, MsgEnd, fb );
+			const PRH64_T msgw = PRH64_LPUEC( Msg, MsgEnd, fb );
+
+			Seed ^= msgw;
+			lcg ^= msgw;
 		}
 
 		PRH64_FN( &Seed, &lcg, &Hash );

@@ -1,5 +1,5 @@
 /**
- * prvhash16.h version 4.1
+ * prvhash16.h version 4.2
  *
  * The inclusion file for the "prvhash16" hash function. For demonstration
  * purposes, not practically useful.
@@ -62,8 +62,8 @@ static inline void prvhash16( const void* const Msg0, const size_t MsgLen,
 
 	typedef uint16_t state_t;
 
-	state_t Seed = 48976;
-	state_t lcg = 0;
+	state_t Seed = 0x243F; // The first mantissa bits of PI.
+	state_t lcg = 0x6A88;
 	*(uint32_t*) Hash = UseSeed;
 
 	const state_t* const HashEnd = (state_t*) ( Hash + HashLen );
@@ -101,7 +101,9 @@ static inline void prvhash16( const void* const Msg0, const size_t MsgLen,
 			fbm = 0;
 		}
 
+		Seed ^= msgw;
 		lcg ^= msgw;
+
 		prvhash_core16( &Seed, &lcg, hc );
 
 		if( ++hc == HashEnd )

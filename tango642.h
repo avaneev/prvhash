@@ -1,5 +1,5 @@
 /**
- * tango642.h version 4.1
+ * tango642.h version 4.2
  *
  * The inclusion file for the "tango642" PRVHASH PRNG-based streamed XOR
  * function.
@@ -138,7 +138,11 @@ static inline void tango642_init( TANGO642_CTX* const ctx,
 	{
 		if( PRVHASH_UNLIKELY( i >= ivo && ivlen > 0 ))
 		{
-			lcg ^= TANGO642_LUEC( iv );
+			const TANGO642_T v = TANGO642_LUEC( iv );
+
+			Seed ^= v;
+			lcg ^= v;
+
 			iv += TANGO642_S;
 			ivlen -= TANGO642_S;
 		}
@@ -152,12 +156,14 @@ static inline void tango642_init( TANGO642_CTX* const ctx,
 	{
 		SeedF3 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + HashPos ));
 		HashPos = ( HashPos + TANGO642_S ) & TANGO642_HASH_MASK;
+
 		SeedF3 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + HashPos ));
 		HashPos = ( HashPos + TANGO642_S ) & TANGO642_HASH_MASK;
 
 		TANGO642_FN( &SeedF1, &lcgF1, &HashF1 );
 		TANGO642_FN( &SeedF2, &lcgF2, &HashF2 );
 		TANGO642_FN( &SeedF3, &lcgF3, &HashF3 );
+
 		TANGO642_SH4( HashF1, HashF2, HashF3, HashF4 );
 	}
 
@@ -256,6 +262,7 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 			ctx -> RndBytes[ 0 ] = TANGO642_FN( &SeedF1, &lcgF1, &HashF1 );
 			ctx -> RndBytes[ 1 ] = TANGO642_FN( &SeedF2, &lcgF2, &HashF2 );
 			ctx -> RndBytes[ 2 ] = TANGO642_FN( &SeedF3, &lcgF3, &HashF3 );
+
 			ctx -> RndLeft[ 0 ] = TANGO642_S;
 			ctx -> RndLeft[ 1 ] = TANGO642_S;
 			ctx -> RndLeft[ 2 ] = TANGO642_S;

@@ -1,5 +1,5 @@
 /**
- * prvrng.h version 4.1
+ * prvrng.h version 4.2
  *
  * The inclusion file for the "prvrng" entropy pseudo-random number generator.
  * This is mostly an example PRNG that demonstrates use of infrequent external
@@ -111,7 +111,10 @@ static inline uint8_t prvrng_gen64p2( PRVRNG_CTX* const ctx )
 		{
 			const uint16_t v = (uint16_t) prvrng_get_entropy( ctx, 2 );
 			ctx -> EntCtr = ( v & 0xFF ) + 1;
-			ctx -> lcg[ 0 ] ^= (uint64_t) (( v >> 8 ) + 1 ) << 55;
+
+			const uint64_t ent = ( v >> 8 ) + 1;
+			ctx -> Seed[ 0 ] ^= ent;
+			ctx -> lcg[ 0 ] ^= ent;
 		}
 
 		uint64_t rv = 0;
