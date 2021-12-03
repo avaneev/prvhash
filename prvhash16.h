@@ -1,5 +1,5 @@
 /**
- * prvhash16.h version 4.2
+ * prvhash16.h version 4.2.1
  *
  * The inclusion file for the "prvhash16" hash function. For demonstration
  * purposes, not practically useful.
@@ -114,7 +114,7 @@ static inline void prvhash16( const void* const Msg0, const size_t MsgLen,
 		Msg += sizeof( state_t );
 	}
 
-	const size_t fc = HashLen + ( MsgLen < HashLen - sizeof( state_t ) ?
+	const size_t fc = HashLen * 2 + ( MsgLen < HashLen - sizeof( state_t ) ?
 		(uint8_t*) HashEnd - (uint8_t*) hc : 0 );
 
 	size_t k;

@@ -355,8 +355,8 @@ output hash, to "mix in" the initial hash value. When there is only 1 hashword
 in use, for larger state variable sizes there is practically no added delay,
 and thus the entropy propagation is only subject to the base latency.
 Empirically, however, entropy propagation speed depends on the state variable
-size: for 8-bit variables, 4 full hash array passes are needed, for 16-bit and
-larger variables only 1 full pass is needed.
+size: for 8-bit variables, 4 full hashword array passes are needed; for 16-bit,
+2 passes are needed, and larger variables need 1 full pass only.
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
