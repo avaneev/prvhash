@@ -41,8 +41,8 @@ Please see the `prvhash64.h` file for the details of the basic hash function
 implementation (the `prvhash.h`, `prvhash4.h`, `prvhash42.h` are outdated
 versions). Note that `64` refers to core hash function's variable size.
 While this hash function is most likely irreversible, according to SAT
-solver-based testing, it does not feature an implicit preimage resistance.
-This function should not be used in open systems, without a secret seed.
+solver-based testing, it does not feature a preimage resistance. This function
+should not be used in open systems, without a secret seed.
 
 The default `prvhash64.h`-based 64-bit hash of the string `The cat is out of
 the bag` is `210f2bb6e1771c12`.
@@ -58,7 +58,7 @@ hashes of this quality level, it is very useful for hash-tables. It is not the
 fastest hash-function in existence, but its throughput for small strings is
 competitive.
 
-Note that for `prvhash64` and `prvhash64_64m` functions a
+Note that for both `prvhash64` and `prvhash64_64m` functions a
 [SAT solver](https://github.com/pysathq/pysat) can "forge" a preimage quickly,
 thus these functions should not be used without a secret seed, when an
 external collision attack is possible (in open systems).
@@ -130,7 +130,7 @@ floating-point to fixed-point, and bit-depth conversions.
 ## Floating-Point PRNG ##
 
 The following expression can be used to convert 64-bit unsigned value to
-full-mantissa floating-point value, without introducing a bias:
+full-mantissa floating-point value, without a truncation bias:
 
 	uint64_t rv = prvhash_core64( &Seed, &lcg, &Hash );
 	double v = ( rv >> ( 64 - 53 )) * 0x1p-53;
@@ -342,7 +342,7 @@ change-related collisions. If the initial state of the system has little or
 zero entropy (less than `Seed` plus `lcg` variable size bits of entropy), on
 very sparse entropy input (in the order of 1 bit per 80), this system may
 initially exhibit local correlations between adjacent bits, so in such case
-this system requires 4-5 preliminary "conditioning" rounds.
+this system requires 5 preliminary "conditioning" rounds.
 
 Another important aspect of this system, especially from the cryptography
 standpoint, is the entropy input to output latency. The base latency for
@@ -391,7 +391,7 @@ entropy input should use as fewer bits as possible, like demonstrated in
 
 P.S. The reason the InitVec in the `prvhash64` hash function has the value
 quality constraints and an initial non-zero state, is that otherwise the
-function would require 4 "conditioning" preliminary rounds (core hash function
+function would require 5 preliminary "conditioning" rounds (core hash function
 calls) to neutralize any oddities (including zero values) in InitVec; that
 would reduce the performance of the hash function dramatically, for hash-table
 uses. Note that the `prvhash64s` function starts from the "full zero" state

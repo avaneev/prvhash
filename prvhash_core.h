@@ -40,10 +40,9 @@
  * This function runs a single PRVHASH random number generation round. This
  * function can be used both as a hash generator and as a general-purpose
  * random number generator. In the latter case, it is advisable to initially
- * run this function 4 times (independent of state variables' size), before
+ * run this function 5 times (independent of state variables' size), before
  * using its random output, to neutralize any possible oddities of state
- * variables' initial values (including zero values); 5 times for "parallel"
- * arrangement.
+ * variables' initial values (including zero values).
  *
  * To generate hashes, the "Seed" and "lcg" variables should be simultaneously
  * XORed with the same entropy input, prior to calling this function.
@@ -296,50 +295,49 @@ static inline uint64_t prvhash_lu64ec( const uint8_t* const p )
  */
 
 static inline uint64_t prvhash_lpu64ec( const uint8_t* Msg,
-	const uint8_t* const MsgEnd, const uint64_t fb )
+	const uint8_t* const MsgEnd, uint64_t fb )
 {
 	const int l = (int) ( MsgEnd - Msg );
-	uint64_t r = fb << ( l << 3 );
+	fb <<= ( l << 3 );
 
 	if( l > 3 )
 	{
-		r |= (uint64_t) prvhash_lu32ec( Msg );
-		Msg += 4;
+		fb |= (uint64_t) prvhash_lu32ec( Msg );
 
-		if( Msg < MsgEnd )
+		if( l > 4 )
 		{
-			r |= (uint64_t) *Msg << 32;
+			fb |= (uint64_t) Msg[ 4 ] << 32;
 
-			if( ++Msg < MsgEnd )
+			if( l > 5 )
 			{
-				r |= (uint64_t) *Msg << 40;
+				fb |= (uint64_t) Msg[ 5 ] << 40;
 
-				if( ++Msg < MsgEnd )
+				if( l > 6 )
 				{
-					r |= (uint64_t) *Msg << 48;
+					fb |= (uint64_t) Msg[ 6 ] << 48;
 				}
 			}
 		}
 
-		return( r );
+		return( fb );
 	}
 
 	if( l != 0 )
 	{
-		r |= *Msg;
+		fb |= Msg[ 0 ];
 
-		if( ++Msg < MsgEnd )
+		if( l > 1 )
 		{
-			r |= (uint64_t) *Msg << 8;
+			fb |= (uint64_t) Msg[ 1 ] << 8;
 
-			if( ++Msg < MsgEnd )
+			if( l > 2 )
 			{
-				r |= (uint64_t) *Msg << 16;
+				fb |= (uint64_t) Msg[ 2 ] << 16;
 			}
 		}
 	}
 
-	return( r );
+	return( fb );
 }
 
 #endif // PRVHASH_CORE_INCLUDED
