@@ -642,9 +642,9 @@ double svalue1;
 double svalue2;
 
 DummyRNG() {
-si = 0.001;
-sincr = 2.0 * cos( si );
-seed( 0 );
+	si = 0.001;
+	sincr = 2.0 * cos( si );
+	seed( 0 );
 }
 
 Uint16 raw16() {
@@ -664,6 +664,44 @@ void seed(Uint64 sv) {
 	svalue2 = sin( ph - si );
 }
 std::string get_name() const {return "SINEWAVE";}
+};
+```
+
+Another finding is that the `lcg * 2 + 1` construct works as PRNG even if the
+multiplier is a simple increasing counter variable, when the second multiplier
+is a high-entropy number.
+
+```
+#include <stdint.h>
+
+class DummyRNG : public PractRand::RNGs::vRNG8 {
+public:
+uint64_t Ctr1;
+DummyRNG() {
+	Ctr1 = 1;
+}
+uint8_t compress( const uint64_t v )
+{
+	uint8_t r = 0;
+	for( int i = 0; i < 64; i++ )
+	{
+		r ^= (uint8_t) (( v >> i ) & 1 );
+	}
+	return( r );
+}
+Uint8 raw8() {
+	uint8_t ov = 0;
+	for( int l = 0; l < 8; l++ )
+	{
+		ov <<= 1;
+		ov ^= compress( 0x243F6A8885A308D3 * Ctr1 );
+		Ctr1 += 2;
+	}
+	return( ov );
+}
+void walk_state(PractRand::StateWalkingObject *walker) {}
+void seed(Uint64 sv) {}
+std::string get_name() const {return "LCG";}
 };
 ```
 
