@@ -435,6 +435,8 @@ variable sizes: there is a saturation factor present for small variable sizes;
 after some point the period increase is non-linear due to small shuffling
 space. Shuffling space can be increased considerably with a "parallel"
 arrangement. Depending on the initial seed value, the period may fluctuate.
+The commented out `Ctr++...` instructions can be uncommented to check the
+period increase due to sparse entropy input.
 
 ```
 #include "prvhash_core.h"
@@ -468,6 +470,10 @@ public:
 
         for( k = 0; k < PH_RAW_ROUNDS; k++ )
         {
+//            Ctr++;
+//            Seed[ 0 ] ^= ( Ctr ^ ( Ctr >> 4 )) & 15;
+//            lcg[ 0 ] ^= ( Ctr ^ ( Ctr >> 4 )) & 15;
+
             uint64_t h = 0;
 
             for( j = 0; j < PH_PAR_COUNT; j++ )
