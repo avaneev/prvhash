@@ -161,20 +161,25 @@ system which can be reached if there is only a small number of hashwords in
 the system. PRNG will continously produce non-repeating random sequences given
 external entropy input, but their statistical quality on a larger frames will
 be limited by the size of `lcg` and `Seed` variables, and the number of
-hashwords in the system. A way to increase the structural limit is to use a
+hashwords in the system, and the combinatorial capacity of the external
+entropy. A way to increase the structural limit is to use a
 "parallel" PRNG structure (arrangement) demonstrated in the `prvhash64s.h`
-file, which additionally increases the security exponentially. The maximal
-PRNG period's 2<sup>N</sup> exponent is hard to approximate exactly, but in
-most tests it was equal to at least system's size in bits, minus the number of
-hashwords in the system, minus 1/4 of `lcg` and `Seed` variables' size.
+file, which additionally increases the security exponentially. Also any
+non-constant entropy input usually increases the period of randomness, which,
+when extrapolated to hashing, means that the period increases by message's
+combinatorial capacity (or the number of various combinations of its bits).
+The maximal PRNG period's 2<sup>N</sup> exponent is hard to approximate
+exactly, but in most tests it was equal to at least system's size in bits,
+minus the number of hashwords in the system, minus 1/4 of `lcg` and `Seed`
+variables' size.
 
 Moreover, the PRVHASH systems can be freely daisy-chained by feeding their
 outputs to `Seed` inputs, adding some security firewalls, and increasing
 the PRNG period of the final output accordingly. Note that any external PRNG
 output can be inputted via `Seed`, yielding PRNG period exponent summation.
 For hashing and external unstructured entropy, only simultaneous input via
-`Seed` and `lcg` works in practice (period's exponent increase does not
-occur).
+`Seed` and `lcg` works in practice (period's exponent increase occurs as
+well).
 
 While `lcg`, `Seed`, and `Hash` variables are best initialized with good
 entropy source (however, structurally, they can accept just about any entropy
