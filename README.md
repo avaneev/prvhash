@@ -50,19 +50,6 @@ the bag` is `210f2bb6e1771c12`.
 A proposed short name for hashes created with `prvhash64.h` is `PRH64-N`,
 where `N` is the hash length in bits (e.g. `PRH64-256`).
 
-## PRVHASH64_64M ##
-
-This is a minimized implementation of the `prvhash64` hash function. Since
-arguably it's the smallest hash function in the world, which produces 64-bit
-hashes of this quality level, it is very useful for hash-tables. It is not the
-fastest hash-function in existence, but its throughput for small strings is
-competitive.
-
-Note that for both `prvhash64` and `prvhash64_64m` functions a
-[SAT solver](https://github.com/pysathq/pysat) can "forge" a preimage quickly,
-thus these functions should not be used without a secret seed, when an
-external collision attack is possible (in open systems).
-
 ## Minimal PRNG for Everyday Use ##
 
 The core hash function can be easily integrated into your applications, to be
