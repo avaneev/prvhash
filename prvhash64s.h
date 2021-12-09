@@ -1,9 +1,9 @@
 /**
- * prvhash64s.h version 4.2
+ * prvhash64s.h version 4.3
  *
  * The inclusion file for the "prvhash64s" hash function. More secure,
- * streamed. Implements a parallel variant of the "prvhash64" hash function,
- * with an interleaved padding PRNG, and output PRNG XORing.
+ * streamed, and high-speed. Implements a parallel variant of the "prvhash64"
+ * hash function, with output PRNG XORing, and a self-start.
  *
  * Description is available at https://github.com/avaneev/prvhash
  *
@@ -44,11 +44,12 @@
 
 #define PRH64S_MAX 512 // Maximal supported hash length, in bytes.
 #define PRH64S_PAR 4 // PRVHASH parallelism.
-#define PRH64S_LEN ( PRH64S_PAR * PRH64S_S ) // Intermediate block's length.
+#define PRH64S_LEN ( PRH64S_S * PRH64S_PAR ) // Intermediate block's length.
 
 /**
  * The context structure of the "prvhash64s_X" functions. On systems where
  * this is relevant, this structure should be aligned to PRH64S_S bytes.
+ * This structure, being small, can be placed on stack.
  */
 
 typedef struct {
@@ -56,35 +57,34 @@ typedef struct {
 	PRH64S_T lcg[ PRH64S_PAR ]; ///< Current parallel "lcg" values.
 	uint8_t Hash[ PRH64S_MAX ]; ///< Working hash buffer.
 	uint8_t Block[ PRH64S_LEN ]; ///< Intermediate input data block.
-	size_t BlockFill; ///< The number of bytes filled in the Block.
+	uint64_t MsgLen; ///< Message length counter, in bytes.
 	uint8_t* HashOut; ///< Pointer to the output hash buffer.
 	size_t HashLen; ///< Hash buffer length, in bytes, >= PRH64S_S,
 		///< increments of PRH64S_S.
 		///<
 	size_t HashPos; ///< Hash buffer position.
-	size_t InitBytePos; ///< Initial input byte position, does not accumulate.
-	uint8_t IsHashFilled; ///< Flag denoting that the whole hash was filled.
+	size_t BlockFill; ///< The number of bytes filled in the Block.
 	uint8_t fb; ///< Final stream bit value, for hashing finalization.
 } PRVHASH64S_CTX;
 
 /**
- * PRVHASH streaming hash function initialization (64-bit state variables)
+ * PRVHASH64S streaming hash function initialization (64-bit state variables)
  * This function should be called before the hashing session.
  *
- * @param[out] ctx Context structure.
+ * @param[out] ctx Context structure. Should be aligned to PRH64S_S bytes.
  * @param[in,out] Hash0 The hash buffer. The length of this buffer should be
  * equal to HashLen. If InitVec is non-NULL, the hash will not be initially
  * reset to the default zero values, and it should be pre-initialized with
  * uniformly-random bytes (there are no restrictions on which values to use
  * for initialization: even an all-zero value can be used). The provided hash
- * will be automatically endianness-corrected. The alignment of this buffer is
- * unimportant. This pointer will be stored in the "ctx" structure.
- * @param HashLen The required hash length, in bytes, should be >= PRH64S_S,
+ * will be automatically endianness-corrected. The address alignment of this
+ * buffer is unimportant. This pointer will be stored in the "ctx" structure.
+ * @param HashLen The required hash length, in bytes; should be >= PRH64S_S,
  * in increments of PRH64S_S. Should not exceed PRH64S_MAX.
  * @param UseSeeds Optional values, to use instead of the default seeds. To
  * use the default seeds, set to 0. If InitVec is non-NULL, this UseSeed is
  * ignored, and should be set to 0. Otherwise, the UseSeeds values can have
- * any bit length and statistical quality, up to five values can be supplied
+ * any bit length and statistical quality, up to four values can be supplied
  * (others can be set to 0). If these values are shared between big- and
  * little-endian systems, they should be endianness-corrected.
  * @param InitVec0 If non-NULL, an "initialization vector" for internal "Seed"
@@ -127,7 +127,7 @@ static inline void prvhash64s_init( PRVHASH64S_CTX* const ctx,
 	{
 		size_t k;
 
-		for( k = 0; PRVHASH_LIKELY( k < HashLen ); k += PRH64S_S )
+		for( k = 0; k < HashLen; k += PRH64S_S )
 		{
 			*(PRH64S_T*) ( ctx -> Hash + k ) = PRH64S_LUEC( Hash + k );
 		}
@@ -140,35 +140,22 @@ static inline void prvhash64s_init( PRVHASH64S_CTX* const ctx,
 		}
 	}
 
-	ctx -> BlockFill = 0;
+	ctx -> MsgLen = 0;
 	ctx -> HashOut = Hash;
 	ctx -> HashLen = HashLen;
+	ctx -> HashPos = 0;
+	ctx -> BlockFill = 0;
 	ctx -> fb = 1;
 
-	size_t HashPos = 0;
+	PRH64S_T* const hc = (PRH64S_T*) ctx -> Hash;
 
-	for( i = 0; i < 5; i++ )
+	for( i = 0; i < PRVHASH_INIT_COUNT; i++ )
 	{
-		PRH64S_T* const hc = (PRH64S_T*) ( ctx -> Hash + HashPos );
-
 		PRH64S_FN( &ctx -> Seed[ 0 ], &ctx -> lcg[ 0 ], hc );
 		PRH64S_FN( &ctx -> Seed[ 1 ], &ctx -> lcg[ 1 ], hc );
 		PRH64S_FN( &ctx -> Seed[ 2 ], &ctx -> lcg[ 2 ], hc );
 		PRH64S_FN( &ctx -> Seed[ 3 ], &ctx -> lcg[ 3 ], hc );
-
-		HashPos += PRH64S_S;
-
-		if( PRVHASH_UNLIKELY( HashPos == ctx -> HashLen ))
-		{
-			HashPos = 0;
-		}
 	}
-
-	ctx -> HashPos = HashPos;
-
-	ctx -> InitBytePos = i * PRH64S_PAR;
-	ctx -> IsHashFilled =
-		(uint8_t) ( ctx -> InitBytePos >= ctx -> HashLen * PRH64S_PAR );
 }
 
 /**
@@ -177,10 +164,10 @@ static inline void prvhash64s_init( PRVHASH64S_CTX* const ctx,
  * to initialize the context structure. When the streamed hashing is finished,
  * the prvhash64s_final() function should be called.
  *
- * @param ctx Context structure.
- * @param Msg0 The message to produce hash from. The alignment of the message
- * is unimportant.
- * @param MsgLen Message's length, in bytes.
+ * @param[in,out] ctx Context structure.
+ * @param Msg0 The message to produce a hash from. The alignment of this
+ * pointer is unimportant.
+ * @param MsgLen Message's length, in bytes; can be 0.
  */
 
 static inline void prvhash64s_update( PRVHASH64S_CTX* const ctx,
@@ -188,30 +175,19 @@ static inline void prvhash64s_update( PRVHASH64S_CTX* const ctx,
 {
 	const uint8_t* Msg = (const uint8_t*) Msg0;
 
-	if( PRVHASH_UNLIKELY( MsgLen == 0 ))
+	if( MsgLen == 0 )
 	{
 		return;
 	}
 
-	ctx -> fb = (uint8_t) ( 1 << ( Msg[ MsgLen - 1 ] >> 7 ));
-
-	if( PRVHASH_UNLIKELY( ctx -> IsHashFilled == 0 ))
-	{
-		ctx -> InitBytePos += MsgLen;
-
-		if( ctx -> InitBytePos >= ctx -> HashLen * PRH64S_PAR )
-		{
-			ctx -> IsHashFilled = 1;
-		}
-	}
+	ctx -> MsgLen += (uint64_t) MsgLen;
 
 	const PRH64S_T* const HashEnd =
 		(PRH64S_T*) ( ctx -> Hash + ctx -> HashLen );
 
 	PRH64S_T* hc = (PRH64S_T*) ( ctx -> Hash + ctx -> HashPos );
 
-	if( PRVHASH_UNLIKELY( ctx -> BlockFill > 0 &&
-		ctx -> BlockFill + MsgLen >= PRH64S_LEN ))
+	if( ctx -> BlockFill > 0 && ctx -> BlockFill + MsgLen >= PRH64S_LEN )
 	{
 		const size_t CopyLen = PRH64S_LEN - ctx -> BlockFill;
 		memcpy( ctx -> Block + ctx -> BlockFill, Msg, CopyLen );
@@ -239,13 +215,13 @@ static inline void prvhash64s_update( PRVHASH64S_CTX* const ctx,
 		PRH64S_FN( &ctx -> Seed[ 2 ], &ctx -> lcg[ 2 ], hc );
 		PRH64S_FN( &ctx -> Seed[ 3 ], &ctx -> lcg[ 3 ], hc );
 
-		if( PRVHASH_UNLIKELY( ++hc == HashEnd ))
+		if( ++hc == HashEnd )
 		{
 			hc = (PRH64S_T*) ctx -> Hash;
 		}
 	}
 
-	if( PRVHASH_LIKELY( MsgLen >= PRH64S_LEN ))
+	if( MsgLen >= PRH64S_LEN )
 	{
 		PRH64S_T Seed1 = ctx -> Seed[ 0 ];
 		PRH64S_T Seed2 = ctx -> Seed[ 1 ];
@@ -281,14 +257,14 @@ static inline void prvhash64s_update( PRVHASH64S_CTX* const ctx,
 			PRH64S_FN( &Seed3, &lcg3, hc );
 			PRH64S_FN( &Seed4, &lcg4, hc );
 
-			if( PRVHASH_UNLIKELY( ++hc == HashEnd ))
+			if( ++hc == HashEnd )
 			{
 				hc = (PRH64S_T*) ctx -> Hash;
 			}
 
 			MsgLen -= PRH64S_LEN;
 
-		} while( PRVHASH_LIKELY( MsgLen >= PRH64S_LEN ));
+		} while( MsgLen >= PRH64S_LEN );
 
 		ctx -> Seed[ 0 ] = Seed1;
 		ctx -> Seed[ 1 ] = Seed2;
@@ -301,6 +277,7 @@ static inline void prvhash64s_update( PRVHASH64S_CTX* const ctx,
 	}
 
 	ctx -> HashPos = (uint8_t*) hc - ctx -> Hash;
+	ctx -> fb = (uint8_t) ( 1 << ( *( Msg + MsgLen - 1 ) >> 7 ));
 
 	memcpy( ctx -> Block + ctx -> BlockFill, Msg, MsgLen );
 	ctx -> BlockFill += MsgLen;
@@ -308,20 +285,32 @@ static inline void prvhash64s_update( PRVHASH64S_CTX* const ctx,
 
 /**
  * This function finalizes the streamed hashing. This function should be
- * called only after prior prvhash64s_init() function call. This function
- * applies endianness correction automatically (on little- and big-endian
- * processors).
+ * called only after a prior prvhash64s_init() function call; intermediate
+ * prvhash64s_update() function call is not required. This function applies
+ * endianness-correction to the resulting hash value automatically
+ * (on little- and big-endian processors).
  *
- * @param ctx Context structure. Zeroed on function's return.
+ * @param[in,out] ctx Context structure. Zeroed on function's return.
  */
 
 static inline void prvhash64s_final( PRVHASH64S_CTX* const ctx )
 {
 	uint8_t fbytes[ PRH64S_LEN ];
 	memset( fbytes, 0, PRH64S_LEN );
-	fbytes[ 0 ] = ctx -> fb;
 
-	prvhash64s_update( ctx, fbytes, PRH64S_LEN - ctx -> BlockFill );
+	fbytes[ PRH64S_S - 1 ] = ctx -> fb;
+	prvhash64s_update( ctx, fbytes, PRH64S_S );
+
+	const uint64_t MsgLen = PRH64S_EC( ctx -> MsgLen );
+	prvhash64s_update( ctx, &MsgLen, 8 );
+	fbytes[ PRH64S_S - 1 ] = ctx -> fb;
+	prvhash64s_update( ctx, fbytes, PRH64S_S );
+
+	if( ctx -> BlockFill > 0 )
+	{
+		fbytes[ PRH64S_S - 1 ] = 0;
+		prvhash64s_update( ctx, fbytes, PRH64S_LEN - ctx -> BlockFill );
+	}
 
 	const PRH64S_T* const HashEnd =
 		(PRH64S_T*) ( ctx -> Hash + ctx -> HashLen );
@@ -337,20 +326,20 @@ static inline void prvhash64s_final( PRVHASH64S_CTX* const ctx )
 	PRH64S_T lcg3 = ctx -> lcg[ 2 ];
 	PRH64S_T lcg4 = ctx -> lcg[ 3 ];
 
-	const size_t fc = PRH64S_S +
-		( ctx -> HashLen == PRH64S_S ? 0 : ctx -> HashLen +
-		( ctx -> IsHashFilled == 0 ? (uint8_t*) HashEnd - (uint8_t*) hc : 0 ));
+	const size_t fc = PRH64S_S + ( ctx -> HashLen == PRH64S_S ? 0 :
+		ctx -> HashLen + ( ctx -> MsgLen < ctx -> HashLen * PRH64S_PAR ?
+		(uint8_t*) HashEnd - (uint8_t*) hc : 0 ));
 
 	size_t k;
 
-	for( k = 0; PRVHASH_LIKELY( k <= fc ); k += PRH64S_S )
+	for( k = 0; k <= fc; k += PRH64S_S )
 	{
 		PRH64S_FN( &Seed1, &lcg1, hc );
 		PRH64S_FN( &Seed2, &lcg2, hc );
 		PRH64S_FN( &Seed3, &lcg3, hc );
 		PRH64S_FN( &Seed4, &lcg4, hc );
 
-		if( PRVHASH_UNLIKELY( ++hc == HashEnd ))
+		if( ++hc == HashEnd )
 		{
 			hc = (PRH64S_T*) ctx -> Hash;
 		}
@@ -358,7 +347,7 @@ static inline void prvhash64s_final( PRVHASH64S_CTX* const ctx )
 
 	uint8_t* const ho = ctx -> HashOut;
 
-	for( k = 0; PRVHASH_LIKELY( k < ctx -> HashLen ); k += PRH64S_S )
+	for( k = 0; k < ctx -> HashLen; k += PRH64S_S )
 	{
 		PRH64S_T res = 0;
 		int i;
@@ -370,7 +359,7 @@ static inline void prvhash64s_final( PRVHASH64S_CTX* const ctx )
 			PRH64S_FN( &Seed3, &lcg3, hc );
 			res ^= PRH64S_FN( &Seed4, &lcg4, hc );
 
-			if( PRVHASH_UNLIKELY( ++hc == HashEnd ))
+			if( ++hc == HashEnd )
 			{
 				hc = (PRH64S_T*) ctx -> Hash;
 			}
@@ -385,15 +374,15 @@ static inline void prvhash64s_final( PRVHASH64S_CTX* const ctx )
 
 /**
  * This function calculates the "prvhash64s" hash of the specified message in
- * "oneshot" mode, with default seed settings, without using streaming
+ * the "oneshot" mode, with default seed settings, without using streaming
  * capabilities.
  *
- * @param Msg The message to produce hash from. The alignment of the message
- * is unimportant.
+ * @param Msg The message to produce a hash from. The alignment of this
+ * pointer is unimportant.
  * @param MsgLen Message's length, in bytes.
- * @param[out] Hash The hash buffer, length = HashLen. The alignment of this
- * buffer is unimportant.
- * @param HashLen The required hash length, in bytes, should be >= PRH64S_S,
+ * @param[out] Hash The hash buffer, length = HashLen. The address alignment
+ * of this buffer is unimportant.
+ * @param HashLen The required hash length, in bytes; should be >= PRH64S_S,
  * in increments of PRH64S_S. Should not exceed PRH64S_MAX.
  */
 

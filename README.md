@@ -45,7 +45,7 @@ solver-based testing, it does not feature a preimage resistance. This function
 should not be used in open systems, without a secret seed.
 
 The default `prvhash64.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `210f2bb6e1771c12`.
+the bag` is `eb405f05cfc4ae1c`.
 
 A proposed short name for hashes created with `prvhash64.h` is `PRH64-N`,
 where `N` is the hash length in bits (e.g. `PRH64-256`).
@@ -161,12 +161,12 @@ minus the number of hashwords in the system, minus 1/4 of `lcg` and `Seed`
 variables' size.
 
 Moreover, the PRVHASH systems can be freely daisy-chained by feeding their
-outputs to `Seed` inputs, adding some security firewalls, and increasing
+outputs to `Seed`/`lcg` inputs, adding some security firewalls, and increasing
 the PRNG period of the final output accordingly. Note that any external PRNG
-output can be inputted via `Seed`, yielding PRNG period exponent summation.
-For hashing and external unstructured entropy, only simultaneous input via
-`Seed` and `lcg` works in practice (period's exponent increase occurs as
-well).
+output can be inputted via either `Seed`, `lcg`, or both, yielding PRNG period
+exponent summation. For hashing and external unstructured entropy, only
+simultaneous input via `Seed` and `lcg` works in practice (period's exponent
+increase occurs as well).
 
 While `lcg`, `Seed`, and `Hash` variables are best initialized with good
 entropy source (however, structurally, they can accept just about any entropy
@@ -176,7 +176,7 @@ suitable sparse entropy.
 
 ## Two-Bit PRNG ##
 
-This is a "just for fun" example, but it passes 128 MB PractRand threshold.
+This is a "just for fun" example, but it passes 256 MB PractRand threshold.
 You CAN generate pseudo-random numbers by using 2-bit shuffles; moreover, you
 can input external entropy into the system.
 
@@ -250,15 +250,15 @@ platforms can be evaluated at the
 [ECRYPT/eBASH project](https://bench.cr.yp.to/results-hash.html).
 
 The default `prvhash64s.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `b091b89167572cda`.
+the bag` is `2043ccf52ae2ca6f`.
 
 The default `prvhash64s.h`-based 256-bit hash of the string
 `Only a toilet bowl does not leak` is
-`268e8bb10d8d75e784412a440f7752586cd684f9a5790f7894f80b965355146e`.
+`b13683799b840002689a1a42d93c826c25cc2d1f1bc1e48dcd005aa566a47ad8`.
 
 The default `prvhash64s.h`-based 256-bit hash of the string
 `Only a toilet bowl does not leaj` is
-`559b2895ea6d64efb6e2a3a64b852b3351bf36829953bcc6d3cb05a0772113fb`.
+`d4534a922fd4f15ae8c6cc637006d1f33f655b06d60007a226d350e87e866250`.
 
 This demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect).
 On a set of 216553 English words, pair-wise hash comparisons give average
@@ -281,12 +281,12 @@ Here is the author's vision on how the core hash function works. In actuality,
 coming up with this solution was accompanied with a lot of trial and error.
 It was especially hard to find a better "hashing finalization" solution.
 
-	Seed ^= msgw; lcg ^= msgw; // Mix in external entropy (or daisy-chain via `Seed` only).
+	Seed ^= msgw; lcg ^= msgw; // Mix in external entropy (or daisy-chain).
 
 	Seed *= lcg * 2 + 1; // Multiply random by random, without multiply by zero.
 	const uint64_t rs = Seed >> 32 | Seed << 32; // Produce halves-swapped copy.
-	lcg += Seed; // Internal entropy accumulation (summation produces uniform distribution).
 	Hash += rs + 0xAAAAAAAAAAAAAAAA; // Accumulate to hash, add raw entropy (self-start).
+	lcg += Seed + 0x5555555555555555; // Output-bound entropy accumulation, add raw entropy.
 	Seed ^= Hash; // Mix new seed value with hash. Entropy feedback.
 	const uint64_t out = lcg ^ rs; // Produce "compressed" output.
 
@@ -298,31 +298,44 @@ sizes, with the results being extrapolatable to larger variable sizes, with a
 high probability (the function is invariant to the variable size). Also note
 that the `0xAAAA...` constant is not an arbitrary constant since it should be
 produced algorithmically by replicating the `10` bit-pairs, to match the
-variable size; it represents the "raw entropy bit-train".
+variable size; it represents the "raw entropy bit-train". The same applies to
+the `0x5555...` constant. An essential property of these bit-trains is that
+they are uncorrelated to any uniformly-random bit-sequences, at all times.
+
+It's important to point out that the presence of the `0xAAAA` and `0x5555...`
+constants logically assures that the `Seed` and `lcg` variables quickly
+recover from the "zero-state". Beside that, these constants logically prohibit
+synchronous control over `Seed` and `lcg` variables: different bits of the
+input entropy will reach these variables. When the system starts from the
+"zero-state", with many hashwords in the system, it is practically impossible
+to find a preimage (including a repetitious one) that stalls the system, and
+thus it is impossible to perform a multi-collision attack. However, since this
+risk cannot be estimated exactly, the `prvhash64s` hash function adds a
+message length value at the end of the stream.
 
 How does it work? First of all, this PRNG system, represented by the core hash
 function, does not work with numbers in a common sense: it works with
 [entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)),
 or random sequences of bits. The current "expression" of system's overall
-internal entropy - the `Seed` - gets multiplied ("smeared") by a supportive
-variable - `lcg`, - which is also a random value, transformed via an
-LCG-alike manner. As a result, a new random value is produced which represents
-two independent random variables (in lower and higher parts of the register),
-a sort of "entropy stream sub-division" happens. This result is then
-halves-swapped, and is accumulated in the `Hash` together with a `10`
+internal entropy - the `Seed` - gets multiplied ("smeared") by a supporting,
+output-bound variable - `lcg`, - which is also a random value, transformed in
+an LCG-alike manner. As a result, a new random value is produced which
+represents two independent random variables (in lower and higher parts of the
+register), a sort of "entropy stream sub-division" happens. This result is
+then halves-swapped, and is accumulated in the `Hash` together with a `10`
 bit-train which adds the "raw entropy", allowing the system to be
 self-starting. The original multiplication result is accumulated in the `lcg`
 variable. The `Seed` is then updated with the hashword produced on previous
 rounds. The reason the message's entropy (which may be sparse or non-random)
-does not destabilize the system is because the message becomes hidden in a mix
-of internal entropy (alike to a cryptographic one-time-pad); message's
-distribution becomes irrelevant. Both accumulations - of the halves-swapped
+does not destabilize the system is because the message becomes hidden in the
+internal entropy (alike to a cryptographic one-time-pad); message's
+distribution becomes unimportant. Both accumulations - of the halves-swapped
 and the original version - produce a uniformly-distributed value in the
 corresponding variables; a sort of "de-sub-division" happens.
 
 The two instructions - `Seed *= lcg * 2 + 1`, `lcg += Seed` - represent an
 "ideal" bit-shuffler: this construct represents a "bivariable shuffler" which
-transforms input `lcg` and `Seed` variables into another pair of variables
+transforms the input `lcg` and `Seed` variables into another pair of variables
 with 50% bit difference relative to input, and without collisions. The whole
 core hash function, however, uses a more complex mixing which produces a hash
 value: the pair composed of the hash value and either a new `lcg` or a new
@@ -330,11 +343,9 @@ value: the pair composed of the hash value and either a new `lcg` or a new
 that the system does not lose any input entropy. In 3-dimensional analysis,
 when `Seed`, `lcg`, and `msgw` values are scanned and transformed into output
 `Seed` and `Hash` value pairs, this system almost does not exhibit state
-change-related collisions. If the initial state of the system has little or
-zero entropy (less than `Seed` plus `lcg` variable size bits of entropy), on
-very sparse entropy input (in the order of 1 bit per 80), this system may
-initially exhibit local correlations between adjacent bits, so in such case
-this system requires 5 preliminary "conditioning" rounds.
+change-related collisions. While non-parallel hashing may even start from
+the "zero-state", for reliable hashing the state after 5 "conditioning" rounds
+should be used.
 
 Another important aspect of this system, especially from the cryptography
 standpoint, is the entropy input to output latency. The base latency for
@@ -344,11 +355,10 @@ additionally requires a full pass through the hashword array, for the entropy
 to propagate, before using its output. However, hashing also requires a pass
 to the end of the hashword array if message's length is shorter than the
 output hash, to "mix in" the initial hash value. When there is only 1 hashword
-in use, for larger state variable sizes there is practically no added delay,
-and thus the entropy propagation is only subject to the base latency.
-Empirically, however, entropy propagation speed depends on the state variable
-size: for 8-bit variables, 4 full hashword array passes are needed; for 16-bit,
-2 passes are needed, and larger variables need 1 full pass only.
+in use, there is no hashword array-related delay, and thus the entropy
+propagation is only subject to the base latency. The essence of these
+"latencies" is that additional rounds are needed for the system to get rid of
+statistical traces of the input entropy.
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
@@ -423,7 +433,10 @@ after some point the period increase is non-linear due to small shuffling
 space. Shuffling space can be increased considerably with a "parallel"
 arrangement. Depending on the initial seed value, the period may fluctuate.
 The commented out `Ctr++...` instructions can be uncommented to check the
-period increase due to sparse entropy input.
+period increase due to sparse entropy input. You may also notice the `^=h`
+instructions: PRVHASH supports feedback onto itself (it's like hashing its own
+output). This operation, which can be only applied to the last parallel
+element, maximizes the achieved PRNG period.
 
 ```
 #include "prvhash_core.h"
@@ -468,6 +481,9 @@ public:
                 h = PH_FN( Seed + j, lcg + j, Hash + HashPos );
             }
 
+//			Seed[ PH_PAR_COUNT - 1 ] ^= h;
+//			lcg[ PH_PAR_COUNT - 1 ] ^= h;
+
             if( PH_BITS < sizeof( uint64_t )) OutValue <<= PH_BITS;
             OutValue |= h;
 
@@ -511,8 +527,8 @@ additionally complicates system's reversal.
 
 While this "fused-3" arrangement is currently not used in the hash function
 implementations, it is also working fine with the core hash function.
-For example, while the "minimal PRNG" described earlier has 0.87 cycles/byte
-performance, the "fused" arrangement has a PRNG performance of 0.38
+For example, while the "minimal PRNG" described earlier has 0.80 cycles/byte
+performance, the "fused" arrangement has a PRNG performance of 0.39
 cycles/byte, with a possibility of further scaling using AVX-512 instructions.
 Note that hashword array size should not be a multiple of the number of
 "fused" elements, otherwise PRNG stalls.
@@ -615,8 +631,8 @@ sequences. This is what happens in PRVHASH: on entropy input the system may
 
 `10` in binary is `2` in decimal, `1010` is `10`, `101010` is `42`...
 
-The `sin(x)/x` (sinc function) series may give one an idea why it all works:
-it is squaring and integrating, ad infinitum.
+The `sin(x)/x` (sinc function) series gives an idea why it all works: it is
+squaring and integrating, ad infinitum.
 
 During the course of PRVHASH development, the author has found that the
 simplest low-frequency sine-wave oscillator can be used as a pseudo-random

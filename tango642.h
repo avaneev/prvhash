@@ -1,5 +1,5 @@
 /**
- * tango642.h version 4.2
+ * tango642.h version 4.3
  *
  * The inclusion file for the "tango642" PRVHASH PRNG-based streamed XOR
  * function.
@@ -77,15 +77,16 @@ typedef struct
  * When "keylen+ivlen" is larger than 1168 bits, there can be theoretical
  * "key+iv" collisions: such collisions should not pose a security threat, but
  * may be perceived as "non-ideal". However, when the "keylen" is 1024
- * bits long, this still allows "iv" to be 128 bits long "safely".
+ * bits long it still allows "iv" to be 128 bits long "safely".
  *
- * @param[out] ctx Pointer to the context structure.
- * @param key0 Uniformly-random key buffer, alignment is unimportant.
- * @param keylen Length of "key" in bytes, should be >= 16, in increments of
+ * @param[out] ctx Pointer to the context structure. Should be aligned to
+ * 8 bytes.
+ * @param key0 Uniformly-random key buffer, address alignment is unimportant.
+ * @param keylen Length of "key", in bytes; should be >= 16, in increments of
  * 8. Should not exceed 128 bytes.
  * @param iv0 Uniformly-random "unsecure" initialization vector (nonce),
- * alignment is unimportant. Can be 0 if "ivlen" is also 0.
- * @param ivlen Length of "iv" in bytes, in increments of 8, can be zero.
+ * address alignment is unimportant. Can be 0 if "ivlen" is also 0.
+ * @param ivlen Length of "iv", in bytes, in increments of 8; can be zero.
  * Should not exceed 80 bytes.
  */
 
@@ -109,7 +110,7 @@ static inline void tango642_init( TANGO642_CTX* const ctx,
 	uint8_t* const ha = (uint8_t*) ctx -> Hash;
 	size_t i;
 
-	for( i = 0; PRVHASH_LIKELY( i < keylen ); i += TANGO642_S )
+	for( i = 0; i < keylen; i += TANGO642_S )
 	{
 		*(TANGO642_T*) ( ha + i ) = TANGO642_LUEC( key + i );
 	}
@@ -127,16 +128,14 @@ static inline void tango642_init( TANGO642_CTX* const ctx,
 	TANGO642_T HashF3 = ctx -> HashF[ 2 ];
 	TANGO642_T HashF4 = ctx -> HashF[ 3 ];
 
-	for( i = 0; i < TANGO642_HASH_SIZE; i += TANGO642_S )
+	for( i = 0; i < PRVHASH_INIT_COUNT; i++ )
 	{
-		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + i ));
+		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ha );
 	}
 
-	const size_t ivo = TANGO642_HASH_SIZE - TANGO642_S * 4 - ivlen;
-
 	for( i = 0; i < TANGO642_HASH_SIZE; i += TANGO642_S )
 	{
-		if( PRVHASH_UNLIKELY( i >= ivo && ivlen > 0 ))
+		if( ivlen != 0 )
 		{
 			const TANGO642_T v = TANGO642_LUEC( iv );
 
@@ -150,15 +149,15 @@ static inline void tango642_init( TANGO642_CTX* const ctx,
 		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + i ));
 	}
 
-	size_t HashPos = 0;
+	size_t hp = 0;
 
 	for( i = 0; i < TANGO642_HASH_SIZE; i += TANGO642_S )
 	{
-		SeedF3 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + HashPos ));
-		HashPos = ( HashPos + TANGO642_S ) & TANGO642_HASH_MASK;
+		SeedF3 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + hp ));
+		hp = ( hp + TANGO642_S ) & TANGO642_HASH_MASK;
 
-		SeedF3 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + HashPos ));
-		HashPos = ( HashPos + TANGO642_S ) & TANGO642_HASH_MASK;
+		SeedF3 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + hp ));
+		hp = ( hp + TANGO642_S ) & TANGO642_HASH_MASK;
 
 		TANGO642_FN( &SeedF1, &lcgF1, &HashF1 );
 		TANGO642_FN( &SeedF2, &lcgF2, &HashF2 );
@@ -179,7 +178,7 @@ static inline void tango642_init( TANGO642_CTX* const ctx,
 	ctx -> HashF[ 1 ] = HashF2;
 	ctx -> HashF[ 2 ] = HashF3;
 	ctx -> HashF[ 3 ] = HashF4;
-	ctx -> HashPos = HashPos;
+	ctx -> HashPos = hp;
 }
 
 /**
@@ -188,7 +187,7 @@ static inline void tango642_init( TANGO642_CTX* const ctx,
  * called.
  *
  * @param[in,out] ctx Pointer to the context structure.
- * @param[in,out] msg0 Message buffer, alignment is unimportant.
+ * @param[in,out] msg0 Message buffer, address alignment is unimportant.
  * @param msglen Message length, in bytes.
  */
 
@@ -197,9 +196,9 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 {
 	uint8_t* msg = (uint8_t*) msg0;
 
-	while( PRVHASH_LIKELY( msglen > 0 ))
+	while( msglen > 0 )
 	{
-		if( PRVHASH_LIKELY( ctx -> RndLeft[ TANGO642_FUSE - 1 ] == 0 ))
+		if( ctx -> RndLeft[ TANGO642_FUSE - 1 ] == 0 )
 		{
 			TANGO642_T Seed = ctx -> Seed;
 			TANGO642_T lcg = ctx -> lcg;
@@ -214,19 +213,15 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 			TANGO642_T HashF3 = ctx -> HashF[ 2 ];
 			TANGO642_T HashF4 = ctx -> HashF[ 3 ];
 			uint8_t* const ha = (uint8_t*) ctx -> Hash;
-			size_t HashPos = ctx -> HashPos;
+			size_t hp = ctx -> HashPos;
 
-			while( PRVHASH_LIKELY( msglen > TANGO642_S * TANGO642_FUSE ))
+			while( msglen > TANGO642_S * TANGO642_FUSE )
 			{
-				SeedF3 ^= TANGO642_FN( &Seed, &lcg,
-					(TANGO642_T*) ( ha + HashPos ));
+				SeedF3 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + hp ));
+				hp = ( hp + TANGO642_S ) & TANGO642_HASH_MASK;
 
-				HashPos = ( HashPos + TANGO642_S ) & TANGO642_HASH_MASK;
-
-				SeedF3 ^= TANGO642_FN( &Seed, &lcg,
-					(TANGO642_T*) ( ha + HashPos ));
-
-				HashPos = ( HashPos + TANGO642_S ) & TANGO642_HASH_MASK;
+				SeedF3 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + hp ));
+				hp = ( hp + TANGO642_S ) & TANGO642_HASH_MASK;
 
 				TANGO642_T mx1, mx2, mx3;
 				memcpy( &mx1, msg, TANGO642_S );
@@ -249,15 +244,11 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 				msglen -= TANGO642_S * TANGO642_FUSE;
 			}
 
-			SeedF3 ^= TANGO642_FN( &Seed, &lcg,
-				(TANGO642_T*) ( ha + HashPos ));
+			SeedF3 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + hp ));
+			hp = ( hp + TANGO642_S ) & TANGO642_HASH_MASK;
 
-			HashPos = ( HashPos + TANGO642_S ) & TANGO642_HASH_MASK;
-
-			SeedF3 ^= TANGO642_FN( &Seed, &lcg,
-				(TANGO642_T*) ( ha + HashPos ));
-
-			HashPos = ( HashPos + TANGO642_S ) & TANGO642_HASH_MASK;
+			SeedF3 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + hp ));
+			hp = ( hp + TANGO642_S ) & TANGO642_HASH_MASK;
 
 			ctx -> RndBytes[ 0 ] = TANGO642_FN( &SeedF1, &lcgF1, &HashF1 );
 			ctx -> RndBytes[ 1 ] = TANGO642_FN( &SeedF2, &lcgF2, &HashF2 );
@@ -281,7 +272,7 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 			ctx -> HashF[ 1 ] = HashF2;
 			ctx -> HashF[ 2 ] = HashF3;
 			ctx -> HashF[ 3 ] = HashF4;
-			ctx -> HashPos = HashPos;
+			ctx -> HashPos = hp;
 		}
 
 		size_t c = ( msglen > ctx -> RndLeft[ 0 ] ?

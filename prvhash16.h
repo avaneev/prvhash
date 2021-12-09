@@ -1,5 +1,5 @@
 /**
- * prvhash16.h version 4.2
+ * prvhash16.h version 4.3
  *
  * The inclusion file for the "prvhash16" hash function. For demonstration
  * purposes, not practically useful.
@@ -35,18 +35,18 @@
 #include "prvhash_core.h"
 
 /**
- * PRVHASH hash function (16-bit variables). Produces hash of the specified
- * message. This function does not apply endianness correction to the
- * resulting hash.
+ * PRVHASH hash function (16-bit variables). Produces a hash of the specified
+ * message, string, or binary data block. This function does not apply
+ * endianness correction to the resulting hash.
  *
- * @param Msg0 The message to produce hash from. The alignment of the message
- * is unimportant.
+ * @param Msg0 The message to produce a hash from. The alignment of this
+ * pointer is unimportant.
  * @param MsgLen Message's length, in bytes.
  * @param[out] Hash0 The resulting hash. The length of this buffer should be
  * equal to HashLen. On systems where this is relevant, this address should be
  * aligned to 32 bits.
- * @param HashLen The required hash length, in bytes, should be >= 4, in
- * increments of 2.
+ * @param HashLen The required hash length, in bytes; should be >= 4, in
+ * increments of 2; no higher-value limits.
  * @param UseSeed Optional value, to use instead of the default seed. To use
  * the default seed, set to 0. The UseSeed value can have any bit length and
  * any statistical quality, and is used only as an additional entropy source.
@@ -62,9 +62,9 @@ static inline void prvhash16( const void* const Msg0, const size_t MsgLen,
 
 	typedef uint16_t state_t;
 
-	state_t Seed = 0x243F; // The first mantissa bits of PI.
-	state_t lcg = 0x6A88;
-	*(uint32_t*) Hash = UseSeed;
+	state_t Seed = 0x128D; // The state after 5 PRVHASH rounds from the
+	state_t lcg = 0x8D5B; // "zero-state".
+	*(uint32_t*) Hash = 0x0932 ^ UseSeed;
 
 	const state_t* const HashEnd = (state_t*) ( Hash + HashLen );
 	state_t* hc = (state_t*) Hash;
@@ -114,7 +114,7 @@ static inline void prvhash16( const void* const Msg0, const size_t MsgLen,
 		Msg += sizeof( state_t );
 	}
 
-	const size_t fc = HashLen * 2 + ( MsgLen < HashLen - sizeof( state_t ) ?
+	const size_t fc = HashLen + ( MsgLen < HashLen - sizeof( state_t ) ?
 		(uint8_t*) HashEnd - (uint8_t*) hc : 0 );
 
 	size_t k;

@@ -1,5 +1,5 @@
 /**
- * prvhash_core.h version 4.2
+ * prvhash_core.h version 4.3
  *
  * The inclusion file for the "prvhash_core*" PRVHASH core functions for
  * various state variable sizes. Also includes several auxiliary functions,
@@ -36,13 +36,18 @@
 #include <stdint.h>
 #include <string.h>
 
+#define PRVHASH_INIT_COUNT 5 // Common number of initialization rounds.
+
 /**
  * This function runs a single PRVHASH random number generation round. This
  * function can be used both as a hash generator and as a general-purpose
- * random number generator. In the latter case, it is advisable to initially
- * run this function 5 times (independent of state variables' size), before
- * using its random output, to neutralize any possible oddities of state
- * variables' initial values (including zero values).
+ * random number generator. In either case, it is advisable to initially run
+ * this function 5 times (independent of state variable's size), before using
+ * its random output, to neutralize any possible oddities of state variables'
+ * initial values (including zero values). Note that after such
+ * initialization, any further "strange" or zero values in the hashword array
+ * do not have any influence over the quality of the output (since they get
+ * mixed with the Seed that already became uniformly-random).
  *
  * To generate hashes, the "Seed" and "lcg" variables should be simultaneously
  * XORed with the same entropy input, prior to calling this function.
@@ -63,10 +68,10 @@ static inline uint64_t prvhash_core64( uint64_t* const Seed0,
 {
 	uint64_t Seed = *Seed0; uint64_t lcg = *lcg0; uint64_t Hash = *Hash0;
 
-	Seed *= lcg - ~lcg; // Equivalent to "lcg * 2 + 1", but faster.
+	Seed *= lcg * 2 + 1;
 	const uint64_t rs = Seed >> 32 | Seed << 32;
-	lcg += Seed;
 	Hash += rs + 0xAAAAAAAAAAAAAAAA;
+	lcg += Seed + 0x5555555555555555;
 	Seed ^= Hash;
 	const uint64_t out = lcg ^ rs;
 
@@ -80,10 +85,10 @@ static inline uint32_t prvhash_core32( uint32_t* const Seed0,
 {
 	uint32_t Seed = *Seed0; uint32_t lcg = *lcg0; uint32_t Hash = *Hash0;
 
-	Seed *= lcg - ~lcg; // Equivalent to "lcg * 2 + 1".
+	Seed *= lcg * 2 + 1;
 	const uint32_t rs = Seed >> 16 | Seed << 16;
-	lcg += Seed;
 	Hash += rs + 0xAAAAAAAA;
+	lcg += Seed + 0x55555555;
 	Seed ^= Hash;
 	const uint32_t out = lcg ^ rs;
 
@@ -97,10 +102,10 @@ static inline uint16_t prvhash_core16( uint16_t* const Seed0,
 {
 	uint16_t Seed = *Seed0; uint16_t lcg = *lcg0; uint16_t Hash = *Hash0;
 
-	Seed *= (uint16_t) ( lcg - ~lcg ); // Equivalent to "lcg * 2 + 1".
+	Seed *= (uint16_t) ( lcg * 2 + 1 );
 	const uint16_t rs = (uint16_t) ( Seed >> 8 | Seed << 8 );
-	lcg += Seed;
 	Hash += (uint16_t) ( rs + 0xAAAA );
+	lcg += (uint16_t) ( Seed + 0x5555 );
 	Seed ^= Hash;
 	const uint16_t out = (uint16_t) ( lcg ^ rs );
 
@@ -114,10 +119,10 @@ static inline uint8_t prvhash_core8( uint8_t* const Seed0,
 {
 	uint8_t Seed = *Seed0; uint8_t lcg = *lcg0; uint8_t Hash = *Hash0;
 
-	Seed *= (uint8_t) ( lcg - ~lcg ); // Equivalent to "lcg * 2 + 1".
+	Seed *= (uint8_t) ( lcg * 2 + 1 );
 	const uint8_t rs = (uint8_t) ( Seed >> 4 | Seed << 4 );
-	lcg += Seed;
 	Hash += (uint8_t) ( rs + 0xAA );
+	lcg += (uint8_t) ( Seed + 0x55 );
 	Seed ^= Hash;
 	const uint8_t out = (uint8_t) ( lcg ^ rs );
 
@@ -131,13 +136,13 @@ static inline uint8_t prvhash_core4( uint8_t* const Seed0,
 {
 	uint8_t Seed = *Seed0; uint8_t lcg = *lcg0; uint8_t Hash = *Hash0;
 
-	Seed *= (uint8_t) ( lcg - ~lcg ); // Equivalent to "lcg * 2 + 1".
+	Seed *= (uint8_t) ( lcg * 2 + 1 );
 	Seed &= 15;
 	const uint8_t rs = (uint8_t) (( Seed >> 2 | Seed << 2 ) & 15 );
-	lcg += Seed;
-	lcg &= 15;
 	Hash += (uint8_t) ( rs + 0xA );
 	Hash &= 15;
+	lcg += (uint8_t) ( Seed + 0x5 );
+	lcg &= 15;
 	Seed ^= Hash;
 	const uint8_t out = (uint8_t) ( lcg ^ rs );
 
@@ -151,13 +156,13 @@ static inline uint8_t prvhash_core2( uint8_t* const Seed0,
 {
 	uint8_t Seed = *Seed0; uint8_t lcg = *lcg0; uint8_t Hash = *Hash0;
 
-	Seed *= (uint8_t) ( lcg - ~lcg ); // Equivalent to "lcg * 2 + 1".
+	Seed *= (uint8_t) ( lcg * 2 + 1 );
 	Seed &= 3;
 	const uint8_t rs = (uint8_t) (( Seed >> 1 | Seed << 1 ) & 3 );
-	lcg += Seed;
-	lcg &= 3;
 	Hash += (uint8_t) ( rs + 0x2 );
 	Hash &= 3;
+	lcg += (uint8_t) ( Seed + 0x1 );
+	lcg &= 3;
 	Seed ^= Hash;
 	const uint8_t out = (uint8_t) ( lcg ^ rs );
 
@@ -166,20 +171,30 @@ static inline uint8_t prvhash_core2( uint8_t* const Seed0,
 	return( out );
 }
 
-// Likelihood macros that are used for manually-guided micro-optimization.
+#if defined( __SIZEOF_INT128__ )
 
-#if defined( __GNUC__ ) || defined( __clang__ ) || \
-	( defined( __GNUC__ ) && defined( __INTEL_COMPILER ))
+static inline __uint128_t prvhash_core128( __uint128_t* const Seed0,
+	__uint128_t* const lcg0, __uint128_t* const Hash0 )
+{
+	__uint128_t Seed = *Seed0; __uint128_t lcg = *lcg0; __uint128_t Hash = *Hash0;
 
-	#define PRVHASH_LIKELY( x )  __builtin_expect( x, 1 )
-	#define PRVHASH_UNLIKELY( x )  __builtin_expect( x, 0 )
+	Seed *= lcg * 2 + 1;
+	const __uint128_t rs = Seed >> 64 | Seed << 64;
+	Hash += rs +
+		( 0xAAAAAAAAAAAAAAAA | (__uint128_t) 0xAAAAAAAAAAAAAAAA << 64 );
 
-#else // likelihood macros
+	lcg += Seed +
+		( 0x5555555555555555 | (__uint128_t) 0x5555555555555555 << 64 );
 
-	#define PRVHASH_LIKELY( x ) ( x )
-	#define PRVHASH_UNLIKELY( x ) ( x )
+	Seed ^= Hash;
+	const __uint128_t out = lcg ^ rs;
 
-#endif // likelihood macros
+	*Seed0 = Seed; *lcg0 = lcg; *Hash0 = Hash;
+
+	return( out );
+}
+
+#endif // defined( __SIZEOF_INT128__ )
 
 // Macros that apply byte-swapping.
 
@@ -214,28 +229,25 @@ static inline uint8_t prvhash_core2( uint8_t* const Seed0,
 
 #endif // defined( _MSC_VER )
 
-// Endianness-definition macro, can be defined externally (e.g. =1, if
-// endianness-correction is unnecessary in any case).
+// Endianness definition macro.
 
-#if !defined( PRVHASH_LITTLE_ENDIAN )
-	#if defined( _WIN32 ) || defined( __LITTLE_ENDIAN__ ) || \
-		( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ )
+#if defined( _WIN32 ) || defined( __LITTLE_ENDIAN__ ) || \
+	( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ )
 
-		#define PRVHASH_LITTLE_ENDIAN 1
+	#define PRVHASH_LITTLE_ENDIAN 1
 
-	#elif defined( __BIG_ENDIAN__ ) || \
-		( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ )
+#elif defined( __BIG_ENDIAN__ ) || \
+	( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ )
 
-		#define PRVHASH_LITTLE_ENDIAN 0
+	#define PRVHASH_LITTLE_ENDIAN 0
 
-	#else // defined( __BIG_ENDIAN__ )
+#else // defined( __BIG_ENDIAN__ )
 
-		#warning PRVHASH: cannot determine endianness, assuming little-endian.
+	#warning PRVHASH: cannot determine endianness, assuming little-endian.
 
-		#define PRVHASH_LITTLE_ENDIAN 1
+	#define PRVHASH_LITTLE_ENDIAN 1
 
-	#endif // defined( __BIG_ENDIAN__ )
-#endif // !defined( PRVHASH_LITTLE_ENDIAN )
+#endif // defined( __BIG_ENDIAN__ )
 
 // Macros that apply byte-swapping, used for endianness-correction.
 
@@ -294,7 +306,7 @@ static inline uint64_t prvhash_lu64ec( const uint8_t* const p )
  * @param fb Final byte used for padding.
  */
 
-static inline uint64_t prvhash_lpu64ec( const uint8_t* Msg,
+static inline uint64_t prvhash_lpu64ec( const uint8_t* const Msg,
 	const uint8_t* const MsgEnd, uint64_t fb )
 {
 	const int l = (int) ( MsgEnd - Msg );
