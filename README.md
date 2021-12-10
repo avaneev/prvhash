@@ -358,7 +358,12 @@ output hash, to "mix in" the initial hash value. When there is only 1 hashword
 in use, there is no hashword array-related delay, and thus the entropy
 propagation is only subject to the base latency. The essence of these
 "latencies" is that additional rounds are needed for the system to get rid of
-statistical traces of the input entropy.
+statistical traces of the input entropy. Note that the "parallel"
+structure/arrangement increases shuffling quality. However, this increase is
+relative to the state variable size: for example, 8-bit parallel-2 arrangement
+with 8-bit input is equivalent to 16-bit non-parallel arrangement with 16-bit
+input. So, it is possible to perform hashing with 8-bit state variables if
+parallel-2 round is done per 1 input byte.
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy without much repetitions. When the
