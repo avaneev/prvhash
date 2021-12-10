@@ -302,16 +302,16 @@ variable size; it represents the "raw entropy bit-train". The same applies to
 the `0x5555...` constant. An essential property of these bit-trains is that
 they are uncorrelated to any uniformly-random bit-sequences, at all times.
 
-It's important to point out that the presence of the `0xAAAA` and `0x5555...`
-constants logically assures that the `Seed` and `lcg` variables quickly
-recover from the "zero-state". Beside that, these constants logically prohibit
-synchronous control over `Seed` and `lcg` variables: different bits of the
-input entropy will reach these variables. When the system starts from the
-"zero-state", with many hashwords in the system, it is practically impossible
-to find a preimage (including a repetitious one) that stalls the system, and
-thus it is impossible to perform a multi-collision attack. However, since this
-risk cannot be estimated exactly, the `prvhash64s` hash function adds a
-message length value at the end of the stream.
+It's important to point out that the presence of the `0xAAAA...` and
+`0x5555...` constants logically assure that the `Seed` and `lcg` variables
+quickly recover from the "zero-state". Beside that, these constants logically
+prohibit synchronous control over `Seed` and `lcg` variables: different bits
+of the input entropy will reach these variables. When the system starts from
+the "zero-state", with many hashwords in the system, it is practically
+impossible to find a preimage (including a repetitious one) that stalls the
+system, and thus it is impossible to perform a multi-collision attack.
+However, since this risk cannot be estimated exactly, the `prvhash64s` hash
+function adds a message length value to the end of the data stream.
 
 How does it work? First of all, this PRNG system, represented by the core hash
 function, does not work with numbers in a common sense: it works with
@@ -532,8 +532,8 @@ additionally complicates system's reversal.
 
 While this "fused-3" arrangement is currently not used in the hash function
 implementations, it is also working fine with the core hash function.
-For example, while the "minimal PRNG" described earlier has 0.80 cycles/byte
-performance, the "fused" arrangement has a PRNG performance of 0.39
+For example, while the "minimal PRNG" described earlier has `0.90` cycles/byte
+performance, the "fused" arrangement has a PRNG performance of `0.47`
 cycles/byte, with a possibility of further scaling using AVX-512 instructions.
 Note that hashword array size should not be a multiple of the number of
 "fused" elements, otherwise PRNG stalls.
