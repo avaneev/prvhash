@@ -102,8 +102,8 @@ output):
 ```
 
 A similar approach is to simply skip the next generated random number, but it
-is slightly less secure. It is likely that PRVHASH's k-equidistribution is
-implicitly secure.
+is slightly less secure. It is likely that PRVHASH's k-equidistribution of
+separate outputs is implicitly secure.
 
 ## TPDF Dithering ##
 
