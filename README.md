@@ -340,12 +340,17 @@ with 50% bit difference relative to input, and without collisions. The whole
 core hash function, however, uses a more complex mixing which produces a hash
 value: the pair composed of the hash value and either a new `lcg` or a new
 `Seed` value also produces no input-to-output collisions. Thus it can be said
-that the system does not lose any input entropy. In 3-dimensional analysis,
-when `Seed`, `lcg`, and `msgw` values are scanned and transformed into output
-`Seed` and `Hash` value pairs, this system almost does not exhibit state
-change-related collisions. While non-parallel hashing may even start from
-the "zero-state", for reliable hashing the state after 5 "conditioning" rounds
-should be used.
+that the system does not lose any input entropy. In 4-dimensional analysis,
+when `Seed`, `lcg`, `Hash`, and `msgw` values are scanned and transformed into
+`lcg ^ rs` output, this system does exhibit local state change-related
+collisions due to external entropy input, with a probability
+1/4<sup>var_size_bits</sup>; this may not be enough for a reliable 8-bit
+hashing, but for higher state variable sizes it becomes adequate since
+system's overall collision resistance is a multiplication of such
+probabilities across the hashword array; however, on very sparse entropy input
+the multiplication of probabilities would occur only on few rounds. While
+non-parallel hashing may even start from the "zero-state", for reliable
+hashing the state after 5 "conditioning" rounds should be used.
 
 Another important aspect of this system, especially from the cryptography
 standpoint, is the entropy input to output latency. The base latency for
