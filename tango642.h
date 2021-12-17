@@ -1,5 +1,5 @@
 /**
- * tango642.h version 4.3
+ * tango642.h version 4.3.1
  *
  * The inclusion file for the "tango642" PRVHASH PRNG-based streamed XOR
  * function.
@@ -87,7 +87,7 @@ typedef struct
  * @param iv0 Uniformly-random "unsecure" initialization vector (nonce),
  * address alignment is unimportant. Can be 0 if "ivlen" is also 0.
  * @param ivlen Length of "iv", in bytes, in increments of 8; can be zero.
- * Should not exceed 80 bytes.
+ * Should not exceed 56 bytes.
  */
 
 static inline void tango642_init( TANGO642_CTX* const ctx,
@@ -95,7 +95,7 @@ static inline void tango642_init( TANGO642_CTX* const ctx,
 	size_t ivlen )
 {
 	const uint8_t* key = (const uint8_t*) key0;
-	const uint8_t* iv = (const uint8_t*) iv0;
+	const uint8_t* const iv = (const uint8_t*) iv0;
 
 	memset( ctx, 0, sizeof( TANGO642_CTX ));
 
@@ -117,6 +117,28 @@ static inline void tango642_init( TANGO642_CTX* const ctx,
 
 	TANGO642_T Seed = ctx -> Seed;
 	TANGO642_T lcg = ctx -> lcg;
+
+	for( i = 0; i < PRVHASH_INIT_COUNT; i++ )
+	{
+		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ha );
+	}
+
+	for( i = 0; i < ivlen; i += TANGO642_S )
+	{
+		const TANGO642_T v = TANGO642_LUEC( iv + i );
+
+		Seed ^= v;
+		lcg ^= v;
+
+		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + i * 2 ));
+		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + i * 2 + TANGO642_S ));
+	}
+
+	for( i = ivlen * 2; i < TANGO642_HASH_SIZE; i += TANGO642_S )
+	{
+		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + i ));
+	}
+
 	TANGO642_T SeedF1 = ctx -> SeedF[ 0 ];
 	TANGO642_T SeedF2 = ctx -> SeedF[ 1 ];
 	TANGO642_T SeedF3 = ctx -> SeedF[ 2 ];
@@ -127,27 +149,6 @@ static inline void tango642_init( TANGO642_CTX* const ctx,
 	TANGO642_T HashF2 = ctx -> HashF[ 1 ];
 	TANGO642_T HashF3 = ctx -> HashF[ 2 ];
 	TANGO642_T HashF4 = ctx -> HashF[ 3 ];
-
-	for( i = 0; i < PRVHASH_INIT_COUNT; i++ )
-	{
-		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ha );
-	}
-
-	for( i = 0; i < TANGO642_HASH_SIZE; i += TANGO642_S )
-	{
-		if( ivlen != 0 )
-		{
-			const TANGO642_T v = TANGO642_LUEC( iv );
-
-			Seed ^= v;
-			lcg ^= v;
-
-			iv += TANGO642_S;
-			ivlen -= TANGO642_S;
-		}
-
-		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + i ));
-	}
 
 	size_t hp = 0;
 
