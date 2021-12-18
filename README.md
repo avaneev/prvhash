@@ -83,7 +83,7 @@ int main()
 
 Note that such minimal 1-hashword PRNG is most definitely not
 cryptographically-secure: its state can be solved by a SAT solver pretty fast;
-this applies to other structuring ("parallel", "fused", multiple hashwords;
+this applies to other arrangements ("parallel", "fused", multiple hashwords;
 with daisy-chaining being harder to solve). The known way to make PRNG
 considerably harder to solve for a SAT solver, with complexity corresponding
 to system's size, is to combine two adjacent PRNG outputs via XOR operation;
@@ -149,16 +149,16 @@ the system. PRNG will continously produce non-repeating random sequences given
 external entropy input, but their statistical quality on a larger frames will
 be limited by the size of `lcg` and `Seed` variables, and the number of
 hashwords in the system, and the combinatorial capacity of the external
-entropy. A way to increase the structural limit is to use a
-"parallel" PRNG structure (arrangement) demonstrated in the `prvhash64s.h`
-file, which additionally increases the security exponentially. Also any
-non-constant entropy input usually increases the period of randomness, which,
-when extrapolated to hashing, means that the period increases by message's
-combinatorial capacity (or the number of various combinations of its bits).
-The maximal PRNG period's 2<sup>N</sup> exponent is hard to approximate
-exactly, but in most tests it was equal to at least system's size in bits,
-minus the number of hashwords in the system, minus 1/4 of `lcg` and `Seed`
-variables' size (e.g., `159` for a minimal PRNG).
+entropy. A way to increase the structural limit is to use the "parallel" PRNG
+arrangement demonstrated in the `prvhash64s.h` file, which additionally
+increases the security exponentially. Also any non-constant entropy input
+usually increases the period of randomness, which, when extrapolated to
+hashing, means that the period increases by message's combinatorial capacity
+(or the number of various combinations of its bits). The maximal PRNG period's
+2<sup>N</sup> exponent is hard to approximate exactly, but in most tests it
+was equal to at least system's size in bits, minus the number of hashwords in
+the system, minus 1/4 of `lcg` and `Seed` variables' size (e.g., `159` for a
+minimal PRNG).
 
 Moreover, the PRVHASH systems can be freely daisy-chained by feeding their
 outputs to `Seed`/`lcg` inputs, adding some security firewalls, and increasing
@@ -222,7 +222,7 @@ int main()
 ## Streamed Hashing ##
 
 The file `prvhash64s.h` includes a relatively fast streamed hashing function
-which utilizes a "parallel" PRVHASH structure. Please take a look at the
+which utilizes a "parallel" PRVHASH arrangement. Please take a look at the
 `prvhash64s_oneshot()` function for usage example. The `prvhash64s` offers
 an increased security and hashing speed.
 
@@ -343,15 +343,16 @@ value: the pair composed of the hash value and either a new `lcg` or a new
 `Seed` value also produces no input-to-output collisions. Thus it can be said
 that the system does not lose any input entropy. In 4-dimensional analysis,
 when `Seed`, `lcg`, `Hash`, and `msgw` values are scanned and transformed into
-`lcg ^ rs` output, this system does exhibit local state change-related
-collisions due to external entropy input, with a probability
-1/4<sup>var_size_bits</sup>; this may not be enough for a reliable 8-bit
-hashing, but for a higher state variable sizes it becomes adequate since
-system's overall collision resistance is a multiplication of such
-probabilities across the hashword array; however, on very sparse entropy input
-the multiplication of probabilities would occur only on few rounds. While
-non-parallel hashing may even start from the "zero-state", for reliable
-hashing the state after 5 "conditioning" rounds should be used.
+subsequent `Seed`, `lcg`, and `Hash` triplets, this system does not exhibit
+local state change-related collisions due to external entropy input (all
+possible input `msgw` values map to subsequent triplets uniquely). However,
+with a small variable size (8-bit) and a large output hash size, a sparse
+entropy input has some probability of "re-sychronization" event happening,
+leading to local collisions. With 16-bit variables, or even 8-bit parallel-2
+arrangement (with the local state having 40-bit size instead of 24-bit),
+probability of such event is negligible. While non-parallel hashing may even
+start from the "zero-state", for reliable hashing the state after 5
+"conditioning" rounds should be used.
 
 Another important aspect of this system, especially from the cryptography
 standpoint, is the entropy input to output latency. The base latency for
@@ -365,11 +366,14 @@ in use, there is no hashword array-related delay, and thus the entropy
 propagation is only subject to the base latency. The essence of these
 "latencies" is that additional rounds are needed for the system to get rid of
 a statistical traces of the input entropy. Note that the "parallel"
-structure/arrangement increases shuffling quality. However, this increase is
-relative to the state variable size: for example, 8-bit parallel-2 arrangement
-with 8-bit input is equivalent to 16-bit non-parallel arrangement with 16-bit
-input. So, it is possible to perform hashing with 8-bit state variables if
-parallel-2 round is done per 1 input byte.
+arrangement increases shuffling quality. However, this increase is relative to
+the state variable size: for example, 8-bit parallel-2 arrangement with 8-bit
+input is equivalent to 16-bit non-parallel arrangement with 16-bit input. So,
+it is possible to perform hashing with 8-bit state variables if parallel-2
+round is done per 1 input byte. The way "parallel" structure works is
+equivalent to shuffling all entropy inputs in a round together (input 1 is
+shuffled into a hash value which is then shuffled with input 2 into a hash
+value, etc).
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy, in extendable-output PRNG mode.
