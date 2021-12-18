@@ -373,7 +373,12 @@ it is possible to perform hashing with 8-bit state variables if parallel-2
 round is done per 1 input byte. The way "parallel" structure works is
 equivalent to shuffling all entropy inputs in a round together (input 1 is
 shuffled into a hash value which is then shuffled with input 2 into a hash
-value, etc).
+value, etc). The "parallel" arrangement may raise a question whether or not
+it provides a target collision resistance as it seemingly "compresses" several
+inputs into a single local hashword: without doubt it does provide target
+collision resistance since `Seed` and `lcg` variables are a part of the
+system, and their presence in the "parallel" arrangement increases the overall
+PRNG period of the system and thus its combinatorial capacity.
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy, in extendable-output PRNG mode.
@@ -599,7 +604,7 @@ independent of state variable size. This hash function variant demonstrates
 that PRVHASH's method does not rely on bit-shuffling alone (shuffles are
 purely local), but is genuinely based on PRNG position "jumps".
 
-## TANGO642 ##
+## TANGO642 (tango-six-fourty-two) ##
 
 This is an efficient implementation of a PRVHASH PRNG-based streamed XOR
 function. Since no cryptanalysis nor certification of this function were
