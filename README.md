@@ -302,7 +302,8 @@ variable size; it represents the "raw entropy bit-train". The same applies to
 the `0x5555...` constant. An essential property of these bit-trains is that
 they are uncorrelated to any uniformly-random bit-sequences, at all times.
 (Practically, `10` and `01` bit-pairs can be also used as constants, without
-replication, but this does not provide conclusively better results).
+replication, but this does not provide conclusively better results for PRNG,
+and does not work well for hashing).
 
 It's important to point out that the presence of the `0xAAAA...` and
 `0x5555...` constants logically assure that the `Seed` and `lcg` variables
