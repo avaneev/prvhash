@@ -122,6 +122,14 @@ full-mantissa floating-point value, without a truncation bias:
 	uint64_t rv = prvhash_core64( &Seed, &lcg, &Hash );
 	double v = ( rv >> ( 64 - 53 )) * 0x1p-53;
 
+## PRVHASH64_64M ##
+
+This is a minimized implementation of the `prvhash64` hash function. Arguably,
+it's the smallest hash function in the world, that produces 64-bit hashes of
+this quality level. While this function does not provide a throughput that can
+be considered "fast", due to its statistical properties it is practically fast
+for hash-maps and hash-tables.
+
 ## Entropy PRNG ##
 
 PRVHASH can be also used as an efficient general-purpose PRNG with an external
