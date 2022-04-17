@@ -309,9 +309,14 @@ produced algorithmically by replicating the `10` bit-pairs, to match the
 variable size; it represents the "raw entropy bit-train". The same applies to
 the `0x5555...` constant. An essential property of these bit-trains is that
 they are uncorrelated to any uniformly-random bit-sequences, at all times.
-(Practically, `10` and `01` bit-pairs can be also used as constants, without
+Practically, `10` and `01` bit-pairs can be also used as constants, without
 replication, but this does not provide conclusively better results for PRNG,
-and does not work well for hashing).
+and does not work well for hashing; also, self-starting period becomes
+longer. A conceptual aspect of replicated bit-pairs is that they represent the
+simplest maximum-entropy number (bit-pair is a minimal sequence that can
+exhibit entropy, with replication count bound to the state variable size).
+While "magic numbers" can be used instead of these bit-trains (at least for
+PRNG), they do not posses the property of being simplest.
 
 It's important to point out that the presence of the `0xAAAA...` and
 `0x5555...` constants logically assure that the `Seed` and `lcg` variables
