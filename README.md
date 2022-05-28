@@ -128,10 +128,15 @@ The `gradilac.h` file includes the Gradilac C++ class which is a generalized
 templated implementation of PRVHASH PRNG that provides integer, single bit,
 floating-point, TPDF, Normal random number generation with a straight-forward
 front-end to specify PRVHASH system's properties. Supports on-the-run
-re-seeding, including re-seeding using sparse entropy, for CSPRNG uses.
-Does not require other PRVHASH header files.
+re-seeding, including re-seeding using sparse entropy, for CSPRNG uses. Does
+not require other PRVHASH header files.
 
-Use `Gradilac< 317 >` to match Mersenne Twister's PRNG period.
+Use `Gradilac< 314 >` to match Mersenne Twister's PRNG period.
+
+Note that this class may not be as efficient for "bulk" random number
+generation as a custom-written code. Nevertheless, Gradilac PRNG class, with
+its 1.0 cycles/byte floating-point performance (at default template settings),
+is competitive among other C++ PRNGs.
 
 ## PRVHASH64_64M ##
 
