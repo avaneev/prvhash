@@ -1,5 +1,5 @@
 /**
- * gradilac.h version 4.3.2
+ * gradilac.h version 4.3.3
  *
  * The inclusion file for the "Gradilac", a flexible templated C++ PRNG, based
  * on the PRVHASH core function. Standalone class, does not require PRVHASH
@@ -75,10 +75,10 @@ static inline stype prvhash_core( stype* const Seed0,
  * stack (if "hcount" is not large).
  *
  * Note that random values returned by functions of this class return values
- * in the "exclusive" range only, [0; 1) or [0; N). Also note that resolution
- * of random numbers depends on the "stype" in use.
+ * in the "exclusive" range only, [0; 1) or [0; N). Also note that precision
+ * of floating-point random numbers depends on the "stype" in use.
  *
- * @tparam hcount The number of hashwords in array, must be >0. E.g. use 314
+ * @tparam hcount The number of hashwords in array, must be >0. E.g. use 316
  * and 64-bit "stype" to match Mersenne Twister's PRNG period.
  * @tparam stype State variable type, must be unsigned integer type, up to 64
  * bits wide. Using "stype" smaller than 24 bits is not advised.
@@ -419,6 +419,16 @@ public:
 		BitPool >>= 1;
 
 		return( b );
+	}
+
+	/**
+	 * @return PRNG period's exponent (2^N) estimation.
+	 */
+
+	static size_t getPeriodExp()
+	{
+		return(( par * 8 + par * 4 + hcount * 8 ) * sizeof( stype ) -
+			hcount );
 	}
 
 protected:

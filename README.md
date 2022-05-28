@@ -131,7 +131,7 @@ front-end to specify PRVHASH system's properties. Supports on-the-run
 re-seeding, including re-seeding using sparse entropy, for CSPRNG uses. Does
 not require other PRVHASH header files.
 
-Use `Gradilac< 314 >` to match Mersenne Twister's PRNG period.
+Use `Gradilac< 316 >` to match Mersenne Twister's PRNG period.
 
 Note that this class may not be as efficient for "bulk" random number
 generation as a custom-written code. Nevertheless, Gradilac PRNG class, with
