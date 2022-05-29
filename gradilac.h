@@ -1,5 +1,5 @@
 /**
- * gradilac.h version 4.3.3
+ * gradilac.h version 4.3.4
  *
  * The inclusion file for the "Gradilac", a flexible templated C++ PRNG, based
  * on the PRVHASH core function. Standalone class, does not require PRVHASH
@@ -82,11 +82,11 @@ static inline stype prvhash_core( stype* const Seed0,
  * and 64-bit "stype" to match Mersenne Twister's PRNG period.
  * @tparam stype State variable type, must be unsigned integer type, up to 64
  * bits wide. Using "stype" smaller than 24 bits is not advised.
- * @tparam par PRVHASH parallelism, must be >= 0. Should be above 0 if PRNG
+ * @tparam par PRVHASH parallelism, must be > 0. Should be above 1 if PRNG
  * output may be used as entropy input (output feedback), usually in open
  * systems.
  * @tparam cs Must be >= 0. If above 0, enable CSPRNG mode. "cs" defines the
- * number of additional PRNG rounds and XOR operations.
+ * number of additional PRNG rounds and XOR operations, 1 is usually enough.
  */
 
 template< size_t hcount = 1, typename stype = uint64_t, int par = 1,
@@ -107,8 +107,9 @@ public:
 	}
 
 	/**
-	 * Function initializes/reinitializes the PRNG. This is not the on-the-run
-	 * re-seeding. In CSPRNG mode, the "reseed" function should be then used.
+	 * Function initializes/reinitializes the PRNG. This is not the on-the-go
+	 * re-seeding. In CSPRNG mode, the "reseed" function should then be
+	 * called.
 	 *
 	 * @param iseed Initial "small" seed, can be zero.
 	 */
@@ -125,7 +126,7 @@ public:
 		BitsLeft = 0;
 
 		// Initialization involving only the first hashword, other zero
-		// hashwords will be initalized on the run.
+		// hashwords will be initialized on the go.
 
 		int j;
 
@@ -141,7 +142,7 @@ public:
 	}
 
 	/**
-	 * Function re-seeds PRNG on-the-run using a single entropy value. This
+	 * Function re-seeds PRNG on-the-go using a single entropy value. This
 	 * function is not advised for use in CSPRNG mode. This function can be
 	 * used to efficiently adjust initial seed after the default constructor
 	 * call (iseed=0).
@@ -428,7 +429,7 @@ public:
 	static size_t getPeriodExp()
 	{
 		return(( par * 8 + par * 4 + hcount * 8 ) * sizeof( stype ) -
-			hcount );
+			hcount - cs );
 	}
 
 protected:

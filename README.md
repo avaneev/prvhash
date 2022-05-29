@@ -127,8 +127,8 @@ full-mantissa floating-point value, without a truncation bias:
 The `gradilac.h` file includes the Gradilac C++ class which is a generalized
 templated implementation of PRVHASH PRNG that provides integer, single bit,
 floating-point, TPDF, Normal random number generation with a straight-forward
-front-end to specify PRVHASH system's properties. Supports on-the-run
-re-seeding, including re-seeding using sparse entropy, for CSPRNG uses. Does
+front-end to specify PRVHASH system's properties. Supports on-the-go
+re-seeding, including re-seeding using sparse entropy (for CSPRNG uses). Does
 not require other PRVHASH header files.
 
 Use `Gradilac< 316 >` to match Mersenne Twister's PRNG period.
