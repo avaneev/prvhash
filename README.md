@@ -514,6 +514,33 @@ public:
         memset( lcg, 0, sizeof( lcg ));
         memset( Hash, 0, sizeof( Hash ));
         HashPos = 0;
+
+        // Initialize, important for small state variable size.
+
+        int k, j;
+
+        for( k = 0; k < 5; k++ )
+        {
+            for( j = 0; j < PH_PAR_COUNT; j++ )
+            {
+                PH_FN( Seed + j, lcg + j, Hash + HashPos );
+            }
+        }
+
+        if( PH_BITS < 16 )
+        {
+            for( k = 0; k < PH_HASH_COUNT; k++ )
+            {
+                for( j = 0; j < PH_PAR_COUNT; j++ )
+                {
+                    PH_FN( Seed + j, lcg + j, Hash + HashPos );
+                }
+       	        if( ++HashPos == PH_HASH_COUNT )
+                {
+       	            HashPos = 0;
+                }
+            }
+        }
     }
 
     Uint8 raw8() {
@@ -533,8 +560,8 @@ public:
                 h = PH_FN( Seed + j, lcg + j, Hash + HashPos );
             }
 
-//			Seed[ PH_PAR_COUNT - 1 ] ^= h;
-//			lcg[ PH_PAR_COUNT - 1 ] ^= h;
+//            Seed[ 0 ] ^= h;
+//            lcg[ 0 ] ^= h;
 
             if( PH_BITS < sizeof( uint64_t )) OutValue <<= PH_BITS;
             OutValue |= h;

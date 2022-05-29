@@ -1,5 +1,5 @@
 /**
- * gradilac.h version 4.3.4
+ * gradilac.h version 4.3.5
  *
  * The inclusion file for the "Gradilac", a flexible templated C++ PRNG, based
  * on the PRVHASH core function. Standalone class, does not require PRVHASH
@@ -126,7 +126,9 @@ public:
 		BitsLeft = 0;
 
 		// Initialization involving only the first hashword, other zero
-		// hashwords will be initialized on the go.
+		// hashwords will be initialized on the go: this approach was
+		// well-tested, and PRNG does produce a valid random output while
+		// initializing the hashwords.
 
 		int j;
 
@@ -359,14 +361,14 @@ public:
 
 	/**
 	 * Function generates a Gaussian (normal)-distributed pseudo-random number
-	 * with the specified mean and std.dev.
+	 * with mean=0 and std.dev=1.
 	 *
 	 * Algorithm is adopted from "Leva, J. L. 1992. "A Fast Normal Random
 	 * Number Generator", ACM Transactions on Mathematical Software, vol. 18,
 	 * no. 4, pp. 449-453".
 	 */
 
-	double getNorm( const double mean = 0.0, const double stddev = 1.0 )
+	double getNorm()
 	{
 		double q, u, v;
 
@@ -375,7 +377,7 @@ public:
 			u = get();
 			v = get();
 
-			if( u <= 0.0 || v <= 0.0 )
+			if( u == 0.0 || v == 0.0 )
 			{
 				u = 1.0;
 				v = 1.0;
@@ -390,9 +392,20 @@ public:
 			{
 				break;
 			}
-		} while(( q > 0.27846 ) || ( v * v > -4.0 * log( u ) * u * u ));
 
-		return( mean + stddev * v / u );
+		} while( q > 0.27846 || v * v > -4.0 * log( u ) * u * u );
+
+		return( v / u );
+	}
+
+	/**
+	 * Function generates a Gaussian (normal)-distributed pseudo-random number
+	 * with the specified mean and std.dev.
+	 */
+
+	double getNorm( const double mean, const double stddev )
+	{
+		return( mean + stddev * getNorm() );
 	}
 
 	/**
