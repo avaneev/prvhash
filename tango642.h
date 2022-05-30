@@ -1,5 +1,5 @@
 /**
- * tango642.h version 4.3.1
+ * tango642.h version 4.3.2
  *
  * The inclusion file for the "tango642" PRVHASH PRNG-based streamed XOR
  * function.
@@ -8,7 +8,7 @@
  *
  * License
  *
- * Copyright (c) 2020-2021 Aleksey Vaneev
+ * Copyright (c) 2020-2022 Aleksey Vaneev
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -36,7 +36,8 @@
 
 #define TANGO642_T uint64_t // PRVHASH state variable type.
 #define TANGO642_S sizeof( TANGO642_T ) // State variable type's size.
-#define TANGO642_HASH_COUNT 16 // Hashwords in keyed PRNG, 2^N.
+#define TANGO642_S_2 ( TANGO642_S * 2 )
+#define TANGO642_HASH_COUNT 16 // Hashwords in keyed PRNG (power-of-2).
 #define TANGO642_HASH_SIZE ( TANGO642_HASH_COUNT * TANGO642_S )
 #define TANGO642_HASH_MASK ( TANGO642_HASH_SIZE - 1 )
 #define TANGO642_FUSE 3 // Firewalling "fused PRNG" size.
@@ -75,9 +76,10 @@ typedef struct
  * pair.
  *
  * When "keylen+ivlen" is larger than 1168 bits, there can be theoretical
- * "key+iv" collisions: such collisions should not pose a security threat, but
- * may be perceived as "non-ideal". However, when the "keylen" is 1024
- * bits long it still allows "iv" to be 128 bits long "safely".
+ * "key+iv" collisions: such collisions should not pose a security threat
+ * (negligible probability), but may be perceived as "non-ideal". However,
+ * when the "keylen" is 1024 bits long it still allows "iv" to be 128 bits
+ * long "safely".
  *
  * @param[out] ctx Pointer to the context structure. Should be aligned to
  * 8 bytes.
@@ -91,28 +93,24 @@ typedef struct
  */
 
 static inline void tango642_init( TANGO642_CTX* const ctx,
-	const void* const key0, size_t keylen, const void* const iv0,
-	size_t ivlen )
+	const void* const key0, const size_t keylen, const void* const iv0,
+	const size_t ivlen )
 {
-	const uint8_t* key = (const uint8_t*) key0;
+	const uint8_t* const key = (const uint8_t*) key0;
 	const uint8_t* const iv = (const uint8_t*) iv0;
 
 	memset( ctx, 0, sizeof( TANGO642_CTX ));
 
 	ctx -> Seed = TANGO642_LUEC( key );
-	key += TANGO642_S;
-
-	ctx -> SeedF[ 0 ] = TANGO642_LUEC( key );
-	key += TANGO642_S;
-
-	keylen -= TANGO642_S * 2;
+	ctx -> SeedF[ 0 ] = TANGO642_LUEC( key + TANGO642_S );
 
 	uint8_t* const ha = (uint8_t*) ctx -> Hash;
+	uint8_t* ha2 = ha - TANGO642_S_2;
 	size_t i;
 
-	for( i = 0; i < keylen; i += TANGO642_S )
+	for( i = TANGO642_S_2; i < keylen; i += TANGO642_S )
 	{
-		*(TANGO642_T*) ( ha + i ) = TANGO642_LUEC( key + i );
+		*(TANGO642_T*) ( ha2 + i ) = TANGO642_LUEC( key + i );
 	}
 
 	TANGO642_T Seed = ctx -> Seed;
@@ -123,6 +121,8 @@ static inline void tango642_init( TANGO642_CTX* const ctx,
 		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ha );
 	}
 
+	ha2 = ha;
+
 	for( i = 0; i < ivlen; i += TANGO642_S )
 	{
 		const TANGO642_T v = TANGO642_LUEC( iv + i );
@@ -130,11 +130,13 @@ static inline void tango642_init( TANGO642_CTX* const ctx,
 		Seed ^= v;
 		lcg ^= v;
 
-		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + i * 2 ));
-		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + i * 2 + TANGO642_S ));
+		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ha2 );
+		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha2 + TANGO642_S ));
+
+		ha2 += TANGO642_S_2;
 	}
 
-	for( i = ivlen * 2; i < TANGO642_HASH_SIZE; i += TANGO642_S )
+	for( i = i * 2; i < TANGO642_HASH_SIZE; i += TANGO642_S )
 	{
 		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + i ));
 	}
@@ -221,22 +223,23 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 				SeedF3 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + hp ));
 				hp = ( hp + TANGO642_S ) & TANGO642_HASH_MASK;
 
-				SeedF3 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + hp ));
-				hp = ( hp + TANGO642_S ) & TANGO642_HASH_MASK;
-
 				TANGO642_T mx1, mx2, mx3;
 				memcpy( &mx1, msg, TANGO642_S );
 				memcpy( &mx2, msg + TANGO642_S, TANGO642_S );
-				memcpy( &mx3, msg + TANGO642_S * 2, TANGO642_S );
+				memcpy( &mx3, msg + TANGO642_S_2, TANGO642_S );
+
+				SeedF3 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + hp ));
+				hp = ( hp + TANGO642_S ) & TANGO642_HASH_MASK;
 
 				mx1 ^= TANGO642_EC( TANGO642_FN( &SeedF1, &lcgF1, &HashF1 ));
-				mx2 ^= TANGO642_EC( TANGO642_FN( &SeedF2, &lcgF2, &HashF2 ));
-				mx3 ^= TANGO642_EC( TANGO642_FN( &SeedF3, &lcgF3, &HashF3 ));
-
 				memcpy( msg, &mx1, TANGO642_S );
 				msg += TANGO642_S;
+
+				mx2 ^= TANGO642_EC( TANGO642_FN( &SeedF2, &lcgF2, &HashF2 ));
 				memcpy( msg, &mx2, TANGO642_S );
 				msg += TANGO642_S;
+
+				mx3 ^= TANGO642_EC( TANGO642_FN( &SeedF3, &lcgF3, &HashF3 ));
 				memcpy( msg, &mx3, TANGO642_S );
 				msg += TANGO642_S;
 
@@ -290,8 +293,7 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 				*msg ^= (uint8_t) RndBytes;
 				RndBytes >>= 8;
 				msg++;
-				c--;
-			} while( c > 0 );
+			} while( --c > 0 );
 
 			ctx -> RndBytes[ 0 ] = RndBytes;
 		}
@@ -309,8 +311,7 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 				*msg ^= (uint8_t) RndBytes;
 				RndBytes >>= 8;
 				msg++;
-				c--;
-			} while( c > 0 );
+			} while( --c > 0 );
 
 			ctx -> RndBytes[ 1 ] = RndBytes;
 		}
@@ -328,8 +329,7 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 				*msg ^= (uint8_t) RndBytes;
 				RndBytes >>= 8;
 				msg++;
-				c--;
-			} while( c > 0 );
+			} while( --c > 0 );
 
 			ctx -> RndBytes[ 2 ] = RndBytes;
 		}

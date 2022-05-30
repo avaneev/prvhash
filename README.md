@@ -607,7 +607,7 @@ additionally complicates system's reversal.
 While this "fused-3" arrangement is currently not used in the hash function
 implementations, it is also working fine with the core hash function.
 For example, while the "minimal PRNG" described earlier has `0.90` cycles/byte
-performance, the "fused" arrangement has a PRNG performance of `0.47`
+performance, the "fused" arrangement has a PRNG performance of `0.35`
 cycles/byte, with a possibility of further scaling using AVX-512 instructions.
 Note that the number of "fused" elements should not be a multiple of hashword
 array size, otherwise PRNG stalls.
