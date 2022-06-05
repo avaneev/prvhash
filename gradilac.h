@@ -1,5 +1,5 @@
 /**
- * gradilac.h version 4.3.5
+ * gradilac.h version 4.3.6
  *
  * The inclusion file for the "Gradilac", a flexible templated C++ PRNG, based
  * on the PRVHASH core function. Standalone class, does not require PRVHASH
@@ -49,8 +49,8 @@
  */
 
 template< typename stype >
-static inline stype prvhash_core( stype* const Seed0,
-	stype* const lcg0, stype* const Hash0 )
+static inline stype prvhash_core( stype* const Seed0, stype* const lcg0,
+	stype* const Hash0 )
 {
 	const int sh = sizeof( stype ) * 4;
 
@@ -61,7 +61,7 @@ static inline stype prvhash_core( stype* const Seed0,
 	Hash += (stype) ( rs + (stype) 0xAAAAAAAAAAAAAAAA );
 	lcg += (stype) ( Seed + (stype) 0x5555555555555555 );
 	Seed ^= Hash;
-	const stype out = lcg ^ rs;
+	const stype out = (stype) ( lcg ^ rs );
 
 	*Seed0 = Seed; *lcg0 = lcg; *Hash0 = Hash;
 
@@ -157,11 +157,11 @@ public:
 		Seed[ 0 ] ^= ent;
 		lcg[ 0 ] ^= ent;
 
-		getInt();
+		getRaw();
 
 		if( par > 1 )
 		{
-			getInt();
+			getRaw();
 		}
 	}
 
@@ -203,7 +203,7 @@ public:
 			Seed[ 0 ] ^= p;
 			lcg[ 0 ] ^= p;
 
-			getInt();
+			getRaw();
 		}
 
 		// Make hashword array pass to eliminate traces of input entropy.
@@ -212,7 +212,7 @@ public:
 
 		for( i = 0; i < hcount + ( hcount > 1 ) + ( par > 1 ); i++ )
 		{
-			getInt();
+			getRaw();
 		}
 	}
 
@@ -224,11 +224,11 @@ public:
 	{
 		if( sizeof( stype ) * 8 > 53 )
 		{
-			return(( getInt() >> ( sizeof( stype ) * 8 - 53 )) * 0x1p-53 );
+			return(( getRaw() >> ( sizeof( stype ) * 8 - 53 )) * 0x1p-53 );
 		}
 		else
 		{
-			return( getInt() * im() );
+			return( getRaw() * im() );
 		}
 	}
 
@@ -240,12 +240,12 @@ public:
 	{
 		if( sizeof( stype ) * 8 > 53 )
 		{
-			return(( getInt() >> ( sizeof( stype ) * 8 - 53 )) *
+			return(( getRaw() >> ( sizeof( stype ) * 8 - 53 )) *
 				0x1p-53 * N1 );
 		}
 		else
 		{
-			return( getInt() * im() * N1 );
+			return( getRaw() * im() * N1 );
 		}
 	}
 
@@ -264,7 +264,7 @@ public:
 	 * This is the actual PRNG advancement function.
 	 */
 
-	stype getInt()
+	stype getRaw()
 	{
 		stype* h = Hash + hpos;
 
@@ -310,9 +310,9 @@ public:
 	 * the extreme value.
 	 */
 
-	stype getInt( const stype N1 )
+	int getInt( const int N1 )
 	{
-		return( (stype) get( N1 ));
+		return( (int) get( (double) N1 ));
 	}
 
 	/**
@@ -337,7 +337,7 @@ public:
 	{
 		if( sizeof( stype ) == 8 )
 		{
-			const stype rv = getInt();
+			const stype rv = getRaw();
 
 			return(( (int64_t) ( rv >> 32 ) - (int64_t) (uint32_t) rv ) *
 				0x1p-32 );
@@ -352,8 +352,8 @@ public:
 		}
 		else
 		{
-			const double v1 = (double) getInt();
-			const double v2 = (double) getInt();
+			const double v1 = (double) getRaw();
+			const double v2 = (double) getRaw();
 
 			return(( v1 - v2 ) * im() );
 		}
@@ -417,9 +417,9 @@ public:
 	{
 		if( BitsLeft == 0 )
 		{
-			BitPool = getInt();
+			BitPool = getRaw();
 
-			const int b = BitPool & 1;
+			const int b = (int) ( BitPool & 1 );
 
 			BitsLeft = sizeof( stype ) * 8 - 1;
 			BitPool >>= 1;
@@ -427,7 +427,7 @@ public:
 			return( b );
 		}
 
-		const int b = BitPool & 1;
+		const int b = (int) ( BitPool & 1 );
 
 		BitsLeft--;
 		BitPool >>= 1;
