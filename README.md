@@ -811,4 +811,6 @@ the state-of-the-art statistical tests.
 PRVHASH authorship and copyright were registered at the
 [Russian Patent Office](https://rospatent.gov.ru/en), under reg.numbers
 2020661136, 2020666287, 2021615385, 2021668070, 2022612987 (searchable via
-[fips.ru](https://new.fips.ru/en/)).
+[fips.ru](https://new.fips.ru/en/)). Please note that these are not "invention
+patents"; the registration assures you that the author has the required rights
+to grant the license to you.
