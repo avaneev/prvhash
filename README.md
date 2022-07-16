@@ -719,7 +719,11 @@ The author has no concrete theory why PRVHASH PRNG works, especially its 2-bit
 variant (which is a very close empirical proof that mathematics has entropy
 processes happening under the hood). The closest mathematical construct found
 by the author is a sinewave oscillator (see below). Also, series related to
-`PI`, `sin(x)`, and `sin(x)/x` may be a candidates for explanation.
+`PI`, `sin(x)`, and `sin(x)/x` may be a candidates for explanation. Author's
+empirical goals when developing PRVHASH were: no loss of entropy in a system,
+easy scalability, self-start without any special initialization and from any
+initial state, state variable size invariance, not-stalling on various entropy
+input.
 
 During the course of PRVHASH development, the author has found that the
 simplest low-frequency sine-wave oscillator can be used as a pseudo-random
