@@ -590,17 +590,18 @@ each other at all times, and are also wholly-unequal during the PRNG period
 (they are not just time-delayed versions of each other). Moreover, as can be
 assured with PractRand, all of these variables can be used as random number
 generators (with a lower period, though); they can even be interleaved after
-each round.
+each core function call.
 
 When the message enters the system via `Seed ^= msgw` and `lcg ^= msgw`
-instructions, it works like mixing a message with an one-time-pad used in
-cryptography. This operation completely hides the message in system's entropy.
-Beside that, the output of PRVHASH uses the mix of two variables:
-statistically, this means the mixing of two unrelated random variables, with
-such summary output never appearing in system's state. It is worth noting the
-`lcg ^ rs` expression: the `rs` variable is composed of two halves, both of
-them practically being independent PRNG outputs, with smaller periods. This
-additionally complicates system's reversal.
+instructions, this works like mixing a message with an one-time-pad used in
+cryptography. This operation completely hides the message in system's entropy,
+while both `Seed` and `lcg` act as "carriers" that "smear" the input message
+via subsequent multiplication. Beside that, the output of PRVHASH uses the mix
+of two variables: statistically, this means mixing of two unrelated random
+variables, with such summary output never appearing in system's state. It is
+worth noting the `lcg ^ rs` expression: the `rs` variable is composed of two
+halves, both of them practically being independent PRNG outputs, with smaller
+periods. This additionally complicates system's reversal.
 
 ## Fused PRNG ##
 
@@ -700,22 +701,25 @@ the number of bit combinations a given system may have, and combining this
 understanding with "random permutations", it may give a false understanding
 that "uniform randomness" may generate any combination within the limits of
 "combinatorial capacity", with some probability. In fact, "uniform randomness"
-auto-limits the "sparseness" of random bit-sequences it generates since
-"too sparse" bit-sequence cannot be statistically called uniformly-random.
-Thus, "combinatorial capacity" of a system, when applied to random number
-generation, transforms into a notion of ability of a system to generate
-independent uniformly-random number sequences. Which means that two different
-initial states of a PRNG system may refer to different "isolated" PRNG
-sequences. This is what happens in PRVHASH: on entropy input the system may
-"jump" or "converge" into an unrelated random sub-sequence. Moreover, with
+auto-limits the "sparseness" of random bit-sequences it generates since a
+suitably long, but "too sparse" bit-sequence cannot be statistically called
+uniformly-random. Thus, "combinatorial capacity" of a system, when applied to
+random number generation, transforms into a notion of ability of a system to
+generate independent uniformly-random number sequences. Which means that two
+different initial states of a PRNG system may refer to different "isolated"
+PRNG sequences. This is what happens in PRVHASH: on entropy input the system
+may "jump" or "converge" into an unrelated random sub-sequence. Moreover, with
 small variable sizes, PRVHASH can produce a train of `0`s longer than the
 bit-size of the system.
 
 `10` in binary is `2` in decimal, `1010` is `10`, `101010` is `42`,
 `01` is `1`, `0101` is `5`, `010101` is `21`...
 
-The `sin(x)/x` (sinc function) series gives an idea why it all works: it is
-squaring and integrating, ad infinitum.
+The author has no concrete theory why PRVHASH PRNG works, especially its 2-bit
+variant (which is a very close empirical proof that mathematics has entropy
+processes happening under the hood). The closest mathematical construct found
+by the author is a sinewave oscillator (see below). Also, series related to
+`PI`, `sin(x)`, and `sin(x)/x` may be a candidates for explanation.
 
 During the course of PRVHASH development, the author has found that the
 simplest low-frequency sine-wave oscillator can be used as a pseudo-random
@@ -808,9 +812,9 @@ the state-of-the-art statistical tests.
 
 ## Other ##
 
-PRVHASH authorship and copyright were registered at the
+PRVHASH "computer program" authorship and copyright were registered at the
 [Russian Patent Office](https://rospatent.gov.ru/en), under reg.numbers
 2020661136, 2020666287, 2021615385, 2021668070, 2022612987 (searchable via
 [fips.ru](https://new.fips.ru/en/)). Please note that these are not "invention
-patents"; the registration assures you that the author has the required rights
-to grant the license to you.
+patents"; the registrations assure you that the author has the required rights
+to grant the software license to you.
