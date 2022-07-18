@@ -515,30 +515,15 @@ public:
         memset( Hash, 0, sizeof( Hash ));
         HashPos = 0;
 
-        // Initialize, important for small state variable size.
+        // Initialize.
 
         int k, j;
 
-        for( k = 0; k < 5; k++ )
+        for( k = 0; k < PRVHASH_INIT_COUNT; k++ )
         {
             for( j = 0; j < PH_PAR_COUNT; j++ )
             {
                 PH_FN( Seed + j, lcg + j, Hash + HashPos );
-            }
-        }
-
-        if( PH_BITS < 16 )
-        {
-            for( k = 0; k < PH_HASH_COUNT; k++ )
-            {
-                for( j = 0; j < PH_PAR_COUNT; j++ )
-                {
-                    PH_FN( Seed + j, lcg + j, Hash + HashPos );
-                }
-       	        if( ++HashPos == PH_HASH_COUNT )
-                {
-       	            HashPos = 0;
-                }
             }
         }
     }

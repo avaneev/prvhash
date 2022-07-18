@@ -30,6 +30,7 @@
 #define PH_HASH_COUNT 15
 #define READ_WORD_BITS 16
 #define READ_COUNT 512
+#define READ_BIT_ORDER 0 // 0 or 1
 static inline uint8_t prvhash_core1( uint8_t* const Seed,
 	uint8_t* const lcg, uint8_t* const Hash )
 {
@@ -37,7 +38,7 @@ static inline uint8_t prvhash_core1( uint8_t* const Seed,
 	*lcg ^= (uint8_t) ( *Seed ^ 0x0 );
 	const uint8_t out = (uint8_t) ( *lcg ^ *Seed );
 	*Seed ^= *Hash;
-	return( out );
+	return( out & 1 );
 }
 int main()
 {
@@ -49,8 +50,12 @@ int main()
 		uint64_t r = 0;
 		for( int k = 0; k < READ_WORD_BITS; k++ )
 		{
+			#if READ_BIT_ORDER == 0
 			r <<= 1;
 			r |= prvhash_core1( &Seed, &lcg, Hash + HashPos );
+			#else // READ_BIT_ORDER == 0
+			r |= (uint64_t) prvhash_core1( &Seed, &lcg, Hash + HashPos ) << k;
+			#endif // READ_BIT_ORDER == 0
 			if( ++HashPos == PH_HASH_COUNT ) HashPos = 0;
 		}
 		printf( "%llu\n", r );
