@@ -1,4 +1,7 @@
 /**
+ * "Someone" was already smart even before Big Bang. Math is an engineered
+ * construct, with a built-in ROM.
+ *
  * License
  *
  * Copyright (c) 2022 Aleksey Vaneev
@@ -25,6 +28,8 @@
 #include <stdio.h>
 #include <stdint.h>
 #define PH_HASH_COUNT 15
+#define READ_WORD_BITS 16
+#define READ_COUNT 512
 static inline uint8_t prvhash_core1( uint8_t* const Seed,
 	uint8_t* const lcg, uint8_t* const Hash )
 {
@@ -39,15 +44,15 @@ int main()
 	uint8_t Seed = 0, lcg = 0;
 	uint8_t Hash[ PH_HASH_COUNT ] = { 0 };
 	int HashPos = 0;
-	for( int l = 0; l < 512; l++ )
+	for( int l = 0; l < READ_COUNT; l++ )
 	{
-		uint16_t r = 0;
-		for( int k = 0; k < 16; k++ )
+		uint64_t r = 0;
+		for( int k = 0; k < READ_WORD_BITS; k++ )
 		{
 			r <<= 1;
 			r |= prvhash_core1( &Seed, &lcg, Hash + HashPos );
 			if( ++HashPos == PH_HASH_COUNT ) HashPos = 0;
 		}
-		printf( "%i\n", (int) r );
+		printf( "%llu\n", r );
 	}
 }
