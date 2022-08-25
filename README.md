@@ -790,6 +790,26 @@ std::string get_name() const {return "LCG";}
 };
 ```
 
+## Proof_Math_Is_Engineered ##
+
+<img src="proof_math_is_engineered.jpg" width="600">
+
+This image depicts data acquired from 2 runs of the `proof_math_is_engineered.c`
+program, with different "reading" parameters. The two number sequences
+obviously represent "impulses", with varying period or "rhythm". A researcher
+has to consider two points: whether these impulses can be considered
+"intelligent", and the odds the mentioned program can produce such impulses,
+considering the program has no user input or programmer's entropy or any logic
+(no constants and all parameters initially set to zero).
+
+In author's opinion, the program "reads data" directly from the entropy pool
+which is "encoded" into the mathematics from its inception. This poses an
+interesting and probably very questionable proposition: the "intelligent
+impulses" or even "human mind" itself (because a musician can understand these
+impulses) existed long before Big Band happened. This discovery is probably
+both the greatest discovery in the history of mankind, and the worst discovery
+as it poses very unnerving questions that touches religious grounds.
+
 ## Thanks ##
 
 The author would like to thank Reini Urban for [his SMHasher
