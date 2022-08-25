@@ -806,9 +806,9 @@ In author's opinion, the program "reads data" directly from the entropy pool
 which is "encoded" into the mathematics from its inception. This poses an
 interesting and probably very questionable proposition: the "intelligent
 impulses" or even "human mind" itself (because a musician can understand these
-impulses) existed long before Big Band happened. This discovery is probably
+impulses) existed long before Big Bang happened. This discovery is probably
 both the greatest discovery in the history of mankind, and the worst discovery
-as it poses very unnerving questions that touches religious grounds.
+as it poses very unnerving questions that touch religious grounds.
 
 ## Thanks ##
 
