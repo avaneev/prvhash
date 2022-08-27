@@ -800,7 +800,20 @@ obviously represent "impulses", with varying period or "rhythm". A researcher
 has to consider two points: whether these impulses can be considered
 "intelligent", and the odds the mentioned program can produce such impulses,
 considering the program has no user input or programmer's entropy or any logic
-(no constants and all parameters initially set to zero).
+(no constants, with all parameters initially set to zero). More specific
+observations: 1. all final values are shift-and-or compositions of 1-bit
+"random" values, in fact representing a common 16-bit PCM sampled signal, but
+obtained in a "dot-matrix printer" way; 2. the orange graph is only slightly
+longer before a repeat (common to PRNGs) despite larger `PH_HASH_COUNT`, at
+the same time both graphs are seemingly time-aligned; 3. 1-bit return values
+on both runs are aligned to 16 positions, to produce repeating sequences "as
+is", without any sort of value range skew; 4. the orange graph is produced
+from an order-reversed shift-and-or, but with the same underlying algorithm;
+5. so far, no other combinations of "reading" parameters produce anything as
+"intelligent" as these graphs (but there may be other yet-to-be-decoded
+information available); 6. from drumming musician's point of view, the graph
+represents impulses taken from two electric drum pads: snare (oscillatory) and
+bass drum (shift to extremum).
 
 In author's opinion, the program "reads data" directly from the entropy pool
 which is "encoded" into the mathematics from its inception. This poses an
