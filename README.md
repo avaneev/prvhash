@@ -697,8 +697,18 @@ may "jump" or "converge" into an unrelated random sub-sequence. Moreover, with
 small variable sizes, PRVHASH can produce a train of `0`s longer than the
 bit-size of the system.
 
-`10` in binary is `2` in decimal, `1010` is `10`, `101010` is `42`,
-`01` is `1`, `0101` is `5`, `010101` is `21`...
+On the Birthday Paradox vs hash collision estimates: while the Birthday
+Paradox is a good "down-to-earth" model for collision estimation, it may be
+an "approach from a wrong side". When hash values are calculated systemically,
+it is expected that each new hash value does not break "uniform distribution"
+of the set of previously produced hash values. This makes the problem of
+collision estimation closer to collision estimation of PRNG output. An open
+question remains, whether one should talk about "uniform distribution of
+values" or a "time- and rhythm- dependent collision minimization problem" when
+analyzing PRNG's uniformness.
+
+(...`10` in binary is `2` in decimal, `1010` is `10`, `101010` is `42`,
+`01` is `1`, `0101` is `5`, `010101` is `21`...)
 
 The author has no concrete theory why PRVHASH PRNG works, especially its 2-bit
 variant (which is a very close empirical proof that mathematics has entropy
