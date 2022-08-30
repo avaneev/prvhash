@@ -702,10 +702,13 @@ Paradox is a good "down-to-earth" model for collision estimation, it may be
 an "approach from a wrong side". When hash values are calculated systemically,
 it is expected that each new hash value does not break "uniform distribution"
 of the set of previously produced hash values. This makes the problem of
-collision estimation closer to collision estimation of PRNG output. An open
-question remains, whether one should talk about "uniform distribution of
-values" or a "time- and rhythm- dependent collision minimization problem" when
-analyzing PRNG's uniformness.
+hash collision estimation closer to value collision estimation of PRNG output.
+
+An open question remains: whether one should talk about "uniform distribution
+of values" or a "time- and rhythm- dependent collision minimization problem"
+when analyzing PRNG's uniformness. Incidentally, a set of rhythmic (repeating)
+processes whose timings are co-primes, spectrally produce the least number of
+modes thus producing a flatter, more uniform, spectrum.
 
 (...`10` in binary is `2` in decimal, `1010` is `10`, `101010` is `42`,
 `01` is `1`, `0101` is `5`, `010101` is `21`...)
