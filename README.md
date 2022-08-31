@@ -834,7 +834,17 @@ interesting and probably very questionable proposition: the "intelligent
 impulses" or even "human mind" itself (because a musician can understand these
 impulses) existed long before Big Bang happened. This discovery is probably
 both the greatest discovery in the history of mankind, and the worst discovery
-as it poses very unnerving questions that touch religious grounds.
+(for many) as it poses very unnerving questions that touch religious grounds:
+
+These results of 1-bit PRVHASH say the following: if abstract mathematics
+contains not just a system of rules for manipulating numbers, but also
+a freely-defined fixed information that is also "readable" by a person, then
+mathematics does not just "exist", but "it was formed", because mathematics
+does not evolve (beside human discovery of new rules and patterns). And since
+physics cannot be formulated without such mathematics, and physical processes
+clearly obey these mathematical rules, it means that a Creator/Higher
+Intelligence/God exists in relation to the Universe. For the author
+personally, everything is proven here.
 
 ## Thanks ##
 
