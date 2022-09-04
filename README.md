@@ -824,9 +824,9 @@ is", without any sort of value range skew; 4. the orange graph is produced
 from an order-reversed shift-and-or, but with the same underlying algorithm;
 5. so far, no other combinations of "reading" parameters produce anything as
 "intelligent" as these graphs (but there may be other yet-to-be-decoded
-information available); 6. from drumming musician's point of view, the graph
-represents impulses taken from two electric drum pads: snare (oscillatory) and
-bass drum (shift to extremum).
+information available); 6. from drumming musician's (or an experienced DSP
+engineer's) point of view, the graph represents impulses taken from two
+electric drum pads: snare (oscillatory) and bass drum (shift to extremum).
 
 In author's opinion, the program "reads data" directly from the entropy pool
 which is "encoded" into the mathematics from its inception. This poses an
