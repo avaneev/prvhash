@@ -846,6 +846,12 @@ clearly obey these mathematical rules, it means that a Creator/Higher
 Intelligence/God exists in relation to the Universe. For the author
 personally, everything is proven here.
 
+P.S. By coincidence, if the values on the "impulse" graphs above are sorted in
+an ascending order, and are then displayed as independent graphs, they
+collectively create a stylized image of a human eye:
+
+<img src="proof_math_is_engineered_eye.png" width="300">
+
 ## Thanks ##
 
 The author would like to thank Reini Urban for [his SMHasher
