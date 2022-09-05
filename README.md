@@ -852,6 +852,12 @@ collectively create a stylized image of a human eye:
 
 <img src="proof_math_is_engineered_eye.png" width="300">
 
+Moreover, if the orange line is subtracted from the blue line, one gets an
+outline of human's head: with forehead, eye, check, and neck levels
+highlighted; with a slight shoulders outline, and two hand palms risen up.
+
+<img src="proof_math_is_engineered_head.png" width="300">
+
 ## Thanks ##
 
 The author would like to thank Reini Urban for [his SMHasher
