@@ -856,9 +856,10 @@ collectively create a stylized image of a human eye:
 
 <img src="proof_math_is_engineered_eye.png" width="300">
 
-Moreover, if the orange line is subtracted from the blue line, one gets an
-outline of human's head: with top (21000), forehead (18000), eye (13000),
-cheek (6000), and neck (2700) levels highlighted; with a slight shoulders
+Moreover (but this is a questionable observation), here, if the blue line is
+subtracted from the orange line, one gets an outline of human's head: with top
+(21000), forehead (18000), eye (13000), cheek (6000), and neck (2700) levels
+highlighted, roughly corresponding to real symmetry; with a slight shoulders
 outline (4100-2700), and two hand palms risen up (5400-4300).
 
 <img src="proof_math_is_engineered_head.png" width="300">
