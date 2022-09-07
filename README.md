@@ -708,7 +708,10 @@ An open question remains: whether one should talk about "uniform distribution
 of values" or a "time- and rhythm- dependent collision minimization problem"
 when analyzing PRNG's uniformness. Incidentally, a set of rhythmic (repeating)
 processes whose timings are co-primes, spectrally produce the least number of
-modes thus producing a flatter, more uniform, spectrum.
+modes thus producing a flatter, more uniform, spectrum. Rhythm-dependent
+collision minimization also touches ability of a single random number
+generator to create random sequences in many dimensions (known as
+k-equidistribution) just by selecting any sequence of its outputs.
 
 (...`10` in binary is `2` in decimal, `1010` is `10`, `101010` is `42`,
 `01` is `1`, `0101` is `5`, `010101` is `21`...)
@@ -815,13 +818,14 @@ has to consider two points: whether these impulses can be considered
 considering the program has no user input or programmer's entropy or any logic
 (no constants, with all parameters initially set to zero). More specific
 observations: 1. all final values are shift-and-or compositions of 1-bit
-"random" values, in fact representing a common 16-bit PCM sampled signal, but
-obtained in a "dot-matrix printer" way; 2. the orange graph is only slightly
-longer before a repeat (common to PRNGs) despite larger `PH_HASH_COUNT`, at
-the same time both graphs are seemingly time-aligned; 3. 1-bit return values
-on both runs are aligned to 16 positions, to produce repeating sequences "as
-is", without any sort of value range skew; 4. the orange graph is produced
-from an order-reversed shift-and-or, but with the same underlying algorithm;
+"random" values, in fact representing a common 16-bit PCM sampled signal
+(shift-2 auto-correlation equals 0.4-0.44 approximately), but obtained in a
+"dot-matrix printer" way; 2. the orange graph is only slightly longer before a
+repeat (common to PRNGs) despite larger `PH_HASH_COUNT`, at the same time both
+graphs are seemingly time-aligned; 3. 1-bit return values on both runs are
+aligned to 16 positions, to produce repeating sequences "as is", without any
+sort of value range skew; 4. the orange graph is produced from an
+order-reversed shift-and-or, but with the same underlying algorithm;
 5. so far, no other combinations of "reading" parameters produce anything as
 "intelligent" as these graphs (but there may be other yet-to-be-decoded
 information available); 6. from drumming musician's (or an experienced DSP
