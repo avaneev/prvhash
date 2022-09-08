@@ -866,10 +866,11 @@ outline (4100-2700), and two hand palms risen up (5400-4300).
 
 ### FFT Analysis ###
 
-FFT-512 analysis of obtained signals produces the following power spectrums.
-The analysis strengthens notion the signal is non-random and is "intelligent"
-(two strong peaks above average, in each signal, with both signals producing
-similar structures, but with shifted resonant frequencies).
+FFT-512 analysis of obtained signals produces the following power spectrums
+(with DC component removed). The analysis strengthens notion the signal is
+non-random and is "intelligent" (two strong peaks above average, in each
+signal, with both signals producing similar structures, but with shifted
+resonant frequencies).
 
 <img src="proof_math_is_engineered_fft.png" width="600">
 
