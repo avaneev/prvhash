@@ -726,6 +726,14 @@ easy scalability, self-start without any special initialization and from any
 initial state, state variable size invariance, not-stalling on various entropy
 input.
 
+The `Seed >> 32 | Seed << 32` operation used in PRVHASH may look like it was
+derived from the middle-square method. This is purely a coincidence. During
+PRVHASH development, in many cases a better option was bit-reversal (and
+probably still is), and not such register "halves-swapping", but due to
+performance considerations (absence of such processor instruction),
+bit-reversal was not used. Practically, both are equivalent (see e.g. 2-bit
+PRVHASH), and exhibit difference in hashing mainly.
+
 During the course of PRVHASH development, the author has found that the
 simplest low-frequency sine-wave oscillator can be used as a pseudo-random
 number generator, if its mantissa is treated as an integer number. This means
