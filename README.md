@@ -882,6 +882,15 @@ resonant frequencies).
 
 <img src="proof_math_is_engineered_fft.png" width="600">
 
+### PRNG Mode ###
+
+Just by changing the PH_HASH_COUNT to 9 the same `proof_math_is_engineered.c`
+program produces a pseudo-random number sequence, confirmed with `PractRand`
+1KB block, 8-bit folding. Note that the same code producing both random and
+non-random number sequences is "highly unlikely" to exist in practical PRNGs.
+
+<img src="proof_math_is_engineered_prng9.png" width="600">
+
 ## Thanks ##
 
 The author would like to thank Reini Urban for [his SMHasher
