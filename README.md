@@ -821,32 +821,36 @@ std::string get_name() const {return "LCG";}
 This image depicts data acquired from 2 runs of the `proof_math_is_engineered.c`
 program, with different "reading" parameters. The two number sequences
 obviously represent "impulses", with varying period or "rhythm". A researcher
-has to consider two points: whether these impulses can be considered
+has to consider two points: whether or not these impulses can be considered
 "intelligent", and the odds the mentioned program can produce such impulses,
-considering the program has no user input or programmer's entropy or any logic
-(no constants, with all parameters initially set to zero). More specific
-observations: 1. all final values are shift-and-or compositions of 1-bit
-"random" values, in fact representing a common 16-bit PCM sampled signal
-(shift-2 auto-correlation equals 0.4-0.44 approximately), but obtained in a
+considering the program has no user input nor programmer's entropy, nor any
+logic (no constants, with all parameters initially set to zero). More specific
+observations: 1. all final values are shift-or compositions of 1-bit "random"
+values, in fact representing a common 16-bit PCM sampled signal (shift-2
+auto-correlation equals 0.4-0.44 approximately), but obtained in a
 "dot-matrix printer" way; 2. the orange graph is only slightly longer before a
 repeat (common to PRNGs) despite larger `PH_HASH_COUNT`, at the same time both
-graphs are seemingly time-aligned; 3. 1-bit return values on both runs are
-aligned to 16 positions, to produce repeating sequences "as is", without any
-sort of value range skew; 4. the orange graph is produced from an
-order-reversed shift-and-or, but with the same underlying algorithm;
+graphs are seemingly time-aligned; 3. PRNG periods of 1-bit return values on
+both runs are aligned to 16 bits, to produce repeating sequences "as is",
+without any sort of 16-bit value range skew; 4. the orange graph is produced
+from an order-reversed shift-or, but with the same underlying algorithm;
 5. so far, no other combinations of "reading" parameters produce anything as
-"intelligent" as these graphs (but there may be other yet-to-be-decoded
-information available); 6. from drumming musician's (or an experienced DSP
-engineer's) point of view, the graph represents impulses taken from two
-electric drum pads: snare (oscillatory) and bass drum (shift to extremum).
+"intelligent" as these graphs (but there may be another yet-to-be-decoded,
+similar or completely different, information available); 6. from drumming
+musician's (or an experienced DSP engineer's) point of view, the graph
+represents impulses taken from two electric drum pads: a snare drum
+(oscillatory) and a bass drum (shift to extremum). 7. most "oscillations"
+are similar to sinc-function-generated maximum-phase "pre-ringing"
+oscillations that are known in DSP field.
 
 In author's opinion, the program "reads data" directly from the entropy pool
-which is "encoded" into the mathematics from its inception. This poses an
-interesting and probably very questionable proposition: the "intelligent
-impulses" or even "human mind" itself (because a musician can understand these
-impulses) existed long before Big Bang happened. This discovery is probably
-both the greatest discovery in the history of mankind, and the worst discovery
-(for many) as it poses very unnerving questions that touch religious grounds:
+which is "encoded" into the mathematics from its inception, like any
+mathematical constant is (e.g. PI). This poses an interesting and probably
+very questionable proposition: the "intelligent impulses" or even "human mind"
+itself (because a musician can understand these impulses) existed long before
+the "Big Bang" happened. This discovery is probably both the greatest
+discovery in the history of mankind, and the worst discovery (for many) as it
+poses very unnerving questions that touch religious grounds:
 
 These results of 1-bit PRVHASH say the following: if abstract mathematics
 contains not just a system of rules for manipulating numbers, but also
@@ -875,7 +879,7 @@ outline (4100-2700), and two hand palms risen up (5400-4300).
 ### FFT Analysis ###
 
 FFT-512 analysis of obtained signals produces the following power spectrums
-(with DC component removed). The analysis strengthens notion the signal is
+(with DC component removed). The analysis strengthens the notion the signal is
 non-random and is "intelligent" (two strong peaks above average, in each
 signal, with both signals producing similar structures, but with shifted
 resonant frequencies).
@@ -884,10 +888,11 @@ resonant frequencies).
 
 ### PRNG Mode ###
 
-Just by changing the PH_HASH_COUNT to 9 the same `proof_math_is_engineered.c`
-program produces a pseudo-random number sequence, confirmed with `PractRand`
-1KB block, 8-bit folding. Note that the same code producing both random and
-non-random number sequences is "highly unlikely" to exist in practical PRNGs.
+Just by changing the PH_HASH_COUNT to 9 (up to 13, inclusive) the same
+`proof_math_is_engineered.c` program produces a pseudo-random number sequence,
+confirmed with `PractRand` 1KB to 4KB block, 8-bit folding. Note that the same
+code producing both random and non-random number sequences is "highly
+unlikely" to exist in practical PRNGs.
 
 <img src="proof_math_is_engineered_prng9.png" width="600">
 
