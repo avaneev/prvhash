@@ -908,7 +908,7 @@ a non-orthogonal ornament and a chess-board. Much larger `PH_HASH_COUNT`
 values create a triangular fractal (not shown), probably giving a structural
 hint.
 
-<img src="proof_math_is_engineered_orn15.png" width="200"><img src="proof_math_is_engineered_chess16.png" width="200">
+<img src="proof_math_is_engineered_orn15.png" width="300"><img src="proof_math_is_engineered_chess16.png" width="300">
 
 ## Thanks ##
 
