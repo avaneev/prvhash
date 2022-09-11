@@ -900,6 +900,15 @@ do not pass as random, with many "fails".
 
 <img src="proof_math_is_engineered_prng9.png" width="600">
 
+### Chess-Board (Pixel Art) ###
+
+The 1-bit output with `PH_HASH_COUNT=16` can be easily transformed into
+256x256 1-bit "pixel art" image, and, quite unexpectedly, it reproduces a
+chess-board. Much larger `PH_HASH_COUNT` values create a triangular fractal
+(not shown), probably giving a structural hint.
+
+<img src="proof_math_is_engineered_chess16.png" width="200">
+
 ## Thanks ##
 
 The author would like to thank Reini Urban for [his SMHasher
