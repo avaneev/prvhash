@@ -893,8 +893,10 @@ Just by changing the PH_HASH_COUNT to 9 (up to 13, inclusive) the same
 confirmed with `PractRand` 1KB to 4KB block, 8-bit folding. Note that the same
 code producing both random and non-random number sequences is "highly
 unlikely" to exist in practical PRNGs. It's important to note that
-`PH_HASH_COUNT=17` (which is beyond 15 and 16 signals mentioned originally)
-also passes as random, with 16-bit folding in `PractRand`.
+`PH_HASH_COUNT=14` and `PH_HASH_COUNT=17` (which is beyond 15 and 16 signals
+mentioned originally) also pass as random, with 16-bit folding in `PractRand`.
+`18` also passes as random, but with a "suspicion". `15` and `16`, of course,
+do not pass as random, with many "fails".
 
 <img src="proof_math_is_engineered_prng9.png" width="600">
 
