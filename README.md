@@ -900,14 +900,15 @@ do not pass as random, with many "fails".
 
 <img src="proof_math_is_engineered_prng9.png" width="600">
 
-### Chess-Board (Pixel Art) ###
+### Ornament and Chess-Board (Pixel Art) ###
 
-The 1-bit output with `PH_HASH_COUNT=16` can be easily transformed into
-256x256 1-bit "pixel art" image, and, quite unexpectedly, it reproduces a
-chess-board. Much larger `PH_HASH_COUNT` values create a triangular fractal
-(not shown), probably giving a structural hint.
+The 1-bit output with PH_HASH_COUNT= `15` and `16` can be easily transformed
+into 256x256 1-bit "pixel art" images, and, quite unexpectedly, they reproduce
+a non-orthogonal ornament and a chess-board. Much larger `PH_HASH_COUNT`
+values create a triangular fractal (not shown), probably giving a structural
+hint.
 
-<img src="proof_math_is_engineered_chess16.png" width="200">
+<img src="proof_math_is_engineered_orn15.png" width="200"><img src="proof_math_is_engineered_chess16.png" width="200">
 
 ## Thanks ##
 
