@@ -904,11 +904,21 @@ do not pass as random, with many "fails".
 
 The 1-bit output with PH_HASH_COUNT= `15` and `16` can be easily transformed
 into 256x256 1-bit "pixel art" images, and, quite unexpectedly, they reproduce
-a non-orthogonal ornament and a chess-board. Much larger `PH_HASH_COUNT`
-values create a triangular fractal (not shown), probably giving a structural
-hint.
+a non-orthogonal ornament and a chess-board.
 
 <img src="img/proof_math_is_engineered_orn15.png" width="300"><img src="img/proof_math_is_engineered_chess16.png" width="300">
+
+### Christmas Tree ###
+
+Much larger `PH_HASH_COUNT` values create triangular structures which are
+non-repeating, but all have a similar build-up consisting of rhombic
+(tree-like) patterns. The `proof_christmas_tree.c` program extracts such
+images into a vertical ASCII-art HTML. It uses the same underlying 1-bit
+PRVHASH code, but with "pixel art" decoding method.
+
+Here is an example image with `PH_HASH_COUNT=342`, converted to PNG:
+
+<img src="img/proof_math_is_engineered_tree342.png" width="686">
 
 ## Thanks ##
 
