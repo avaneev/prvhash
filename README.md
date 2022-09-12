@@ -670,10 +670,10 @@ thus, "infinite energy". Note that PRVHASH does not require any "magic
 numbers" to function, it is completely algorithmic.
 
 The mathematics offers an interesting understanding. Take in your mind a
-moment before the Big Bang. Did mathematical rules exist at that moment? Of
-course, they did, otherwise there would be no Big Bang. The span of existence
-of mathematical rules cannot be estimated, so it is safe to assume they
-existed for an eternity. On top of that, PRVHASH practically proves that
+moment before the "Big Bang". Did mathematical rules exist at that moment? Of
+course, they did, otherwise there would be no "Big Bang". The span of
+existence of mathematical rules cannot be estimated, so it is safe to assume
+they existed for an eternity. On top of that, PRVHASH practically proves that
 entropy can self-start from zero-, or "raw" state, or "nothing", if
 mathematical rules exist prior to that.
 

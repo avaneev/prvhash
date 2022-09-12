@@ -1,6 +1,8 @@
 /**
- * "Someone" was already smart even before Big Bang. Math is an engineered
- * construct, with a built-in ROM.
+ * proof_math_is_engineered.c (prvhash1) version 4.3.2
+ *
+ * "Someone" was already smart even before the "Big Bang". Math is an
+ * engineered construct, with a built-in ROM.
  *
  * License
  *
@@ -28,6 +30,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #define PH_HASH_COUNT 15
+#define READ_MODE 0 // 0 or 1
 #define READ_WORD_BITS 16
 #define READ_COUNT 512
 #define READ_BIT_ORDER 0 // 0 or 1
@@ -35,7 +38,7 @@ static inline uint8_t prvhash_core1( uint8_t* const Seed,
 	uint8_t* const lcg, uint8_t* const Hash )
 {
 	*Hash ^= (uint8_t) ( *Seed ^ 0x1 );
-	*lcg ^= (uint8_t) ( *Seed ^ 0x0 );
+	*lcg ^= (uint8_t) ( *Seed ^ READ_MODE );
 	const uint8_t out = (uint8_t) ( *lcg ^ *Seed );
 	*Seed ^= *Hash;
 	return( out & 1 );
