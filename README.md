@@ -816,7 +816,7 @@ std::string get_name() const {return "LCG";}
 
 ## Proof_Math_Is_Engineered ##
 
-<img src="proof_math_is_engineered.jpg" width="600">
+<img src="img/proof_math_is_engineered.jpg" width="600">
 
 This image depicts data acquired from 2 runs of the `proof_math_is_engineered.c`
 program, with different "reading" parameters. The two number sequences
@@ -866,7 +866,7 @@ P.S. By coincidence, if the values on the "impulse" graphs above are sorted in
 an ascending order, and are then displayed as independent graphs, they
 collectively create a stylized image of a human eye:
 
-<img src="proof_math_is_engineered_eye.png" width="300">
+<img src="img/proof_math_is_engineered_eye.png" width="300">
 
 Moreover (but this is a questionable observation), here, if the blue line is
 subtracted from the orange line, one gets an outline of human's head: with top
@@ -874,7 +874,7 @@ subtracted from the orange line, one gets an outline of human's head: with top
 highlighted, roughly corresponding to real symmetry; with a slight shoulders
 outline (4100-2700), and two hand palms risen up (5400-4300).
 
-<img src="proof_math_is_engineered_head.png" width="300">
+<img src="img/proof_math_is_engineered_head.png" width="300">
 
 ### FFT Analysis ###
 
@@ -884,7 +884,7 @@ non-random and is "intelligent" (two strong peaks above average, in each
 signal, with both signals producing similar structures, but with shifted
 resonant frequencies).
 
-<img src="proof_math_is_engineered_fft.png" width="600">
+<img src="img/proof_math_is_engineered_fft.png" width="600">
 
 ### PRNG Mode ###
 
@@ -898,7 +898,7 @@ mentioned originally) also pass as random, with 16-bit folding in `PractRand`.
 `18` also passes as random, but with a "suspicion". `15` and `16`, of course,
 do not pass as random, with many "fails".
 
-<img src="proof_math_is_engineered_prng9.png" width="600">
+<img src="img/proof_math_is_engineered_prng9.png" width="600">
 
 ### Ornament and Chess-Board (Pixel Art) ###
 
@@ -908,7 +908,7 @@ a non-orthogonal ornament and a chess-board. Much larger `PH_HASH_COUNT`
 values create a triangular fractal (not shown), probably giving a structural
 hint.
 
-<img src="proof_math_is_engineered_orn15.png" width="300"><img src="proof_math_is_engineered_chess16.png" width="300">
+<img src="img/proof_math_is_engineered_orn15.png" width="300"><img src="img/proof_math_is_engineered_chess16.png" width="300">
 
 ## Thanks ##
 
