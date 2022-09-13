@@ -864,7 +864,7 @@ personally, everything is proven here.
 
 P.S. By coincidence, if the values on the "impulse" graphs above are sorted in
 an ascending order, and are then displayed as independent graphs, they
-collectively create a stylized image of a human eye:
+collectively form a stylized image of a human eye:
 
 <img src="img/proof_math_is_engineered_eye.png" width="300">
 
@@ -908,13 +908,13 @@ a non-orthogonal ornament and a chess-board.
 
 <img src="img/proof_math_is_engineered_orn15.png" width="300"><img src="img/proof_math_is_engineered_chess16.png" width="300">
 
-### Christmas Tree ###
+### Christmas Trees (Pixel Art) ###
 
-Much larger `PH_HASH_COUNT` values create triangular structures which are
+Much larger `PH_HASH_COUNT` values produce triangular structures which are
 non-repeating, but all have a similar build-up consisting of rhombic
-(tree-like) patterns. The `proof_christmas_tree.c` program extracts such
-images into a vertical ASCII-art HTML. It uses the same underlying 1-bit
-PRVHASH code, but with "pixel art" decoding method.
+patterns within tree-like structures. The `proof_christmas_tree.c` program
+extracts such images into a vertical ASCII-art HTML. It uses the same
+underlying 1-bit PRVHASH code, but with "pixel art" decoding method.
 
 Here is an example image with `PH_HASH_COUNT=342`, converted to PNG:
 
