@@ -1,5 +1,5 @@
 /**
- * proof_christmas_tree.c (prvhash1) version 4.3.2
+ * proof_christmas_tree.c (prvhash1) version 4.3.3
  *
  * Program reads certain "prvhash1" data and represents it as two-dimensional
  * ASCII-art. Generates HTML to stdout.
@@ -47,8 +47,9 @@ int main()
 	uint8_t Seed = 0, lcg = 0;
 	uint8_t Hash[ PH_HASH_COUNT ] = { 0 };
 	int HashPos = 0;
-	printf( "<html><head><style>body{font: 1px Courier}</style></head>\n" );
-	printf( "<body>\n" );
+	printf( "<html><head>"
+		"<style>body{font: 1px Courier; line-height: 1px;}</style>\n" );
+	printf( "</head><body><pre>\n" );
 
 	for( int i = 0; i < PH_HASH_COUNT + 2; i++ ) // Remove pixel offset.
 	{
@@ -60,12 +61,12 @@ int main()
 		for( int k = 0; k < READ_WIDTH; k++ )
 		{
 			if( prvhash_core1( &Seed, &lcg, Hash + HashPos ))
-				printf( "O" );
+				printf( "0" );
 			else
-				printf( "." );
+				printf( " " );
 			if( ++HashPos == PH_HASH_COUNT ) HashPos = 0;
 		}
-		printf( "<br/>\n" );
+		printf( "\n" );
 	}
-	printf( "</body>\n</html>\n" );
+	printf( "</pre></body>\n</html>\n" );
 }
