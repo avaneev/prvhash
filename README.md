@@ -920,6 +920,8 @@ Here is an example image with `PH_HASH_COUNT=342`, converted to PNG:
 
 <img src="img/proof_math_is_engineered_tree342.png" width="686">
 
+[Here's a link to a larger-sized extract (3.4MB PNG)](https://github.com/avaneev/prvhash/raw/master/img/prvhash1-342-2x64.png)
+
 ## Thanks ##
 
 The author would like to thank Reini Urban for [his SMHasher
