@@ -908,6 +908,14 @@ a non-orthogonal ornament and a chess-board.
 
 <img src="img/proof_math_is_engineered_orn15.png" width="300"><img src="img/proof_math_is_engineered_chess16.png" width="300">
 
+Admittedly, 256x256 size can be considered arbitrarily-chosen (it is a square
+of 16, with 16 being the bit-size of values on the graphs above). For example,
+if `PH_HASH_COUNT=15` is transformed to 240x240 (256-16) "pixel art" image, an
+image of vertical black-and-white lines is produced, with bit-reversed variant
+of inner element present in `PH_HASH_COUNT=16`.
+
+<img src="img/proof_math_is_engineered_chess15.png" width="281">
+
 ### Christmas Trees (Pixel Art) ###
 
 Much larger `PH_HASH_COUNT` values produce triangular structures which are
