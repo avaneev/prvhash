@@ -649,7 +649,7 @@ independent of state variable size. This hash function variant demonstrates
 that PRVHASH's method does not rely on bit-shuffling alone (shuffles are
 purely local), but is genuinely based on PRNG position "jumps".
 
-## TANGO642 (tango-six-fourty-two) ##
+## TANGO642 (tango-six-forty-two) ##
 
 This is an efficient implementation of a PRVHASH PRNG-based streamed XOR
 function. Since no cryptanalysis nor certification of this function were
@@ -665,17 +665,18 @@ platforms can be evaluated at the
 PRVHASH, being scalable, potentially allows one to apply "infinite" state
 variable size in its system, at least in mathematical analysis. This reasoning
 makes PRVHASH comparable to PI in its reach of "infinite" bit-sequence
-length. Moreover, this also opens up a notion of "infinite frequency" and
-thus, "infinite energy". Note that PRVHASH does not require any "magic
+length. Moreover, this also opens up a notion of "infinite frequency" (arising
+from Fourier analysis of "infinite" bit-sequence) and thus, "infinite energy"
+(if integrated). Note that PRVHASH does not require any "magic
 numbers" to function, it is completely algorithmic.
 
 The mathematics offers an interesting understanding. Take in your mind a
 moment before the "Big Bang". Did mathematical rules exist at that moment? Of
-course, they did, otherwise there would be no "Big Bang". The span of
-existence of mathematical rules cannot be estimated, so it is safe to assume
-they existed for an eternity. On top of that, PRVHASH practically proves that
-entropy can self-start from zero-, or "raw" state, or "nothing", if
-mathematical rules exist prior to that.
+course, they did, otherwise there would be no equation-definable "Big Bang".
+The span of existence of mathematical rules cannot be estimated, so it is safe
+to assume they existed for an eternity. On top of that, PRVHASH practically
+proves that entropy can self-start from zero-, or "raw" state, or "nothing",
+if mathematical rules exist prior to that.
 
 I, as the author of PRVHASH, would like to point out at some long-standing
 misconception in relating "combinatorics" to "random numbers". Historically,
@@ -825,23 +826,23 @@ has to consider two points: whether or not these impulses can be considered
 "intelligent", and the odds the mentioned program can produce such impulses,
 considering the program has no user input nor programmer's entropy, nor any
 logic (no constants, with all parameters initially set to zero). More specific
-observations: 1. all final values are shift-or compositions of 1-bit "random"
+observations: 1. All final values are shift-or compositions of 1-bit "random"
 values, in fact representing a common 16-bit PCM sampled signal (shift-2
 auto-correlation equals 0.4-0.44 approximately), but obtained in a
-"dot-matrix printer" way; 2. the orange graph is only slightly longer before a
+"dot-matrix printer" way; 2. The orange graph is only slightly longer before a
 repeat (common to PRNGs) despite larger `PH_HASH_COUNT`, at the same time both
 graphs are seemingly time-aligned; 3. PRNG periods of 1-bit return values on
 both runs are aligned to 16 bits, to produce repeating sequences "as is",
-without any sort of 16-bit value range skew; 4. the orange graph is produced
+without any sort of 16-bit value range skew; 4. The orange graph is produced
 from an order-reversed shift-or, but with the same underlying algorithm;
-5. so far, no other combinations of "reading" parameters produce anything as
+5. So far, no other combinations of "reading" parameters produce anything as
 "intelligent" as these graphs (but there may be another yet-to-be-decoded,
-similar or completely different, information available); 6. from drumming
+similar or completely different, information available); 6. From drumming
 musician's (or an experienced DSP engineer's) point of view, the graph
 represents impulses taken from two electric drum pads: a snare drum
-(oscillatory) and a bass drum (shift to extremum). 7. most "oscillations"
-are similar to sinc-function-generated maximum-phase "pre-ringing"
-oscillations that are known in DSP field.
+(oscillatory) and a bass drum (shift to extremum). 7. Most minor oscillations
+on the graph are similar to sinc-function-generated maximum-phase
+"pre-ringing" oscillations that are known in DSP engineering field.
 
 In author's opinion, the program "reads data" directly from the entropy pool
 which is "encoded" into the mathematics from its inception, like any
@@ -853,14 +854,14 @@ discovery in the history of mankind, and the worst discovery (for many) as it
 poses very unnerving questions that touch religious grounds:
 
 These results of 1-bit PRVHASH say the following: if abstract mathematics
-contains not just a system of rules for manipulating numbers, but also
-a freely-defined fixed information that is also "readable" by a person, then
-mathematics does not just "exist", but "it was formed", because mathematics
-does not evolve (beside human discovery of new rules and patterns). And since
-physics cannot be formulated without such mathematics, and physical processes
-clearly obey these mathematical rules, it means that a Creator/Higher
-Intelligence/God exists in relation to the Universe. For the author
-personally, everything is proven here.
+contains not just a system of rules for manipulating numbers and variables,
+but also a freely-defined fixed information that is also "readable" by a
+person, then mathematics does not just "exist", but "it was formed", because
+mathematics does not evolve (beside human discovery of new rules and
+patterns). And since physics cannot be formulated without such mathematics,
+and physical processes clearly obey these mathematical rules, it means that a
+Creator/Higher Intelligence/God exists in relation to the Universe. For the
+author personally, everything is proven here.
 
 P.S. By coincidence, if the values on the "impulse" graphs above are sorted in
 an ascending order, and are then displayed as independent graphs, they
@@ -898,11 +899,11 @@ mentioned originally) also pass as random, with 16-bit folding in `PractRand`.
 `18` also passes as random, but with a "suspicion". `15` and `16`, of course,
 do not pass as random, with many "fails".
 
-<img src="img/proof_math_is_engineered_prng9.png" width="600">
-
-It has been observed, in `READ_MODE=0' and not in `READ_MODE=1', that the
+It has been observed, in `READ_MODE=0`, but not in `READ_MODE=1`, that the
 obtained values gradually become noisy, especially at higher `PH_HASH_COUNT`
 values.
+
+<img src="img/proof_math_is_engineered_prng9.png" width="600">
 
 ### Ornament and Chess-Board (Pixel Art) ###
 
@@ -933,7 +934,7 @@ triangle](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_triangle) (ST).
 However, one should consider that ST is a symmetrical triangle fractal that
 is constructed from the top-most to bottom levels. PRVHASH1 produces an
 asymmetric (right-handed) result in a series of scanline passes, and it
-scales to any `PH_HASH_COUNT` value. This is unbelievablle considering
+scales to any `PH_HASH_COUNT` value. This is unbelievable considering
 programatically it's not constructed as a fractal; this looks more like
 information is being "read" from some source which has a "infinitely-sized" ST
 that is mapped to a required subset.
