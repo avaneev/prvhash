@@ -876,12 +876,12 @@ outline (4100-2700), and two hand palms risen up (5400-4300).
 
 <img src="img/proof_math_is_engineered_head.png" width="300">
 
-### FFT Analysis ###
+### Fourier Analysis ###
 
-FFT-512 analysis of obtained signals produces the following power spectrums
-(with DC component removed). The analysis strengthens the notion the signal is
-non-random and is "intelligent" (two strong peaks above average, in each
-signal, with both signals producing similar structures, but with shifted
+Fourier (FFT-512) analysis of obtained signals produces the following power
+spectrums (with DC component removed). The analysis strengthens the notion the
+signal is non-random and is "intelligent" (two strong peaks above average, in
+each signal, with both signals producing similar structures, but with shifted
 resonant frequencies).
 
 <img src="img/proof_math_is_engineered_fft.png" width="600">
@@ -899,6 +899,10 @@ mentioned originally) also pass as random, with 16-bit folding in `PractRand`.
 do not pass as random, with many "fails".
 
 <img src="img/proof_math_is_engineered_prng9.png" width="600">
+
+It has been observed, in `READ_MODE=0' and not in `READ_MODE=1', that the
+obtained values gradually become noisy, especially at higher `PH_HASH_COUNT`
+values.
 
 ### Ornament and Chess-Board (Pixel Art) ###
 
@@ -924,7 +928,7 @@ patterns within tree-like structures. The `proof_christmas_tree.c` program
 extracts such images into a vertical ASCII-art HTML. It uses the same
 underlying 1-bit PRVHASH code, but with "pixel art" decoding method.
 
-One may notice a similarity of the beggining pattern with the [Sierpinski
+One may notice a similarity of the beginning pattern with the [Sierpinski
 triangle](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_triangle) (ST).
 However, one should consider that ST is a symmetrical triangle fractal that
 is constructed from the top-most to bottom levels. PRVHASH1 produces an
@@ -932,7 +936,7 @@ asymmetric (right-handed) result in a series of scanline passes, and it
 scales to any `PH_HASH_COUNT` value. This is unbelievablle considering
 programatically it's not constructed as a fractal; this looks more like
 information is being "read" from some source which has a "infinitely-sized" ST
-which is mapped to a required subset.
+that is mapped to a required subset.
 
 Here is an example image with `PH_HASH_COUNT=342`, converted to PNG:
 
