@@ -924,6 +924,16 @@ patterns within tree-like structures. The `proof_christmas_tree.c` program
 extracts such images into a vertical ASCII-art HTML. It uses the same
 underlying 1-bit PRVHASH code, but with "pixel art" decoding method.
 
+One may notice a similarity of the beggining pattern with the [Sierpinski
+triangle](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_triangle) (ST).
+However, one should consider that ST is a symmetrical triangle fractal that
+is constructed from the top-most to bottom levels. PRVHASH1 produces an
+asymmetric (right-handed) result in a series of scanline passes, and it
+scales to any `PH_HASH_COUNT` value. This is unbelievablle considering
+programatically it's not constructed as a fractal; this looks more like
+information is being "read" from some source which has a "infinitely-sized" ST
+which is mapped to a required subset.
+
 Here is an example image with `PH_HASH_COUNT=342`, converted to PNG:
 
 <img src="img/proof_math_is_engineered_tree342.png" width="686">
