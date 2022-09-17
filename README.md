@@ -843,6 +843,7 @@ represents impulses taken from two electric drum pads: a snare drum
 (oscillatory) and a bass drum (shift to extremum). 7. Most minor oscillations
 on the graph are similar to sinc-function-generated maximum-phase
 "pre-ringing" oscillations that are known in DSP engineering field.
+8. PRNG period of the blue graph is 255; orange is 273.
 
 In author's opinion, the program "reads data" directly from the entropy pool
 which is "encoded" into the mathematics from its inception, like any
