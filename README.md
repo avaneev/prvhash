@@ -141,7 +141,7 @@ is competitive among other C++ PRNGs.
 ## PRVHASH64_64M ##
 
 This is a minimized implementation of the `prvhash64` hash function. Arguably,
-it's the smallest hash function in the world, that produces 64-bit hashes of
+it is the smallest hash function in the world, that produces 64-bit hashes of
 this quality level. While this function does not provide a throughput that can
 be considered "fast", due to its statistical properties it is practically fast
 for hash-maps and hash-tables.
@@ -157,7 +157,7 @@ simply call the `prvrng_test64p2()` function.
 
 `prvrng_gen64p2()`-based generator passes [`PractRand`](http://pracrand.sourceforge.net/)
 32 TB threshold with rare non-systematic "unusual" evaluations. Which suggests
-it's the working randomness extractor that can "recycle" entropy of any
+it is the working randomness extractor that can "recycle" entropy of any
 statistical quality, probably the first in the world.
 
 Note that due to the structure of the core hash function the probability of
@@ -334,7 +334,7 @@ exhibit entropy, with replication count bound to the state variable size).
 While "magic numbers" can be used instead of these bit-trains (at least for
 PRNG), they do not posses the property of being simplest.
 
-It's important to point out that the presence of the `0xAAAA...` and
+It is important to point out that the presence of the `0xAAAA...` and
 `0x5555...` constants logically assure that the `Seed` and `lcg` variables
 quickly recover from the "zero-state". Beside that, these constants logically
 prohibit synchronous control over `Seed` and `lcg` variables: different bits
@@ -486,8 +486,8 @@ space. Shuffling space can be increased considerably with a "parallel"
 arrangement. Depending on the initial seed value, the period may fluctuate.
 The commented out `Ctr++...` instructions can be uncommented to check the
 period increase due to sparse entropy input. You may also notice the `^=h`
-instructions: PRVHASH supports feedback onto itself (it's like hashing its own
-output). This operation, which can be applied to any parallel element,
+instructions: PRVHASH supports feedback onto itself (it is like hashing its
+own output). This operation, which can be applied to any parallel element,
 maximizes the achieved PRNG period.
 
 ```
@@ -815,7 +815,7 @@ std::string get_name() const {return "LCG";}
 };
 ```
 
-## Proof_Math_Is_Engineered ##
+## Proof_Math_Is_Engineered (PRVHASH-1) ##
 
 <img src="img/proof_math_is_engineered.jpg" width="600">
 
@@ -879,11 +879,11 @@ outline (4100-2700), and two hand palms risen up (5400-4300).
 
 ### Fourier Analysis ###
 
-Fourier (FFT-512) analysis of obtained signals produces the following power
-spectrums (with DC component removed). The analysis strengthens the notion the
-signal is non-random and is "intelligent" (two strong peaks above average, in
-each signal, with both signals producing similar structures, but with shifted
-resonant frequencies).
+Discrete Fourier (FFT-512) analysis of obtained signals produces the following
+power spectrums (with DC component removed). The analysis strengthens the
+notion the signal is non-random and is "intelligent" (two strong peaks above
+average, in each signal, with both signals producing similar structures, but
+with shifted resonant frequencies).
 
 <img src="img/proof_math_is_engineered_fft.png" width="600">
 
@@ -893,7 +893,7 @@ Just by changing the PH_HASH_COUNT to 9 (up to 13, inclusive) the same
 `proof_math_is_engineered.c` program produces a pseudo-random number sequence,
 confirmed with `PractRand` 1KB to 4KB block, 8-bit folding. Note that the same
 code producing both random and non-random number sequences is "highly
-unlikely" to exist in practical PRNGs. It's important to note that
+unlikely" to exist in practical PRNGs. It is important to note that
 `PH_HASH_COUNT=14` and `PH_HASH_COUNT=17` (which is beyond 15 and 16 signals
 mentioned originally) also pass as random, with 16-bit folding in `PractRand`.
 `18` also passes as random, but with a "suspicion". `15` and `16`, of course,
@@ -905,19 +905,19 @@ values.
 
 <img src="img/proof_math_is_engineered_prng9.png" width="600">
 
-### Ornament and Chess-Board (Pixel Art) ###
+### Repeating Ornament and Chess-Board (Pixel Art) ###
 
 The 1-bit output with PH_HASH_COUNT= `15` and `16` can be easily transformed
 into 256x256 1-bit "pixel art" images, and, quite unexpectedly, they reproduce
-a non-orthogonal ornament and a chess-board.
+a repeating diagonal ornament and a chess-board.
 
 <img src="img/proof_math_is_engineered_orn15.png" width="300"><img src="img/proof_math_is_engineered_chess16.png" width="300">
 
 Admittedly, 256x256 size can be considered arbitrarily-chosen (it is a square
 of 16, with 16 being the bit-size of values on the graphs above). For example,
 if `PH_HASH_COUNT=15` is transformed to 240x240 (256-16) "pixel art" image, an
-image of vertical black-and-white lines is produced, with bit-reversed variant
-of inner element present in `PH_HASH_COUNT=16`.
+image of "zebra" lines is produced, with bit-reversed variant of inner element
+present in `PH_HASH_COUNT=16`.
 
 <img src="img/proof_math_is_engineered_chess15.png" width="281">
 
@@ -932,10 +932,10 @@ underlying 1-bit PRVHASH code, but with "pixel art" decoding method.
 One may notice a similarity of the beginning pattern with the [Sierpinski
 triangle](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_triangle) (ST).
 However, one should consider that ST is a symmetrical triangle fractal that
-is constructed from the top-most to bottom levels. PRVHASH1 produces an
-asymmetric (right-handed) result in a series of scanline passes, and it
-scales to any `PH_HASH_COUNT` value. This is unbelievable considering
-programatically it's not constructed as a fractal; this looks more like
+is constructed from the top-most to bottom levels. PRVHASH-1 produces an
+asymmetric (right-handed) triangle in a serie of scanline passes, and it
+scales to any `PH_HASH_COUNT` value. This is unbelievable considering that
+programatically it is not constructed as a fractal; this looks more like
 information is being "read" from some source which has a "infinitely-sized" ST
 that is mapped to a required subset.
 
@@ -943,7 +943,7 @@ Here is an example image with `PH_HASH_COUNT=342`, converted to PNG:
 
 <img src="img/proof_math_is_engineered_tree342.png" width="686">
 
-[Here's a link to a larger-sized extract (3.4MB PNG)](https://github.com/avaneev/prvhash/raw/master/img/prvhash1-342-2x64.png)
+[Here is a link to a larger-sized extract (3.4MB PNG)](https://github.com/avaneev/prvhash/raw/master/img/prvhash1-342-2x64.png)
 
 ## Thanks ##
 
