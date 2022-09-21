@@ -908,9 +908,9 @@ values.
 
 ### Repeating Ornament and Chess-Board (Pixel Art) ###
 
-The 1-bit output with PH_HASH_COUNT= `15` and `16` can be easily transformed
-into 256x256 1-bit "pixel art" images, and, quite unexpectedly, they reproduce
-a repeating diagonal ornament and a chess-board.
+The 1-bit output with PH_HASH_COUNT= `15` and `16` (`READ_MODE=0`) can be
+easily transformed into 256x256 1-bit "pixel art" images, and, quite
+unexpectedly, they reproduce a repeating diagonal ornament and a chess-board.
 
 <img src="img/proof_math_is_engineered_orn15.png" width="300"><img src="img/proof_math_is_engineered_chess16.png" width="300">
 
@@ -935,10 +935,11 @@ triangle](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_triangle) (ST).
 However, one should consider that ST is a symmetrical triangle fractal that
 is constructed from the top-most to bottom levels. PRVHASH-1 produces an
 asymmetric (right-handed) triangle in a serie of scanline passes, and it
-scales to any `PH_HASH_COUNT` value. This is unbelievable considering that
-programatically it is not constructed as a fractal; this looks more like
-information is being "read" from some source which has a "infinitely-sized" ST
-that is mapped to a required subset.
+scales to any `PH_HASH_COUNT` value. The initial part of the image looks like
+Wolfram Rule 153 "cellular automata" image (ST as well). However, if one
+considers the whole picture, including previously presented images and graphs,
+this leads to conclusion that some very complex "cellular automata" is working
+behind the scenes, further strengthening a "presence of intelligence" notion.
 
 Here is an example image with `PH_HASH_COUNT=342`, converted to PNG:
 
