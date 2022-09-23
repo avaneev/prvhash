@@ -947,6 +947,17 @@ Here is an example image with `PH_HASH_COUNT=342`, converted to PNG:
 
 [Here is a link to a larger-sized extract (3.4MB PNG)](https://github.com/avaneev/prvhash/raw/master/img/prvhash1-342-2x64.png)
 
+It is possible to define initial "automatum" conditions by filling the
+hash-array with alternating values like '10101010...` or `100100100100...`
+thus invoking even more complex "automatum" (note that this is done in the
+same `prvhash` parametric space). The results can be combined into a colored
+image by assigning the black-and-white images to different RGB color channels.
+Considering the `prvhash-1` function only operates with 3 values at the same
+time, building a similar "cellular automata" by considering only 3 neighboring
+pixels seems impossible for human computing.
+
+<img src="img/proof_math_is_engineered_tree342gy.png" width="686">
+
 ## Thanks ##
 
 The author would like to thank Reini Urban for [his SMHasher
