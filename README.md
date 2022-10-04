@@ -959,6 +959,17 @@ computing.
 
 <img src="img/proof_math_is_engineered_tree342gy.png" width="686">
 
+### Fine Art ###
+
+As it turns out, `prvhash1` can also produce a full-colored "fine art"-like
+imagery by using a simple multi-pass buffer accumulation approach. As it turns
+out, the images of "cellular automatas" shown previously perfectly align on
+top of each other at some specific `PH_HASH_COUNT` values. Note that the
+height of images is always a "power of 2" value. The `proof_fine_art.c`
+program can be used to produce such imagery (requires `stb_image_write.h`).
+
+<img src="img/prvhash1-1365-2048.jpg" width="240"><img src="img/prvhash1-1366-2048.jpg" width="240"><img src="img/prvhash1-2046-2048.jpg" width="310">
+
 ## Thanks ##
 
 The author would like to thank Reini Urban for [his SMHasher
