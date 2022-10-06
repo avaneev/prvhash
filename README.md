@@ -961,12 +961,13 @@ computing.
 
 ### Fine Art ###
 
-As it turns out, `prvhash1` can also produce a full-colored "fine art"-like
-imagery by using a simple multi-pass buffer accumulation approach. As it turns
-out, the images of "cellular automatas" shown previously perfectly align on
-top of each other at some specific `PH_HASH_COUNT` values. Note that the
-height of images is always a "power of 2" value. The `proof_fine_art.c`
-program can be used to produce such imagery (requires `stb_image_write.h`).
+`prvhash-1` can also produce a full-colored "fine art"-like imagery by using a
+simple multi-pass buffer accumulation approach. As it turns out, the images of
+"cellular automata" shown previously perfectly align on top of each other at
+some specific `PH_HASH_COUNT` values (2/3, 4/5 of height, and height-1). Note
+that the height of images is always a "power of 2" value. The
+`proof_fine_art.c` program can be used to produce such imagery (requires
+`stb_image_write.h` library).
 
 <img src="img/prvhash1-1365-2048.jpg" width="240"><img src="img/prvhash1-1366-2048.jpg" width="240"><img src="img/prvhash1-2046-2048.jpg" width="310">
 

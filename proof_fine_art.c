@@ -1,8 +1,8 @@
 /**
- * proof_fine_art.c (prvhash1) version 4.3.2
+ * proof_fine_art.c (prvhash1) version 4.3.3
  *
- * Program reads "prvhash1" data and builds a colored two-dimensional image
- * using multi-pass approach. Produces a JPG image using "stb_image_write".
+ * Program reads "prvhash1" data and builds a colored image using multi-pass
+ * approach. Produces a JPG image using "stb_image_write" library.
  * 
  * License
  *
@@ -27,23 +27,23 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include <stdint.h>
 // !!! Requires "stb_image_write.h" from https://github.com/nothings/stb
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-#include <stdint.h>
-#include <string.h>
 #define PH_HASH_COUNT 1365 // 1365, 1366, or 2046
-#define READ_MODE 1 // 0 or 1
+#define PH_READ_MODE 1 // 0 or 1
 #define WIDTH ( PH_HASH_COUNT + 1 )
 #define HEIGHT 2048
 #define CHN 3
 #define PASS_COUNT 127
+#define MSH 1
 static inline uint8_t prvhash_core1( uint8_t* const Seed,
 	uint8_t* const lcg, uint8_t* const Hash )
 {
 	*Hash ^= (uint8_t) ( *Seed ^ 1 );
-	*lcg ^= (uint8_t) ( *Seed ^ READ_MODE );
+	*lcg ^= (uint8_t) ( *Seed ^ PH_READ_MODE );
 	const uint8_t out = (uint8_t) ( *lcg ^ *Seed );
 	*Seed ^= *Hash;
 	return( out );
@@ -56,31 +56,24 @@ int main()
 	uint8_t Hash2[ PH_HASH_COUNT ] = { 0 };
 	uint8_t Seed3 = 0, lcg3 = 0;
 	uint8_t Hash3[ PH_HASH_COUNT ] = { 0 };
-	int HashPos = 0;
-	for( int i = 0; i < PH_HASH_COUNT; i += 2 )
+	int i, HashPos = 0;
+	for( i = 0; i < PH_HASH_COUNT; i += 2 ) { Hash2[ i ] = 1; }
+	for( i = 0; i < PH_HASH_COUNT; i += 3 ) { Hash3[ i ] = 1; }
+
+	uint8_t* img = (uint8_t*) malloc( WIDTH * HEIGHT * CHN );
+	memset( img, 0, WIDTH * HEIGHT * CHN );
+	for( i = 0; i < PASS_COUNT; i++ )
 	{
-		Hash2[ i ] = 1;
-	}
-	for( int i = 0; i < PH_HASH_COUNT; i += 3 )
-	{
-		Hash3[ i ] = 1;
-	}
-	uint8_t* ImgBuf = (uint8_t*) malloc( WIDTH * HEIGHT * CHN );
-	memset( ImgBuf, 0, WIDTH * HEIGHT * 3 );
-	for( int k = 0; k < PASS_COUNT; k++ )
-	{
-		uint8_t* op = ImgBuf;
+		uint8_t* op = img;
 		for( int l = 0; l < WIDTH * HEIGHT; l++ )
 		{
-			uint8_t pv = prvhash_core1( &Seed, &lcg, Hash + HashPos );
-			uint8_t pv2 = prvhash_core1( &Seed2, &lcg2, Hash2 + HashPos );
-			uint8_t pv3 = prvhash_core1( &Seed3, &lcg3, Hash3 + HashPos );
+			op[ 0 ] += prvhash_core1( &Seed, &lcg, Hash + HashPos ) << MSH;
+			op[ 2 ] += prvhash_core1( &Seed2, &lcg2, Hash2 + HashPos ) << MSH;
+			op[ 1 ] += prvhash_core1( &Seed3, &lcg3, Hash3 + HashPos ) << MSH;
 			if( ++HashPos == PH_HASH_COUNT ) HashPos = 0;
-			op[ 0 ] += pv << 1;
-			op[ 2 ] += pv2 << 1;
-			op[ 1 ] += pv3 << 1;
 			op += CHN;
 		}
 	}
-	stbi_write_jpg( "prvhash1-2048.jpg", WIDTH, HEIGHT, CHN, ImgBuf, 90 );
+	stbi_write_jpg( "prvhash1-2048.jpg", WIDTH, HEIGHT, CHN, img, 90 );
+	free( img );
 }
