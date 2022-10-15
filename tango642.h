@@ -1,5 +1,5 @@
 /**
- * tango642.h version 4.3.2
+ * tango642.h version 4.3.3
  *
  * The inclusion file for the "tango642" PRVHASH PRNG-based streamed XOR
  * function.
@@ -46,6 +46,18 @@
 #define TANGO642_EC PRVHASH_EC64 // Value EC function.
 #define TANGO642_SH4( v1, v2, v3, v4 ) \
 	{ TANGO642_T t = v1; v1 = v2; v2 = v3; v3 = v4; v4 = t; } // 4-value shift macro.
+
+// Likelihood macros that are used for manually-guided micro-optimization.
+
+#if defined( __GNUC__ ) || defined( __clang__ )
+
+	#define TANGO642_LIKELY( x )  __builtin_expect( x, 1 )
+
+#else // likelihood macros
+
+	#define TANGO642_LIKELY( x ) ( x )
+
+#endif // likelihood macros
 
 /**
  * tango642 context structure, can be placed on stack. On systems where this
@@ -199,7 +211,7 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 {
 	uint8_t* msg = (uint8_t*) msg0;
 
-	while( msglen > 0 )
+	while( TANGO642_LIKELY( msglen != 0 ))
 	{
 		if( ctx -> RndLeft[ TANGO642_FUSE - 1 ] == 0 )
 		{
@@ -218,8 +230,11 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 			uint8_t* const ha = (uint8_t*) ctx -> Hash;
 			size_t hp = ctx -> HashPos;
 
-			while( msglen > TANGO642_S * TANGO642_FUSE )
+			while( TANGO642_LIKELY( msglen > TANGO642_S * TANGO642_FUSE ))
 			{
+				SeedF3 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + hp ));
+				hp = ( hp + TANGO642_S ) & TANGO642_HASH_MASK;
+
 				SeedF3 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + hp ));
 				hp = ( hp + TANGO642_S ) & TANGO642_HASH_MASK;
 
@@ -227,9 +242,6 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 				memcpy( &mx1, msg, TANGO642_S );
 				memcpy( &mx2, msg + TANGO642_S, TANGO642_S );
 				memcpy( &mx3, msg + TANGO642_S_2, TANGO642_S );
-
-				SeedF3 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + hp ));
-				hp = ( hp + TANGO642_S ) & TANGO642_HASH_MASK;
 
 				mx1 ^= TANGO642_EC( TANGO642_FN( &SeedF1, &lcgF1, &HashF1 ));
 				memcpy( msg, &mx1, TANGO642_S );
@@ -282,7 +294,7 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 		size_t c = ( msglen > ctx -> RndLeft[ 0 ] ?
 			ctx -> RndLeft[ 0 ] : msglen );
 
-		if( c > 0 )
+		if( c != 0 )
 		{
 			msglen -= c;
 			ctx -> RndLeft[ 0 ] -= c;
@@ -291,16 +303,16 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 			do
 			{
 				*msg ^= (uint8_t) RndBytes;
-				RndBytes >>= 8;
 				msg++;
-			} while( --c > 0 );
+				RndBytes >>= 8;
+			} while( --c != 0 );
 
 			ctx -> RndBytes[ 0 ] = RndBytes;
 		}
 
 		c = ( msglen > ctx -> RndLeft[ 1 ] ? ctx -> RndLeft[ 1 ] : msglen );
 
-		if( c > 0 )
+		if( c != 0 )
 		{
 			msglen -= c;
 			ctx -> RndLeft[ 1 ] -= c;
@@ -309,16 +321,16 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 			do
 			{
 				*msg ^= (uint8_t) RndBytes;
-				RndBytes >>= 8;
 				msg++;
-			} while( --c > 0 );
+				RndBytes >>= 8;
+			} while( --c != 0 );
 
 			ctx -> RndBytes[ 1 ] = RndBytes;
 		}
 
 		c = ( msglen > ctx -> RndLeft[ 2 ] ? ctx -> RndLeft[ 2 ] : msglen );
 
-		if( c > 0 )
+		if( c != 0 )
 		{
 			msglen -= c;
 			ctx -> RndLeft[ 2 ] -= c;
@@ -327,9 +339,9 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 			do
 			{
 				*msg ^= (uint8_t) RndBytes;
-				RndBytes >>= 8;
 				msg++;
-			} while( --c > 0 );
+				RndBytes >>= 8;
+			} while( --c != 0 );
 
 			ctx -> RndBytes[ 2 ] = RndBytes;
 		}
@@ -362,7 +374,7 @@ static inline void tango642_final_selfdestruct( TANGO642_CTX* const ctx )
 	const size_t c = sizeof( TANGO642_CTX );
 
 	memset( &pad, 0, c );
-	tango642_xor( ctx, (uint8_t*) &pad, c );
+	tango642_xor( ctx, &pad, c );
 
 	memcpy( ctx, &pad, c );
 
