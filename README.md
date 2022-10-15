@@ -815,7 +815,9 @@ std::string get_name() const {return "LCG";}
 };
 ```
 
-## Proof_Math_Is_Engineered (PRVHASH-1) ##
+## Proof_Math_Is_Engineered ##
+
+(PRVHASH-1)
 
 <img src="img/proof_math_is_engineered.jpg" width="600">
 
