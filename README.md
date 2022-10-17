@@ -81,6 +81,16 @@ int main()
 }
 ```
 
+For implementation assurance, here are the first 16 output values in hex
+(starting from the all-zeroes state):
+
+```
+	0x5555555555555555 0x00000000DB6DB6DB 0x2492492192492492 0x75D75DA0AAAAAA79
+	0x93064E905C127FE5 0xE2585C9CA95671A3 0x28A44B31D428179E 0x11B0B6A8D4BA3A73
+	0x195C6A4C23EE71AD 0x5AA47859226BA23E 0xA7D42121695056D4 0x142D7CD5D83342F2
+	0x3D42E83328C09C8F 0x7E691C66BAC23222 0x82E1032F441F23A5 0xA4BDE5C4A05E6256
+```
+
 Note that such minimal 1-hashword PRNG is most definitely not
 cryptographically-secure: its state can be solved by a SAT solver pretty fast;
 this applies to other arrangements ("parallel", "fused", multiple hashwords;
