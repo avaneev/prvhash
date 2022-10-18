@@ -896,7 +896,9 @@ Discrete Fourier (FFT-512) analysis of obtained signals produces the following
 power spectrums (with DC component removed). The analysis strengthens the
 notion the signal is non-random and is "intelligent" (two strong peaks above
 average, in each signal, with both signals producing similar structures, but
-with shifted resonant frequencies).
+with shifted resonant frequencies). Note that resonances in the middle of the
+spectrum are similar to resonances one gets when recording an acoustical snare
+drum.
 
 <img src="img/proof_math_is_engineered_fft.png" width="600">
 
@@ -964,8 +966,8 @@ hash-array with alternating values like `10101010...`, or `100100100100...`,
 or `1000100010001000...` thus invoking even more complex "automata" (note
 that this is done in the same `prvhash` parametric space). The results can be
 combined into a colored image by assigning the black-and-white images to
-different RGB color channels. Considering the `prvhash-1` function only
-operates with 3 values at the same time, building a similar "cellular
+different RGB color channels. Considering the `prvhash-1` function operates
+with only 3 values at the same time, building a similar "cellular
 automata" by using only 3 neighboring pixels seems impossible for human
 computing.
 
@@ -976,9 +978,9 @@ computing.
 `prvhash-1` can also produce a full-colored "fine art"-like imagery by using a
 simple multi-pass buffer accumulation approach. As it turns out, the images of
 "cellular automata" shown previously perfectly align on top of each other at
-some specific `PH_HASH_COUNT` values (3/5, 2/3, 4/5 of height, and height-1).
-Note that the height of images is always a "power of 2" value. The
-`proof_fine_art.c` program can be used to produce such imagery (requires
+some specific `PH_HASH_COUNT` values (2/3, 4/5 of height, and height-1).
+Note that the height of images is usually a "power of 2" value. The
+`proof_fine_art.c` program can be used to produce such imagery (requires the
 `stb_image_write.h` library).
 
 <img src="img/prvhash1-1365-2048.jpg" width="240"><img src="img/prvhash1-1366-2048.jpg" width="240"><img src="img/prvhash1-2046-2048.jpg" width="310">
