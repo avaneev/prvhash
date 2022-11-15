@@ -1,5 +1,5 @@
 /**
- * prvhash64s.h version 4.3
+ * prvhash64s.h version 4.3.1
  *
  * The inclusion file for the "prvhash64s" hash function. More secure,
  * streamed, and high-speed. Implements a parallel variant of the "prvhash64"
@@ -9,7 +9,7 @@
  *
  * License
  *
- * Copyright (c) 2020-2021 Aleksey Vaneev
+ * Copyright (c) 2020-2022 Aleksey Vaneev
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -37,7 +37,7 @@
 
 #define PRH64S_T uint64_t // PRVHASH state variable type.
 #define PRH64S_S sizeof( PRH64S_T ) // State variable type's size.
-#define PRH64S_S2 ( PRH64S_S * 2 ) // = PRH64S_S * 2.
+#define PRH64S_S_2 ( PRH64S_S * 2 ) // = PRH64S_S * 2.
 #define PRH64S_FN prvhash_core64 // PRVHASH function name.
 #define PRH64S_LUEC( v ) prvhash_lu64ec( v ) // Value load function, with EC.
 #define PRH64S_EC( v ) PRVHASH_EC64( v ) // Value's endianness-correction.
@@ -64,7 +64,7 @@ typedef struct {
 		///<
 	size_t HashPos; ///< Hash buffer position.
 	size_t BlockFill; ///< The number of bytes filled in the Block.
-	uint8_t fb; ///< Final stream bit value, for hashing finalization.
+	uint8_t fb; ///< Final stream byte value, for hashing finalization.
 } PRVHASH64S_CTX;
 
 /**
@@ -134,8 +134,8 @@ static inline void prvhash64s_init( PRVHASH64S_CTX* const ctx,
 
 		for( i = 0; i < PRH64S_PAR; i++ )
 		{
-			ctx -> Seed[ i ] = PRH64S_LUEC( InitVec + i * PRH64S_S2 );
-			ctx -> lcg[ i ] = PRH64S_LUEC( InitVec + i * PRH64S_S2 +
+			ctx -> Seed[ i ] = PRH64S_LUEC( InitVec + i * PRH64S_S_2 );
+			ctx -> lcg[ i ] = PRH64S_LUEC( InitVec + i * PRH64S_S_2 +
 				PRH64S_S );
 		}
 	}
@@ -145,17 +145,35 @@ static inline void prvhash64s_init( PRVHASH64S_CTX* const ctx,
 	ctx -> HashLen = HashLen;
 	ctx -> HashPos = 0;
 	ctx -> BlockFill = 0;
-	ctx -> fb = 1;
+	ctx -> fb = 0;
 
 	PRH64S_T* const hc = (PRH64S_T*) ctx -> Hash;
 
+	PRH64S_T Seed1 = ctx -> Seed[ 0 ];
+	PRH64S_T Seed2 = ctx -> Seed[ 1 ];
+	PRH64S_T Seed3 = ctx -> Seed[ 2 ];
+	PRH64S_T Seed4 = ctx -> Seed[ 3 ];
+	PRH64S_T lcg1 = ctx -> lcg[ 0 ];
+	PRH64S_T lcg2 = ctx -> lcg[ 1 ];
+	PRH64S_T lcg3 = ctx -> lcg[ 2 ];
+	PRH64S_T lcg4 = ctx -> lcg[ 3 ];
+
 	for( i = 0; i < PRVHASH_INIT_COUNT; i++ )
 	{
-		PRH64S_FN( &ctx -> Seed[ 0 ], &ctx -> lcg[ 0 ], hc );
-		PRH64S_FN( &ctx -> Seed[ 1 ], &ctx -> lcg[ 1 ], hc );
-		PRH64S_FN( &ctx -> Seed[ 2 ], &ctx -> lcg[ 2 ], hc );
-		PRH64S_FN( &ctx -> Seed[ 3 ], &ctx -> lcg[ 3 ], hc );
+		PRH64S_FN( &Seed1, &lcg1, hc );
+		PRH64S_FN( &Seed2, &lcg2, hc );
+		PRH64S_FN( &Seed3, &lcg3, hc );
+		PRH64S_FN( &Seed4, &lcg4, hc );
 	}
+
+	ctx -> Seed[ 0 ] = Seed1;
+	ctx -> Seed[ 1 ] = Seed2;
+	ctx -> Seed[ 2 ] = Seed3;
+	ctx -> Seed[ 3 ] = Seed4;
+	ctx -> lcg[ 0 ] = lcg1;
+	ctx -> lcg[ 1 ] = lcg2;
+	ctx -> lcg[ 2 ] = lcg3;
+	ctx -> lcg[ 3 ] = lcg4;
 }
 
 /**
@@ -173,8 +191,6 @@ static inline void prvhash64s_init( PRVHASH64S_CTX* const ctx,
 static inline void prvhash64s_update( PRVHASH64S_CTX* const ctx,
 	const void* const Msg0, size_t MsgLen )
 {
-	const uint8_t* Msg = (const uint8_t*) Msg0;
-
 	if( MsgLen == 0 )
 	{
 		return;
@@ -182,47 +198,56 @@ static inline void prvhash64s_update( PRVHASH64S_CTX* const ctx,
 
 	ctx -> MsgLen += (uint64_t) MsgLen;
 
-	const PRH64S_T* const HashEnd =
-		(PRH64S_T*) ( ctx -> Hash + ctx -> HashLen );
+	const uint8_t* Msg = (const uint8_t*) Msg0;
+	size_t blf = ctx -> BlockFill;
 
-	PRH64S_T* hc = (PRH64S_T*) ( ctx -> Hash + ctx -> HashPos );
-
-	if( ctx -> BlockFill > 0 && ctx -> BlockFill + MsgLen >= PRH64S_LEN )
+	if( blf + MsgLen >= PRH64S_LEN && blf != 0 )
 	{
-		const size_t CopyLen = PRH64S_LEN - ctx -> BlockFill;
-		memcpy( ctx -> Block + ctx -> BlockFill, Msg, CopyLen );
-		ctx -> BlockFill = 0;
+		const size_t CopyLen = PRH64S_LEN - blf;
+		memcpy( ctx -> Block + blf, Msg, CopyLen );
+		blf = 0;
 
 		Msg += CopyLen;
 		MsgLen -= CopyLen;
 
+		PRH64S_T* const hc = (PRH64S_T*) ( ctx -> Hash + ctx -> HashPos );
+
+		ctx -> HashPos += PRH64S_S;
+
+		if( ctx -> HashPos == ctx -> HashLen )
+		{
+			ctx -> HashPos = 0;
+		}
+
 		const PRH64S_T m1 = PRH64S_LUEC( ctx -> Block );
 		const PRH64S_T m2 = PRH64S_LUEC( ctx -> Block + PRH64S_S );
-		const PRH64S_T m3 = PRH64S_LUEC( ctx -> Block + PRH64S_S2 );
+		const PRH64S_T m3 = PRH64S_LUEC( ctx -> Block + PRH64S_S_2 );
 		const PRH64S_T m4 = PRH64S_LUEC( ctx -> Block + PRH64S_S * 3 );
 
 		ctx -> Seed[ 0 ] ^= m1;
 		ctx -> lcg[ 0 ] ^= m1;
+		PRH64S_FN( &ctx -> Seed[ 0 ], &ctx -> lcg[ 0 ], hc );
+
 		ctx -> Seed[ 1 ] ^= m2;
 		ctx -> lcg[ 1 ] ^= m2;
+		PRH64S_FN( &ctx -> Seed[ 1 ], &ctx -> lcg[ 1 ], hc );
+
 		ctx -> Seed[ 2 ] ^= m3;
 		ctx -> lcg[ 2 ] ^= m3;
+		PRH64S_FN( &ctx -> Seed[ 2 ], &ctx -> lcg[ 2 ], hc );
+
 		ctx -> Seed[ 3 ] ^= m4;
 		ctx -> lcg[ 3 ] ^= m4;
-
-		PRH64S_FN( &ctx -> Seed[ 0 ], &ctx -> lcg[ 0 ], hc );
-		PRH64S_FN( &ctx -> Seed[ 1 ], &ctx -> lcg[ 1 ], hc );
-		PRH64S_FN( &ctx -> Seed[ 2 ], &ctx -> lcg[ 2 ], hc );
 		PRH64S_FN( &ctx -> Seed[ 3 ], &ctx -> lcg[ 3 ], hc );
-
-		if( ++hc == HashEnd )
-		{
-			hc = (PRH64S_T*) ctx -> Hash;
-		}
 	}
 
 	if( MsgLen >= PRH64S_LEN )
 	{
+		const PRH64S_T* const HashEnd =
+			(PRH64S_T*) ( ctx -> Hash + ctx -> HashLen );
+
+		PRH64S_T* hc = (PRH64S_T*) ( ctx -> Hash + ctx -> HashPos );
+
 		PRH64S_T Seed1 = ctx -> Seed[ 0 ];
 		PRH64S_T Seed2 = ctx -> Seed[ 1 ];
 		PRH64S_T Seed3 = ctx -> Seed[ 2 ];
@@ -235,13 +260,9 @@ static inline void prvhash64s_update( PRVHASH64S_CTX* const ctx,
 		do
 		{
 			const PRH64S_T m1 = PRH64S_LUEC( Msg );
-			Msg += PRH64S_S;
-			const PRH64S_T m2 = PRH64S_LUEC( Msg );
-			Msg += PRH64S_S;
-			const PRH64S_T m3 = PRH64S_LUEC( Msg );
-			Msg += PRH64S_S;
-			const PRH64S_T m4 = PRH64S_LUEC( Msg );
-			Msg += PRH64S_S;
+			const PRH64S_T m2 = PRH64S_LUEC( Msg + PRH64S_S );
+			const PRH64S_T m3 = PRH64S_LUEC( Msg + PRH64S_S_2 );
+			const PRH64S_T m4 = PRH64S_LUEC( Msg + PRH64S_S * 3 );
 
 			Seed1 ^= m1;
 			lcg1 ^= m1;
@@ -257,12 +278,13 @@ static inline void prvhash64s_update( PRVHASH64S_CTX* const ctx,
 			PRH64S_FN( &Seed3, &lcg3, hc );
 			PRH64S_FN( &Seed4, &lcg4, hc );
 
+			Msg += PRH64S_LEN;
+			MsgLen -= PRH64S_LEN;
+
 			if( ++hc == HashEnd )
 			{
 				hc = (PRH64S_T*) ctx -> Hash;
 			}
-
-			MsgLen -= PRH64S_LEN;
 
 		} while( MsgLen >= PRH64S_LEN );
 
@@ -274,13 +296,12 @@ static inline void prvhash64s_update( PRVHASH64S_CTX* const ctx,
 		ctx -> lcg[ 1 ] = lcg2;
 		ctx -> lcg[ 2 ] = lcg3;
 		ctx -> lcg[ 3 ] = lcg4;
+		ctx -> HashPos = (uint8_t*) hc - ctx -> Hash;
 	}
 
-	ctx -> HashPos = (uint8_t*) hc - ctx -> Hash;
-	ctx -> fb = (uint8_t) ( 1 << ( *( Msg + MsgLen - 1 ) >> 7 ));
-
-	memcpy( ctx -> Block + ctx -> BlockFill, Msg, MsgLen );
-	ctx -> BlockFill += MsgLen;
+	memcpy( ctx -> Block + blf, Msg, MsgLen );
+	ctx -> BlockFill = blf + MsgLen;
+	ctx -> fb = Msg[ MsgLen - 1 ];
 }
 
 /**
@@ -298,12 +319,12 @@ static inline void prvhash64s_final( PRVHASH64S_CTX* const ctx )
 	uint8_t fbytes[ PRH64S_LEN ];
 	memset( fbytes, 0, PRH64S_LEN );
 
-	fbytes[ PRH64S_S - 1 ] = ctx -> fb;
+	fbytes[ PRH64S_S - 1 ] = 1 << ( ctx -> fb >> 7 );
 	prvhash64s_update( ctx, fbytes, PRH64S_S );
 
 	const uint64_t MsgLen = PRH64S_EC( ctx -> MsgLen );
 	prvhash64s_update( ctx, &MsgLen, 8 );
-	fbytes[ PRH64S_S - 1 ] = ctx -> fb;
+	fbytes[ PRH64S_S - 1 ] = 1 << ( ctx -> fb >> 7 );
 	prvhash64s_update( ctx, fbytes, PRH64S_S );
 
 	if( ctx -> BlockFill > 0 )

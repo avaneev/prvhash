@@ -1,15 +1,15 @@
 /**
- * prvhash_core.h version 4.3
+ * prvhash_core.h version 4.3.1
  *
  * The inclusion file for the "prvhash_core*" PRVHASH core functions for
- * various state variable sizes. Also includes several auxiliary functions,
- * for endianness-correction.
+ * various state variable sizes. Also includes several auxiliary functions and
+ * macros for endianness-correction.
  *
  * Description is available at https://github.com/avaneev/prvhash
  *
  * License
  *
- * Copyright (c) 2020-2021 Aleksey Vaneev
+ * Copyright (c) 2020-2022 Aleksey Vaneev
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -198,8 +198,7 @@ static inline __uint128_t prvhash_core128( __uint128_t* const Seed0,
 
 // Macros that apply byte-swapping.
 
-#if defined( __GNUC__ ) || defined( __clang__ ) || \
-	( defined( __GNUC__ ) && defined( __INTEL_COMPILER ))
+#if defined( __GNUC__ ) || defined( __clang__ )
 
 	#define PRVHASH_BYTESW32( v ) __builtin_bswap32( v )
 	#define PRVHASH_BYTESW64( v ) __builtin_bswap64( v )
@@ -293,63 +292,6 @@ static inline uint64_t prvhash_lu64ec( const uint8_t* const p )
 	memcpy( &v, p, 8 );
 
 	return( PRVHASH_EC64( v ));
-}
-
-/**
- * Function loads 64-bit message word and pads it with the "final byte". This
- * function should only be called if there is less than 8 bytes left to read.
- * Function performs endianness-correction automatically.
- *
- * @param Msg Message pointer, alignment is unimportant. Should be below or
- * equal to MsgEnd.
- * @param MsgEnd Message's end pointer.
- * @param fb Final byte used for padding.
- */
-
-static inline uint64_t prvhash_lpu64ec( const uint8_t* const Msg,
-	const uint8_t* const MsgEnd, uint64_t fb )
-{
-	const int l = (int) ( MsgEnd - Msg );
-	fb <<= ( l << 3 );
-
-	if( l > 3 )
-	{
-		fb |= (uint64_t) prvhash_lu32ec( Msg );
-
-		if( l > 4 )
-		{
-			fb |= (uint64_t) Msg[ 4 ] << 32;
-
-			if( l > 5 )
-			{
-				fb |= (uint64_t) Msg[ 5 ] << 40;
-
-				if( l > 6 )
-				{
-					fb |= (uint64_t) Msg[ 6 ] << 48;
-				}
-			}
-		}
-
-		return( fb );
-	}
-
-	if( l != 0 )
-	{
-		fb |= Msg[ 0 ];
-
-		if( l > 1 )
-		{
-			fb |= (uint64_t) Msg[ 1 ] << 8;
-
-			if( l > 2 )
-			{
-				fb |= (uint64_t) Msg[ 2 ] << 16;
-			}
-		}
-	}
-
-	return( fb );
 }
 
 #endif // PRVHASH_CORE_INCLUDED
