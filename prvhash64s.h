@@ -319,12 +319,12 @@ static inline void prvhash64s_final( PRVHASH64S_CTX* const ctx )
 	uint8_t fbytes[ PRH64S_LEN ];
 	memset( fbytes, 0, PRH64S_LEN );
 
-	fbytes[ PRH64S_S - 1 ] = 1 << ( ctx -> fb >> 7 );
+	fbytes[ PRH64S_S - 1 ] = (uint8_t) ( 1 << ( ctx -> fb >> 7 ));
 	prvhash64s_update( ctx, fbytes, PRH64S_S );
 
 	const uint64_t MsgLen = PRH64S_EC( ctx -> MsgLen );
 	prvhash64s_update( ctx, &MsgLen, 8 );
-	fbytes[ PRH64S_S - 1 ] = 1 << ( ctx -> fb >> 7 );
+	fbytes[ PRH64S_S - 1 ] = (uint8_t) ( 1 << ( ctx -> fb >> 7 ));
 	prvhash64s_update( ctx, fbytes, PRH64S_S );
 
 	if( ctx -> BlockFill > 0 )
