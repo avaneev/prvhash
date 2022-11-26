@@ -983,6 +983,11 @@ Note that the height of images is usually a "power of 2" value. The
 `proof_fine_art.c` program can be used to produce such imagery (requires the
 `stb_image_write.h` library).
 
+You may also take a look at an
+[animation](https://www.youtube.com/watch?v=qYfGjD19VWo)
+which represents a continuous generation while displaying a sum of the recent
+255 passes, at every moment.
+
 <img src="img/prvhash1-1365-2048.jpg" width="240"><img src="img/prvhash1-1366-2048.jpg" width="240"><img src="img/prvhash1-2046-2048.jpg" width="310">
 
 ## Thanks ##
