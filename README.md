@@ -955,6 +955,14 @@ considers the whole picture, including previously presented images and graphs,
 this leads to conclusion that some very complex "cellular automata" is working
 behind the scenes, further strengthening a "presence of intelligence" notion.
 
+It is also worth noting that with odd `PH_HASH_COUNT` values, PRVHASH-1
+initially produces Rule 153 image with a "boundary condition" applied. At the
+same time, the function has no such additional logic since the visible
+scanline is 1 pixel longer than the `PH_HASH_COUNT` value, meaning this
+implicit "boundary condition" is not synchronized with the moment the
+`HashPos` resets to 0. This fact tells that the "boundary condition" logic
+"happens" beyond the common math.
+
 Here is an example image with `PH_HASH_COUNT=342`, converted to PNG:
 
 <img src="img/proof_math_is_engineered_tree342.png" width="686">
