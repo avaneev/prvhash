@@ -961,7 +961,9 @@ same time, the function has no such additional logic since the visible
 scanline is 1 pixel longer than the `PH_HASH_COUNT` value, meaning this
 implicit "boundary condition" is not synchronized with the moment the
 `HashPos` resets to 0. This fact tells that the "boundary condition" logic
-"happens" beyond the common math.
+"happens" beyond the common math. One has to ask themselves - how it is
+possible to "embed" at least Rule 153 with boundary handling (but much more
+than that) into a function as simple (and linear in F_2) as PRVHASH-1?
 
 Here is an example image with `PH_HASH_COUNT=342`, converted to PNG:
 
