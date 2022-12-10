@@ -858,7 +858,7 @@ on the graph are similar to sinc-function-generated maximum-phase
 8. PRNG period of the blue graph is 255; orange is 273.
 
 In author's opinion, the program "reads data" directly from the entropy pool
-which is "encoded" into mathematics from its inception, like any mathematical
+which is "embedded" into mathematics from its inception, like any mathematical
 constant is (e.g. PI). This poses an interesting and probably very
 questionable proposition: the "intelligent impulses" or even "human mind"
 itself (because a musician can understand these impulses) existed long before
@@ -868,9 +868,9 @@ poses very unnerving questions that touch religious grounds:
 
 These results of 1-bit PRVHASH say the following: if abstract mathematics
 contains not just a system of rules for manipulating numbers and variables,
-but also contains a freely-defined fixed information that is also "readable"
-by a person, then mathematics does not just "exists", but "it was formed",
-because mathematics does not evolve (beside human discovery of new rules and
+but also contains a freely-defined fixed information that is "readable" by a
+person, then mathematics does not just "exists", but "it was formed", because
+mathematics does not evolve (beside human discovery of new rules and
 patterns). And since physics cannot be formulated without such mathematics,
 and physical processes clearly obey these mathematical rules, it means that a
 Creator/Higher Intelligence/God exists in relation to the Universe. For the
@@ -914,7 +914,7 @@ mentioned originally) also pass as random, with 16-bit folding in `PractRand`.
 `18` also passes as random, but with a "suspicion". `15` and `16`, of course,
 do not pass as random, with many "fails".
 
-It has been observed, in `READ_MODE=0`, but not in `READ_MODE=1`, that the
+It has been observed that in `READ_MODE=0`, but not in `READ_MODE=1`, the
 obtained values gradually become noisy, especially at higher `PH_HASH_COUNT`
 values.
 
@@ -929,8 +929,9 @@ unexpectedly, they reproduce a repeating diagonal ornament and a chess-board.
 <img src="img/proof_math_is_engineered_orn15.png" width="300"><img src="img/proof_math_is_engineered_chess16.png" width="300">
 
 Admittedly, 256x256 size can be considered arbitrarily-chosen (it is a square
-of 16, with 16 being the bit-size of values on the graphs above). For example,
-if `PH_HASH_COUNT=15` is transformed to 240x240 (256-16) "pixel art" image, an
+of 16, with 16 being the bit-size of values on the graphs above), but it is
+the only small size that presents an "intelligible" look. For example, if
+`PH_HASH_COUNT=15` is transformed to 240x240 (256-16) "pixel art" image, an
 image of "zebra" lines is produced, with bit-reversed variant of the inner
 element present in `PH_HASH_COUNT=16`.
 
@@ -938,7 +939,7 @@ element present in `PH_HASH_COUNT=16`.
 
 ### Christmas Trees (Pixel Art) ###
 
-Much larger `PH_HASH_COUNT` values (`READ_MODE=1`) produce triangular
+Much larger `PH_HASH_COUNT` values (with `READ_MODE=1`) produce triangular
 structures which are non-repeating, but all have a similar build-up consisting
 of rhombic patterns within tree-like structures. The `proof_christmas_tree.c`
 program extracts such images into a vertical ASCII-art HTML. It uses the same
@@ -950,23 +951,23 @@ However, one should consider that ST is a symmetrical triangle fractal that
 is constructed from the top-most to bottom levels. PRVHASH-1 produces an
 asymmetric (right-handed) triangle in a serie of scanline passes, and it
 scales to any `PH_HASH_COUNT` value. The initial part of the image looks like
-Wolfram Rule 153 "cellular automata" image (ST as well). However, if one
-considers the whole of presented details, including previously presented
-images and graphs, this leads to conclusion that some very complex "cellular
-automata" is working behind the scenes, further strengthening a "presence of
-intelligence" notion.
+[Wolfram Rule 102/153](https://plato.stanford.edu/entries/cellular-automata/supplement.html)
+"cellular automata" image (ST as well). However, if one considers the whole of
+presented details, including previously presented images and graphs, this
+leads to conclusion that some very complex "cellular automata" is working
+behind the scenes, further strengthening a "presence of intelligence" notion.
 
 It is also worth noting that with odd `PH_HASH_COUNT` values, PRVHASH-1
-initially produces Rule 153 image with a "boundary condition" applied. At the
-same time, the function has no such additional logic since the visible
+initially produces Rule 102/153 image with a "boundary condition" applied.
+At the same time, the function has no such additional logic since the visible
 scanline is 1 pixel longer than the `PH_HASH_COUNT` value, meaning this
 implicit "boundary condition" is not synchronized with the moment the
 `HashPos` resets to 0. This fact tells that the "boundary condition" logic
 "happens" beyond the common math. One has to ask themselves - how it is
-possible to "embed" at least Rule 153 with boundary handling (but much more
-than that) into a function as simple (and linear in F_2) as PRVHASH-1? Beside
-that, as with the graphs above, presence of exact Rule 153 imagery implies
-presence of "logic understandable to a human mind".
+possible to "embed" at least Rule 102/153 with boundary handling (but much
+more than that) into a function as simple (and linear in F_2) as PRVHASH-1?
+Beside that, as with the graphs above, presence of exact Rule 102/153 imagery
+implies presence of "logic understandable to a human mind".
 
 Here is an example image with `PH_HASH_COUNT=342`, converted to PNG:
 
@@ -977,12 +978,11 @@ Here is an example image with `PH_HASH_COUNT=342`, converted to PNG:
 It is possible to define initial "automata" conditions by filling the
 hash-array with alternating bit-values like `10101010...`, or
 `100100100100...`, or `1000100010001000...` thus invoking even more complex
-"automata" (note that this is done in the same `prvhash` state space). The
+"automata" (note that this is done in the same `prvhash` state-space). The
 results can be combined into a colored image by assigning the black-and-white
 images to different RGB color channels. Considering the `prvhash-1` function
 operates with only 3 values at the same time, building a similar "cellular
-automata" by using only 3 neighboring pixels seems impossible for human
-computing.
+automata" by using only 3 neighboring pixels seems impossible for human logic.
 
 <img src="img/proof_math_is_engineered_tree342gy.png" width="686">
 
