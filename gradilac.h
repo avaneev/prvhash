@@ -1,5 +1,5 @@
 /**
- * gradilac.h version 4.3.6
+ * gradilac.h version 4.3.7
  *
  * The inclusion file for the "Gradilac", a flexible templated C++ PRNG, based
  * on the PRVHASH core function. Standalone class, does not require PRVHASH
@@ -82,14 +82,13 @@ static inline stype prvhash_core( stype* const Seed0, stype* const lcg0,
  * and 64-bit "stype" to match Mersenne Twister's PRNG period.
  * @tparam stype State variable type, must be unsigned integer type, up to 64
  * bits wide. Using "stype" smaller than 24 bits is not advised.
- * @tparam par PRVHASH parallelism, must be > 0. Should be above 1 if PRNG
- * output may be used as entropy input (output feedback), usually in open
- * systems.
+ * @tparam fuse PRVHASH fusing, must be > 0. Should be above 1 if PRNG output
+ * may be used as entropy input (output feedback), usually in open systems.
  * @tparam cs Must be >= 0. If above 0, enable CSPRNG mode. "cs" defines the
  * number of additional PRNG rounds and XOR operations, 1 is usually enough.
  */
 
-template< size_t hcount = 1, typename stype = uint64_t, int par = 1,
+template< size_t hcount = 1, typename stype = uint64_t, int fuse = 1,
 	int cs = 0 >
 class Gradilac
 {
@@ -116,8 +115,8 @@ public:
 
 	void seed( const stype iseed = 0 )
 	{
-		memset( Seed, 0, par * sizeof( Seed[ 0 ]));
-		memset( lcg, 0, par * sizeof( lcg[ 0 ]));
+		memset( Seed, 0, fuse * sizeof( Seed[ 0 ]));
+		memset( lcg, 0, fuse * sizeof( lcg[ 0 ]));
 		memset( Hash, 0, hcount * sizeof( Hash[ 0 ]));
 
 		Seed[ 0 ] = iseed;
@@ -136,7 +135,7 @@ public:
 		{
 			int i;
 
-			for( i = 0; i < par; i++ )
+			for( i = 0; i < fuse; i++ )
 			{
 				prvhash_core( Seed + i, lcg + i, Hash + 0 );
 			}
@@ -159,7 +158,7 @@ public:
 
 		getRaw();
 
-		if( par > 1 )
+		if( fuse > 1 )
 		{
 			getRaw();
 		}
@@ -210,7 +209,7 @@ public:
 
 		int i;
 
-		for( i = 0; i < hcount + ( hcount > 1 ) + ( par > 1 ); i++ )
+		for( i = 0; i < hcount + ( hcount > 1 ) + ( fuse > 1 ); i++ )
 		{
 			getRaw();
 		}
@@ -275,7 +274,7 @@ public:
 
 		int i;
 
-		for( i = 0; i < par - 1; i++ )
+		for( i = 0; i < fuse - 1; i++ )
 		{
 			prvhash_core( Seed + i, lcg + i, h );
 		}
@@ -293,7 +292,7 @@ public:
 				hpos = 0;
 			}
 
-			for( i = 0; i < par - 1; i++ )
+			for( i = 0; i < fuse - 1; i++ )
 			{
 				prvhash_core( Seed + i, lcg + i, h );
 			}
@@ -441,23 +440,17 @@ public:
 
 	static size_t getPeriodExp()
 	{
-		return(( par * 8 + par * 4 + hcount * 8 ) * sizeof( stype ) -
+		return(( fuse * 8 + fuse * 4 + hcount * 8 ) * sizeof( stype ) -
 			hcount - cs );
 	}
 
 protected:
-	stype Seed[ par ]; ///< PRNG seeds (>1 - parallel).
-		///<
-	stype lcg[ par ]; ///< PRNG lcg (>1 - parallel).
-		///<
+	stype Seed[ fuse ]; ///< PRNG seeds (>1 - fused).
+	stype lcg[ fuse ]; ///< PRNG lcg (>1 - fused).
 	stype Hash[ hcount ]; ///< PRNG hash array.
-		///<
 	size_t hpos; ///< Hash array position (increments linearly, resets to 0).
-		///<
 	stype BitPool; ///< Bit pool, optional feature.
-		///<
 	int BitsLeft; ///< The number of bits left in the bit pool.
-		///<
 
 	/**
 	 * @return Inverse multiplier to scale stype's value range to [0; 1)

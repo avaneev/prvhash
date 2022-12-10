@@ -1,5 +1,5 @@
 /**
- * tango642.h version 4.3.4
+ * tango642.h version 4.3.5
  *
  * The inclusion file for the "tango642" PRVHASH PRNG-based streamed XOR
  * function.
@@ -40,7 +40,7 @@
 #define TANGO642_HASH_COUNT 16 // Hashwords in keyed PRNG (power-of-2).
 #define TANGO642_HASH_SIZE ( TANGO642_HASH_COUNT * TANGO642_S )
 #define TANGO642_HASH_MASK ( TANGO642_HASH_SIZE - 1 )
-#define TANGO642_FUSE 4 // Firewalling "fused PRNG" size.
+#define TANGO642_PAR 4 // Firewalling "parallel PRNG" size.
 #define TANGO642_FN prvhash_core64 // PRVHASH core function name.
 #define TANGO642_LUEC prvhash_lu64ec // Unsigned value EC load function.
 #define TANGO642_EC PRVHASH_EC64 // Value EC function.
@@ -70,11 +70,11 @@ typedef struct
 	TANGO642_T Seed; ///< Keyed PRNG Seed value.
 	TANGO642_T lcg; ///< Keyed PRNG lcg value.
 	TANGO642_T Hash[ TANGO642_HASH_COUNT ]; ///< Keyed PRNG hash values.
-	TANGO642_T SeedF[ TANGO642_FUSE ]; ///< Firewalling PRNG Seed values.
-	TANGO642_T lcgF[ TANGO642_FUSE ]; ///< Firewalling PRNG lcg values.
-	TANGO642_T HashF[ TANGO642_FUSE + 1 ]; ///< Firewalling PRNG Hash values.
-	TANGO642_T RndBytes[ TANGO642_FUSE ]; ///< The left-over random output.
-	size_t RndLeft[ TANGO642_FUSE ]; ///< The number of bytes left in RndBytes.
+	TANGO642_T SeedF[ TANGO642_PAR ]; ///< Firewalling PRNG Seed values.
+	TANGO642_T lcgF[ TANGO642_PAR ]; ///< Firewalling PRNG lcg values.
+	TANGO642_T HashF[ TANGO642_PAR + 1 ]; ///< Firewalling PRNG Hash values.
+	TANGO642_T RndBytes[ TANGO642_PAR ]; ///< The left-over random output.
+	size_t RndLeft[ TANGO642_PAR ]; ///< The number of bytes left in RndBytes.
 	size_t RndPos; ///< Position within the RndLeft array.
 	size_t HashPos; ///< Keyed PRNG hash array position, in bytes.
 } TANGO642_CTX;
@@ -203,7 +203,7 @@ static inline void tango642_init( TANGO642_CTX* const ctx,
 	ctx -> HashF[ 3 ] = HashF4;
 	ctx -> HashF[ 4 ] = HashF5;
 	ctx -> HashPos = hp;
-	ctx -> RndPos = TANGO642_FUSE;
+	ctx -> RndPos = TANGO642_PAR;
 }
 
 /**
@@ -223,7 +223,7 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 
 	while( TANGO642_LIKELY( msglen != 0 ))
 	{
-		if( ctx -> RndPos == TANGO642_FUSE )
+		if( ctx -> RndPos == TANGO642_PAR )
 		{
 			TANGO642_T Seed = ctx -> Seed;
 			TANGO642_T lcg = ctx -> lcg;
@@ -243,7 +243,7 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 			uint8_t* const ha = (uint8_t*) ctx -> Hash;
 			size_t hp = ctx -> HashPos;
 
-			while( TANGO642_LIKELY( msglen > TANGO642_S * TANGO642_FUSE ))
+			while( TANGO642_LIKELY( msglen > TANGO642_S * TANGO642_PAR ))
 			{
 				SeedF4 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + hp ));
 				hp = ( hp + TANGO642_S ) & TANGO642_HASH_MASK;
@@ -277,7 +277,7 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 
 				TANGO642_SH( HashF1, HashF2, HashF3, HashF4, HashF5 );
 
-				msglen -= TANGO642_S * TANGO642_FUSE;
+				msglen -= TANGO642_S * TANGO642_PAR;
 			}
 
 			SeedF4 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + hp ));
@@ -319,7 +319,7 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 
 		size_t p = ctx -> RndPos;
 
-		while( p < TANGO642_FUSE )
+		while( p < TANGO642_PAR )
 		{
 			size_t rl = ctx -> RndLeft[ p ];
 			size_t c = ( msglen > rl ? rl : msglen );

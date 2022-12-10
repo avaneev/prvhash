@@ -93,7 +93,7 @@ For implementation assurance, here are the first 16 output values in hex
 
 Note that such minimal 1-hashword PRNG is most definitely not
 cryptographically-secure: its state can be solved by a SAT solver pretty fast;
-this applies to other arrangements ("parallel", "fused", multiple hashwords;
+this applies to other arrangements ("fused", "parallel", multiple hashwords;
 with daisy-chaining being harder to solve). The known way to make PRNG
 considerably harder to solve for a SAT solver, with complexity corresponding
 to system's size, is to combine two adjacent PRNG outputs via XOR operation;
@@ -183,7 +183,7 @@ the system. PRNG will continously produce non-repeating random sequences given
 external entropy input, but their statistical quality on a larger frames will
 be limited by the size of `lcg` and `Seed` variables, and the number of
 hashwords in the system, and the combinatorial capacity of the external
-entropy. A way to increase the structural limit is to use the "parallel" PRNG
+entropy. A way to increase the structural limit is to use the "fused" PRNG
 arrangement demonstrated in the `prvhash64s.h` file, which additionally
 increases the security exponentially. Also any non-constant entropy input
 usually increases the period of randomness, which, when extrapolated to
@@ -256,7 +256,7 @@ int main()
 ## Streamed Hashing ##
 
 The file `prvhash64s.h` includes a relatively fast streamed hashing function
-which utilizes a "parallel" PRVHASH arrangement. Please take a look at the
+which utilizes a "fused" PRVHASH arrangement. Please take a look at the
 `prvhash64s_oneshot()` function for usage example. The `prvhash64s` offers
 an increased security and hashing speed.
 
@@ -390,16 +390,16 @@ local state change-related collisions due to external entropy input (all
 possible input `msgw` values map to subsequent triplets uniquely). However,
 with a small variable size (8-bit) and a large output hash size, a sparse
 entropy input has some probability of "re-sychronization" event happening,
-leading to local collisions. With 16-bit variables, or even 8-bit parallel-2
+leading to local collisions. With 16-bit variables, or even 8-bit fused-2
 arrangement (with the local state having 40-bit size instead of 24-bit),
-probability of such event is negligible. While non-parallel hashing may even
+probability of such event is negligible. While non-fused hashing may even
 start from the "zero-state", for reliable hashing the state after 5
 "conditioning" rounds should be used.
 
 Another important aspect of this system, especially from the cryptography
 standpoint, is the entropy input to output latency. The base latency for
-state-to-state transition is equal to 1 (2 for "parallel" arrangements); and
-at the same time, 1 in hash-to-hash direction: this means that PRVHASH
+state-to-state transition is equal to 1 (2 for "fused" arrangements); and at
+the same time, 1 in hash-to-hash direction: this means that PRVHASH
 additionally requires a full pass through the hashword array, for the entropy
 to propagate, before using its output. However, hashing also requires a pass
 to the end of the hashword array if message's length is shorter than the
@@ -407,20 +407,20 @@ output hash, to "mix in" the initial hash value. When there is only 1 hashword
 in use, there is no hashword array-related delay, and thus the entropy
 propagation is only subject to the base latency. The essence of these
 "latencies" is that additional rounds are needed for the system to get rid of
-a statistical traces of the input entropy. Note that the "parallel"
-arrangement increases shuffling quality. However, this increase is relative to
-the state variable size: for example, 8-bit parallel-2 arrangement with 8-bit
-input is equivalent to 16-bit non-parallel arrangement with 16-bit input. So,
-it is possible to perform hashing with 8-bit state variables if parallel-2
-round is done per 1 input byte. The way "parallel" structure works is
-equivalent to shuffling all entropy inputs in a round together (input 1 is
-shuffled into a hash value which is then shuffled with input 2 into a hash
-value, etc). The "parallel" arrangement may raise a question whether or not
-it provides a target collision resistance as it seemingly "compresses" several
-inputs into a single local hashword: without doubt it does provide target
-collision resistance since `Seed` and `lcg` variables are a part of the
-system, and their presence in the "parallel" arrangement increases the overall
-PRNG period of the system and thus its combinatorial capacity.
+a statistical traces of the input entropy. Note that the "fused" arrangement
+increases shuffling quality. However, this increase is relative to the state
+variable size: for example, 8-bit fused-2 arrangement with 8-bit input is
+equivalent to 16-bit non-fused arrangement with 16-bit input. So, it is
+possible to perform hashing with 8-bit state variables if fused-2 round is
+done per 1 input byte. The way "fused" structure works is equivalent to
+shuffling all entropy inputs in a round together (input 1 is shuffled into a
+hash value which is then shuffled with input 2 into a hash value, etc). The
+"fused" arrangement may raise a question whether or not it provides a target
+collision resistance as it seemingly "compresses" several inputs into a single
+local hashword: without doubt it does provide target collision resistance
+since `Seed` and `lcg` variables are a part of the system, and their presence
+in the "fused" arrangement increases the overall PRNG period of the system and
+thus its combinatorial capacity.
 
 Without external entropy (message) injections, the function can run for a
 prolonged time, generating pseudo-entropy, in extendable-output PRNG mode.
@@ -492,19 +492,19 @@ changes to the constants quicker. Note that both `PH_HASH_COUNT` and
 `PH_PAR_COUNT` affect the PRNG period exponent not exactly linearly for small
 variable sizes: there is a saturation factor present for small variable sizes;
 after some point the period increase is non-linear due to small shuffling
-space. Shuffling space can be increased considerably with a "parallel"
+space. Shuffling space can be increased considerably with a "fused"
 arrangement. Depending on the initial seed value, the period may fluctuate.
 The commented out `Ctr++...` instructions can be uncommented to check the
 period increase due to sparse entropy input. You may also notice the `^=h`
 instructions: PRVHASH supports feedback onto itself (it is like hashing its
-own output). This operation, which can be applied to any parallel element,
+own output). This operation, which can be applied to any fused element,
 maximizes the achieved PRNG period.
 
 ```
 #include "prvhash_core.h"
 #include <string.h>
 
-#define PH_PAR_COUNT 1 // PRVHASH parallelism.
+#define PH_FUSE_COUNT 1 // PRVHASH fusing.
 #define PH_HASH_COUNT 4 // Hashword count (any positive number).
 #define PH_STATE_TYPE uint8_t // State variable's physical type.
 #define PH_FN prvhash_core4 // Core hash function name.
@@ -514,8 +514,8 @@ maximizes the achieved PRNG period.
 
 class DummyRNG : public PractRand::RNGs::vRNG8 {
 public:
-    PH_STATE_TYPE Seed[ PH_PAR_COUNT ];
-    PH_STATE_TYPE lcg[ PH_PAR_COUNT ];
+    PH_STATE_TYPE Seed[ PH_FUSE_COUNT ];
+    PH_STATE_TYPE lcg[ PH_FUSE_COUNT ];
     PH_STATE_TYPE Hash[ PH_HASH_COUNT ];
     int HashPos;
 
@@ -531,7 +531,7 @@ public:
 
         for( k = 0; k < PRVHASH_INIT_COUNT; k++ )
         {
-            for( j = 0; j < PH_PAR_COUNT; j++ )
+            for( j = 0; j < PH_FUSE_COUNT; j++ )
             {
                 PH_FN( Seed + j, lcg + j, Hash + HashPos );
             }
@@ -550,7 +550,7 @@ public:
 
             uint64_t h = 0;
 
-            for( j = 0; j < PH_PAR_COUNT; j++ )
+            for( j = 0; j < PH_FUSE_COUNT; j++ )
             {
                 h = PH_FN( Seed + j, lcg + j, Hash + HashPos );
             }
@@ -598,15 +598,15 @@ worth noting the `lcg ^ rs` expression: the `rs` variable is composed of two
 halves, both of them practically being independent PRNG outputs, with smaller
 periods. This additionally complicates system's reversal.
 
-## Fused PRNG ##
+## Parallel PRNG ##
 
-While this "fused-3" arrangement is currently not used in the hash function
+While this "parallel-3" arrangement is currently not used in the hash function
 implementations, it is also working fine with the core hash function.
 For example, while the "minimal PRNG" described earlier has `0.90` cycles/byte
-performance, the "fused" arrangement has a PRNG performance of `0.35`
+performance, the "parallel" arrangement has a PRNG performance of `0.35`
 cycles/byte, with a possibility of further scaling using AVX-512 instructions.
-Note that the number of "fused" elements should not be a multiple of hashword
-array size, otherwise PRNG stalls.
+Note that the number of "parallel" elements should not be a multiple of
+hashword array size, otherwise PRNG stalls.
 
 ```
 #include "prvhash_core.h"

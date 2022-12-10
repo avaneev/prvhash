@@ -1,8 +1,8 @@
 /**
- * prvhash64s.h version 4.3.1
+ * prvhash64s.h version 4.3.2
  *
  * The inclusion file for the "prvhash64s" hash function. More secure,
- * streamed, and high-speed. Implements a parallel variant of the "prvhash64"
+ * streamed, and high-speed. Implements a fused variant of the "prvhash64"
  * hash function, with output PRNG XORing, and a self-start.
  *
  * Description is available at https://github.com/avaneev/prvhash
@@ -43,8 +43,8 @@
 #define PRH64S_EC( v ) PRVHASH_EC64( v ) // Value's endianness-correction.
 
 #define PRH64S_MAX 512 // Maximal supported hash length, in bytes.
-#define PRH64S_PAR 4 // PRVHASH parallelism.
-#define PRH64S_LEN ( PRH64S_S * PRH64S_PAR ) // Intermediate block's length.
+#define PRH64S_FUSE 4 // PRVHASH fusing.
+#define PRH64S_LEN ( PRH64S_S * PRH64S_FUSE ) // Intermediate block's length.
 
 /**
  * The context structure of the "prvhash64s_X" functions. On systems where
@@ -53,8 +53,8 @@
  */
 
 typedef struct {
-	PRH64S_T Seed[ PRH64S_PAR ]; ///< Current parallel "Seed" values.
-	PRH64S_T lcg[ PRH64S_PAR ]; ///< Current parallel "lcg" values.
+	PRH64S_T Seed[ PRH64S_FUSE ]; ///< Current fused "Seed" values.
+	PRH64S_T lcg[ PRH64S_FUSE ]; ///< Current fused "lcg" values.
 	uint8_t Hash[ PRH64S_MAX ]; ///< Working hash buffer.
 	uint8_t Block[ PRH64S_LEN ]; ///< Intermediate input data block.
 	uint64_t MsgLen; ///< Message length counter, in bytes.
@@ -95,7 +95,7 @@ typedef struct {
 
 static inline void prvhash64s_init( PRVHASH64S_CTX* const ctx,
 	void* const Hash0, const size_t HashLen,
-	const PRH64S_T UseSeeds[ PRH64S_PAR ], const void* const InitVec0 )
+	const PRH64S_T UseSeeds[ PRH64S_FUSE ], const void* const InitVec0 )
 {
 	uint8_t* const Hash = (uint8_t*) Hash0;
 	const uint8_t* const InitVec = (const uint8_t*) InitVec0;
@@ -108,7 +108,7 @@ static inline void prvhash64s_init( PRVHASH64S_CTX* const ctx,
 
 		if( UseSeeds == 0 )
 		{
-			for( i = 0; i < PRH64S_PAR; i++ )
+			for( i = 0; i < PRH64S_FUSE; i++ )
 			{
 				ctx -> Seed[ i ] = 0;
 				ctx -> lcg[ i ] = 0;
@@ -116,7 +116,7 @@ static inline void prvhash64s_init( PRVHASH64S_CTX* const ctx,
 		}
 		else
 		{
-			for( i = 0; i < PRH64S_PAR; i++ )
+			for( i = 0; i < PRH64S_FUSE; i++ )
 			{
 				ctx -> Seed[ i ] = UseSeeds[ i ];
 				ctx -> lcg[ i ] = 0;
@@ -132,7 +132,7 @@ static inline void prvhash64s_init( PRVHASH64S_CTX* const ctx,
 			*(PRH64S_T*) ( ctx -> Hash + k ) = PRH64S_LUEC( Hash + k );
 		}
 
-		for( i = 0; i < PRH64S_PAR; i++ )
+		for( i = 0; i < PRH64S_FUSE; i++ )
 		{
 			ctx -> Seed[ i ] = PRH64S_LUEC( InitVec + i * PRH64S_S_2 );
 			ctx -> lcg[ i ] = PRH64S_LUEC( InitVec + i * PRH64S_S_2 +
@@ -348,7 +348,7 @@ static inline void prvhash64s_final( PRVHASH64S_CTX* const ctx )
 	PRH64S_T lcg4 = ctx -> lcg[ 3 ];
 
 	const size_t fc = PRH64S_S + ( ctx -> HashLen == PRH64S_S ? 0 :
-		ctx -> HashLen + ( ctx -> MsgLen < ctx -> HashLen * PRH64S_PAR ?
+		ctx -> HashLen + ( ctx -> MsgLen < ctx -> HashLen * PRH64S_FUSE ?
 		(uint8_t*) HashEnd - (uint8_t*) hc : 0 ));
 
 	size_t k;

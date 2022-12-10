@@ -1,5 +1,5 @@
 /**
- * prvrng.h version 4.3
+ * prvrng.h version 4.3.1
  *
  * The inclusion file for the "prvrng" entropy pseudo-random number generator.
  * This is mostly an example PRNG that demonstrates use of infrequent external
@@ -50,7 +50,7 @@
  * prvrng context structure.
  */
 
-#define PRVRNG_PAR_COUNT 2 // PRNG parallelism.
+#define PRVRNG_FUSE_COUNT 2 // PRNG fusing.
 #define PRVRNG_HASH_COUNT 16 // Hashwords in a hasharray.
 
 typedef struct
@@ -61,8 +61,8 @@ typedef struct
 		HCRYPTPROV prov; ///< Crypt provider (for Windows).
 	#endif // defined( PRVRNG_UNIX )
 
-	uint64_t Seed[ PRVRNG_PAR_COUNT ]; ///< Current Seed values.
-	uint64_t lcg[ PRVRNG_PAR_COUNT ]; ///< Current lcg values.
+	uint64_t Seed[ PRVRNG_FUSE_COUNT ]; ///< Current Seed values.
+	uint64_t lcg[ PRVRNG_FUSE_COUNT ]; ///< Current lcg values.
 	uint64_t Hash[ PRVRNG_HASH_COUNT ]; ///< Current hash values.
 	size_t HashPos; ///< Position within the Hash array.
 	int EntCtr; ///< Bytes remaining before entropy is injected.
@@ -125,7 +125,7 @@ static inline uint8_t prvrng_gen64p2( PRVRNG_CTX* const ctx )
 			uint64_t* const Hash = ctx -> Hash + ctx -> HashPos;
 			int i;
 
-			for( i = 0; i < PRVRNG_PAR_COUNT - 1; i++ )
+			for( i = 0; i < PRVRNG_FUSE_COUNT - 1; i++ )
 			{
 				prvhash_core64( &ctx -> Seed[ i ], &ctx -> lcg[ i ], Hash );
 			}
@@ -181,7 +181,7 @@ static inline int prvrng_init64p2( PRVRNG_CTX* const ctx )
 
 	int i;
 
-	for( i = 0; i < PRVRNG_PAR_COUNT; i++ )
+	for( i = 0; i < PRVRNG_FUSE_COUNT; i++ )
 	{
 		ctx -> Seed[ i ] = prvrng_get_entropy( ctx, sizeof( uint64_t ));
 		ctx -> lcg[ i ] = prvrng_get_entropy( ctx, sizeof( uint64_t ));
@@ -204,7 +204,7 @@ static inline int prvrng_init64p2( PRVRNG_CTX* const ctx )
 		uint64_t* const Hash = ctx -> Hash + k;
 		int i;
 
-		for( i = 0; i < PRVRNG_PAR_COUNT; i++ )
+		for( i = 0; i < PRVRNG_FUSE_COUNT; i++ )
 		{
 			prvhash_core64( &ctx -> Seed[ i ], &ctx -> lcg[ i ], Hash );
 		}
