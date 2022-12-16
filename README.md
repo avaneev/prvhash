@@ -956,6 +956,8 @@ scales to any `PH_HASH_COUNT` value. The initial part of the image looks like
 presented details, including previously presented images and graphs, this
 leads to conclusion that some very complex "cellular automata" is working
 behind the scenes, further strengthening a "presence of intelligence" notion.
+Note that Wolfram rules represent sets of "freely-defined fixed information"
+which dictates the logical behavior of the cellular automata.
 
 It is also worth noting that with odd `PH_HASH_COUNT` values, PRVHASH-1
 initially produces Rule 102/153 image with a "boundary condition" applied.
