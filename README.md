@@ -339,10 +339,11 @@ Practically, `10` and `01` bit-pairs can be also used as constants, without
 replication, but this does not provide conclusively better results for PRNG,
 and does not work well for hashing; also, self-starting period becomes
 longer. A conceptual aspect of replicated bit-pairs is that they represent the
-simplest maximum-entropy number (bit-pair is a minimal sequence that can
-exhibit entropy, with replication count bound to the state variable size).
-While "magic numbers" can be used instead of these bit-trains (at least for
-PRNG), they do not posses the property of being simplest.
+simplest maximum-entropy number that lacks information (bit-pair is a minimal
+sequence that can exhibit entropy, with replication count bound to the state
+variable size). While "magic numbers" can be used instead of these bit-trains
+(at least for PRNG), they do not posses the property of not having an
+information (zero spectrum beside DC and Nyquist components).
 
 It is important to point out that the presence of the `0xAAAA...` and
 `0x5555...` constants logically assure that the `Seed` and `lcg` variables
