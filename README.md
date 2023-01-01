@@ -1009,6 +1009,14 @@ formula?
 
 <img src="img/prvhash1-1365-2048.jpg" width="240"><img src="img/prvhash1-1366-2048.jpg" width="240"><img src="img/prvhash1-2046-2048.jpg" width="310">
 
+## Architectural Ruler ##
+
+Whatever the true source of imagery is, the produced imagery seems to be
+useful if applied as some architectural measurement ruler/tool since it can be
+used to quickly measure architectural features as whole-number ratios:
+
+<img src="img/arch-ruler.jpg" width="686">
+
 ## Thanks ##
 
 The author would like to thank Reini Urban for [his SMHasher
