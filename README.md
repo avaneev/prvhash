@@ -1009,7 +1009,7 @@ formula?
 
 <img src="img/prvhash1-1365-2048.jpg" width="240"><img src="img/prvhash1-1366-2048.jpg" width="240"><img src="img/prvhash1-2046-2048.jpg" width="310">
 
-## Architectural Ruler ##
+## Architectural Ruler (Gradilac Ruler) ##
 
 Whatever the true source of imagery is, the produced imagery seems to be
 useful if applied as some architectural measurement ruler/tool since it can be
