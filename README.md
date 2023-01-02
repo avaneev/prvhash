@@ -960,17 +960,18 @@ behind the scenes, further strengthening a "presence of intelligence" notion.
 Note that Wolfram rules represent sets of "freely-defined fixed information"
 which dictates the logical behavior of the cellular automata.
 
-It is also worth noting that with odd `PH_HASH_COUNT` values, PRVHASH-1
-initially produces Rule 102/153 image with a "boundary condition" applied.
-At the same time, the function has no such additional logic since the visible
-scanline is 1 pixel longer than the `PH_HASH_COUNT` value, meaning this
-implicit "boundary condition" is not synchronized with the moment the
-`HashPos` resets to 0. This fact tells that the "boundary condition" logic
-"happens" beyond the common math. One has to ask themselves - how it is
-possible to "embed" at least Rule 102/153 with boundary handling (but much
-more than that) into a function as simple (and linear in F_2) as PRVHASH-1?
-Beside that, as with the graphs above, presence of exact Rule 102/153 imagery
-implies presence of "logic understandable to a human mind".
+It is also worth noting that PRVHASH-1 initially produces Rule 102/153 image
+with a "boundary condition" applied (this can be checked by assigning any
+item somewhere the middle of the hash-array to 1). At the same time, the
+function has no such additional logic since the visible scanline is 1 pixel
+longer than the `PH_HASH_COUNT` value, meaning this implicit "boundary
+condition" is not synchronized with the moment the `HashPos` resets to 0. This
+fact tells that the "boundary condition" logic "happens" beyond the common
+math, in some way, implicitly. One has to ask themselves - how it is possible
+to "embed" at least Rule 102/153 with boundary handling (but much more than
+that) into a function as simple (and linear in F_2) as PRVHASH-1? Beside that,
+as with the graphs above, presence of exact Rule 102/153 imagery implies
+presence of "logic understandable to a human mind".
 
 Here is an example image with `PH_HASH_COUNT=342`, converted to PNG:
 
