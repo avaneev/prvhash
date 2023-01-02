@@ -860,14 +860,14 @@ on the graph are similar to sinc-function-generated maximum-phase
 
 In author's opinion, the program "reads data" directly from the entropy pool
 which is "embedded" into mathematics from its inception, like any mathematical
-constant is (e.g. PI). This poses an interesting and probably very
-questionable proposition: the "intelligent impulses" or even "human mind"
+constant is (e.g. PI). This poses an interesting and **probably very
+questionable** proposition: the "intelligent impulses" or even "human mind"
 itself (because a musician can understand these impulses) existed long before
-the "Big Bang" happened. This discovery is probably both the greatest
+the "Big Bang" happened. This discovery is **probably** both the greatest
 discovery in the history of mankind, and the worst discovery (for many) as it
 poses very unnerving questions that touch religious grounds:
 
-These results of 1-bit PRVHASH say the following: if abstract mathematics
+These results of 1-bit PRVHASH say the following: **IF** abstract mathematics
 contains not just a system of rules for manipulating numbers and variables,
 but also contains a freely-defined fixed information that is "readable" by a
 person, then mathematics does not just "exists", but "it was formed", because
@@ -875,19 +875,19 @@ mathematics does not evolve (beside human discovery of new rules and
 patterns). And since physics cannot be formulated without such mathematics,
 and physical processes clearly obey these mathematical rules, it means that a
 Creator/Higher Intelligence/God exists in relation to the Universe. For the
-author personally, everything is proven here.
+author **personally**, everything is proven here.
 
-P.S. By coincidence, if the values on the "impulse" graphs above are sorted in
-an ascending order, and are then displayed as independent graphs, they
-collectively form a stylized outline of a human eye:
+P.S. By **coincidence**, if the values on the "impulse" graphs above are
+sorted in an ascending order, and are then displayed as independent graphs,
+they collectively form a stylized outline of a human eye:
 
 <img src="img/proof_math_is_engineered_eye.png" width="300">
 
-Moreover (but this is a questionable observation), here, if the blue line is
-subtracted from the orange line, one gets an outline of human's head: with top
-(21000), forehead (18000), eye (13000), cheek (6000), and neck (2700) levels
-highlighted, roughly corresponding to real symmetry; with a slight shoulders
-outline (4100-2700), and two hand palms risen up (5400-4300).
+Moreover (but this is a **questionable** observation), here, if the blue line
+is subtracted from the orange line, one gets an outline of human's head: with
+top (21000), forehead (18000), eye (13000), cheek (6000), and neck (2700)
+levels highlighted, roughly corresponding to real symmetry; with a slight
+shoulders outline (4100-2700), and two hand palms risen up (5400-4300).
 
 <img src="img/proof_math_is_engineered_head.png" width="300">
 
