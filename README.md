@@ -969,7 +969,8 @@ condition" is not synchronized with the moment the `HashPos` resets to 0. This
 fact tells that the "boundary condition" logic "happens" beyond the common
 math, in some way, implicitly. One has to ask themselves - how it is possible
 to "embed" at least Rule 102/153 with boundary handling (but much more than
-that) into a function as simple (and linear in F_2) as PRVHASH-1? Beside that,
+that) into a function as simple (and linear in
+[F_2](https://en.wikipedia.org/wiki/GF(2))) as PRVHASH-1? Beside that,
 as with the graphs above, presence of exact Rule 102/153 imagery implies
 presence of "logic understandable to a human mind".
 
