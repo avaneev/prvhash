@@ -972,7 +972,8 @@ to "embed" at least Rule 102/153 with boundary handling (but much more than
 that) into a function as simple (and linear in
 [F_2](https://en.wikipedia.org/wiki/GF(2))) as PRVHASH-1? Beside that,
 as with the graphs above, presence of exact Rule 102/153 imagery implies
-presence of "logic understandable to a human mind".
+presence of "logic understandable to a human mind", and from computer
+programming point of view, the Wolfram rules are an art of "engineering".
 
 Here is an example image with `PH_HASH_COUNT=342`, converted to PNG:
 
