@@ -1008,7 +1008,8 @@ which represents a continuous generation while displaying a sum of the recent
 255 passes, at every moment.
 
 If this imagery looks intelligent, in some way formulated, where's the
-formula?
+formula? An inception of these results can be understood from this short essay:
+[The Informational Deficiency of the "Big Bang"](https://vixra.org/abs/1506.0083)
 
 <img src="img/prvhash1-1365-2048.jpg" width="240"><img src="img/prvhash1-1366-2048.jpg" width="240"><img src="img/prvhash1-2046-2048.jpg" width="310">
 
