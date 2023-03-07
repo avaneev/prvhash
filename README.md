@@ -1013,6 +1013,19 @@ formula? An inception of these results can be understood from this short essay:
 
 <img src="img/prvhash1-1365-2048.jpg" width="240"><img src="img/prvhash1-1366-2048.jpg" width="240"><img src="img/prvhash1-2046-2048.jpg" width="310">
 
+### Reptile Skin ###
+
+The original `prvhash-1` function can be simplified to examine the discovered
+"entropy pool" further. The function variant present in the `proof_reptile.c`
+file includes the simplified function, but also extends the delay parameter
+of the `Seed` delay line from 1 to 32. The resulting image closely represents
+skin of some reptiles and other organisms. In author's opinion, since the
+function works in linear F_2 domain, the same construct can be recreated
+physically thus offering an idea that the evolution of intelligence in the
+organisms may have its roots in mathematics.
+
+<img src="img/prvhash1-reptile.jpg" width="240">
+
 ## Architectural Ruler (Gradilac Ruler) ##
 
 Whatever the true source of imagery is, the produced imagery seems to be

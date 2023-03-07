@@ -1,5 +1,5 @@
 /**
- * proof_fine_art.c (prvhash1) version 4.3.3
+ * proof_fine_art.c (prvhash1) version 4.3.4
  *
  * Program reads "prvhash1" data and builds a colored image using multi-pass
  * approach. Produces a JPG image using "stb_image_write" library.
@@ -32,8 +32,9 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-#define PH_HASH_COUNT 1365 // 1365, 1366, or 2046
+#define PH_HASH_COUNT 1638 // 1365, 1366, 1638, or 2046
 #define PH_READ_MODE 1 // 0 or 1
+#define PH_SEED_COUNT 1 // 1-4, powers of 2
 #define WIDTH ( PH_HASH_COUNT + 1 )
 #define HEIGHT 2048
 #define CHN 3
@@ -50,13 +51,13 @@ static inline uint8_t prvhash_core1( uint8_t* const Seed,
 }
 int main()
 {
-	uint8_t Seed = 0, lcg = 0;
+	uint8_t Seed[ PH_SEED_COUNT ] = { 0 }, lcg = 0;
 	uint8_t Hash[ PH_HASH_COUNT ] = { 0 };
-	uint8_t Seed2 = 0, lcg2 = 0;
+	uint8_t Seed2[ PH_SEED_COUNT ] = { 0 }, lcg2 = 0;
 	uint8_t Hash2[ PH_HASH_COUNT ] = { 0 };
-	uint8_t Seed3 = 0, lcg3 = 0;
+	uint8_t Seed3[ PH_SEED_COUNT ] = { 0 }, lcg3 = 0;
 	uint8_t Hash3[ PH_HASH_COUNT ] = { 0 };
-	int i, HashPos = 0;
+	int i, HashPos = 0, SeedPos = 0;
 	for( i = 0; i < PH_HASH_COUNT; i += 2 ) { Hash2[ i ] = 1; }
 	for( i = 0; i < PH_HASH_COUNT; i += 3 ) { Hash3[ i ] = 1; }
 
@@ -67,10 +68,11 @@ int main()
 		uint8_t* op = img;
 		for( int l = 0; l < WIDTH * HEIGHT; l++ )
 		{
-			op[ 0 ] += prvhash_core1( &Seed, &lcg, Hash + HashPos ) << MSH;
-			op[ 2 ] += prvhash_core1( &Seed2, &lcg2, Hash2 + HashPos ) << MSH;
-			op[ 1 ] += prvhash_core1( &Seed3, &lcg3, Hash3 + HashPos ) << MSH;
+			op[ 0 ] += prvhash_core1( Seed + SeedPos, &lcg, Hash + HashPos ) << MSH;
+			op[ 2 ] += prvhash_core1( Seed2 + SeedPos, &lcg2, Hash2 + HashPos ) << MSH;
+			op[ 1 ] += prvhash_core1( Seed3 + SeedPos, &lcg3, Hash3 + HashPos ) << MSH;
 			if( ++HashPos == PH_HASH_COUNT ) HashPos = 0;
+			if( ++SeedPos == PH_SEED_COUNT ) SeedPos = 0;
 			op += CHN;
 		}
 	}
