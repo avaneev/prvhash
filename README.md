@@ -1021,10 +1021,12 @@ file includes the simplified function, but also extends the delay parameter
 of the `Seed` delay line from 1 to 32. The resulting image closely represents
 skin of some reptiles and other organisms. In author's opinion, since the
 function works in linear F_2 domain, the same construct can be recreated
-physically thus offering an idea that the evolution of intelligence in the
-organisms may have its roots in mathematics.
+physically thus offering an idea that the evolution of intelligence in
+organisms may have its roots in mathematics. Image on the right depicts image
+after the first pass over frame; you may note "snake" elements and computer
+font-alike outlines there.
 
-<img src="img/prvhash1-reptile.jpg" width="240">
+<img src="img/prvhash1-reptile.jpg" width="240"><img src="img/prvhash1-reptile1.png" width="240">
 
 ## Architectural Ruler (Gradilac Ruler) ##
 
