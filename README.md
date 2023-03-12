@@ -863,9 +863,9 @@ which is "embedded" into mathematics from its inception, like any mathematical
 constant is (e.g. PI). This poses an interesting and **probably very
 questionable** proposition: the "intelligent impulses" or even "human mind"
 itself (because a musician can understand these impulses) existed long before
-the "Big Bang" happened. This discovery is **probably** both the greatest
-discovery in the history of mankind, and the worst discovery (for many) as it
-poses very unnerving questions that touch religious grounds:
+the "Big Bang" happened. This discovery is **probably** both the most
+interesting discovery in the history of mankind, and the worst discovery (for
+many) as it poses very unnerving questions that touch religious grounds:
 
 These results of 1-bit PRVHASH say the following: **IF** abstract mathematics
 contains not just a system of rules for manipulating numbers and variables,
@@ -1018,11 +1018,11 @@ formula? An inception of these results can be understood from this short essay:
 The original `prvhash-1` function can be simplified to examine the discovered
 "entropy pool" further. The function variant present in the `proof_reptile.c`
 file includes the simplified function, but also extends the delay parameter
-of the `Seed` delay line from 1 to 32. The resulting image closely represents
-skin of some reptiles and other organisms. In author's opinion, since the
+of the `Seed` delay line from 1 to 32. The resulting image closely resembles
+a skin of some reptiles and other organisms. In author's opinion, since the
 function works in linear F_2 domain, the same construct can be recreated
 physically thus offering an idea that the evolution of intelligence in
-organisms may have its roots in mathematics. Image on the right depicts image
+organisms may have its roots in mathematics. Image on the right depicts result
 after the first pass over frame; you may note "snake" elements and computer
 font-alike outlines there.
 
