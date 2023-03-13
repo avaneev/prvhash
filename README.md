@@ -839,24 +839,24 @@ has to consider two points: whether or not these impulses can be considered
 "intelligent", and the odds the mentioned program can produce such impulses,
 considering the program has no user input nor programmer's entropy, nor any
 logic (no constants, with all parameters initially set to zero). More specific
-observations: 1. All final values are shift-or compositions of 1-bit "random"
-values, in fact representing a common 16-bit PCM sampled signal (shift-2
+observations: 1. All final values are shift-or compositions of 1-bit values,
+in fact representing a common 16-bit PCM sampled signal (shift-2
 auto-correlation equals 0.4-0.44 approximately), but obtained in a
 "dot-matrix printer" way; 2. The orange graph is only slightly longer before a
-repeat (common to PRNGs) despite larger `PH_HASH_COUNT`, at the same time both
-graphs are seemingly time-aligned; 3. PRNG periods of 1-bit return values on
-both runs are aligned to 16 bits, to produce repeating sequences "as is",
-without any sort of 16-bit value range skew; 4. The orange graph is produced
-from an order-reversed shift-or, but with the same underlying algorithm;
-5. So far, no other combinations of "reading" parameters produce anything as
-"intelligent" as these graphs (but there may be another yet-to-be-decoded,
-similar or completely different, information available); 6. From drumming
-musician's (or an experienced DSP engineer's) point of view, the graph
-represents impulses taken from two electric drum pads: a snare drum
-(oscillatory) and a bass drum (shift to extremum). 7. Most minor oscillations
-on the graph are similar to sinc-function-generated maximum-phase
-"pre-ringing" oscillations that are known in DSP engineering field.
-8. PRNG period of the blue graph is 255; orange is 273.
+repeat (common to PRNGs) despite larger `PH_HASH_COUNT`; at the same time both
+graphs are seemingly time-aligned; 3. Periods of 1-bit return values on both
+runs are aligned to 16 bits, to produce repeating sequences "as is", without
+any sort of 16-bit value range skew; 4. The orange graph is produced from an
+order-reversed shift-or, but with the same underlying algorithm; 5. So far, no
+other combinations of "reading" parameters produce anything as "intelligent"
+as these graphs (but there may be another yet-to-be-decoded, similar or
+completely different, information available); 6. From drumming musician's (or
+an experienced DSP engineer's) point of view, the graph represents impulses
+taken from two electric drum pads: a snare drum (oscillatory) and a bass drum
+(shift to extremum). 7. Most minor oscillations on the graph are similar to
+sinc-function-generated maximum-phase "pre-ringing" oscillations that are
+known in DSP engineering field. 8. Period of the blue graph is 255; orange is
+273.
 
 In author's opinion, the program "reads data" directly from the entropy pool
 which is "embedded" into mathematics from its inception, like any mathematical
@@ -895,7 +895,7 @@ shoulders outline (4100-2700), and two hand palms risen up (5400-4300).
 
 Discrete Fourier (FFT-512) analysis of obtained signals produces the following
 power spectrums (with DC component removed). The analysis strengthens the
-notion the signal is non-random and is "intelligent" (two strong peaks above
+notion the signal is non-chaotic and is "intelligent" (two strong peaks above
 average, in each signal, with both signals producing similar structures, but
 with shifted resonant frequencies). Note that resonances in the middle of the
 spectrum are similar to resonances one gets when recording an acoustical snare
@@ -903,12 +903,12 @@ drum.
 
 <img src="img/proof_math_is_engineered_fft.png" width="600">
 
-### PRNG Mode ###
+### PRNG (Chaotic) Mode ###
 
 Just by changing the PH_HASH_COUNT to 9 (up to 13, inclusive) the same
 `proof_math_is_engineered.c` program produces a pseudo-random number sequence,
 confirmed with `PractRand` 1KB to 4KB block, 8-bit folding. Note that the same
-code producing both random and non-random number sequences is "highly
+code producing both chaotic and non-chaotic number sequences is "highly
 unlikely" to exist in practical PRNGs. It is important to note that
 `PH_HASH_COUNT=14` and `PH_HASH_COUNT=17` (which is beyond 15 and 16 signals
 mentioned originally) also pass as random, with 16-bit folding in `PractRand`.
@@ -962,7 +962,7 @@ which dictates the logical behavior of the cellular automata.
 
 It is also worth noting that PRVHASH-1 initially produces Rule 102/153 image
 with a "boundary condition" applied (this can be checked by assigning any
-item somewhere the middle of the hash-array to 1). At the same time, the
+item somewhere in the middle of the hash-array to 1). At the same time, the
 function has no such additional logic since the visible scanline is 1 pixel
 longer than the `PH_HASH_COUNT` value, meaning this implicit "boundary
 condition" is not synchronized with the moment the `HashPos` resets to 0. This
