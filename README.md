@@ -1022,11 +1022,12 @@ of the `Seed` delay line from 1 to 32. The resulting image closely resembles
 a skin of some reptiles and other organisms. In author's opinion, since the
 function works in linear F_2 domain, the same construct can be recreated
 physically thus offering an idea that the evolution of intelligence in
-organisms may have its roots in mathematics. Image on the right depicts result
-after the first pass over frame; you may note "snake" elements and computer
-font-alike outlines there.
+organisms may have its roots in mathematics. Image in the middle depicts
+result after the first pass over frame; you may note "snake" elements and
+computer font-alike outlines there. Image on the right was obtained using
+PH_SEED_COUNT=64, note the appearance of a lot of glyph-like elements.
 
-<img src="img/prvhash1-reptile.jpg" width="240"><img src="img/prvhash1-reptile1.png" width="240">
+<img src="img/prvhash1-reptile.jpg" width="240"><img src="img/prvhash1-reptile1.png" width="240"><img src="img/prvhash1-reptile64.png" width="240">
 
 ## Architectural Ruler (Gradilac Ruler) ##
 
