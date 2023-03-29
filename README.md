@@ -674,12 +674,26 @@ platforms can be evaluated at the
 ## Other Thoughts ##
 
 PRVHASH, being scalable, potentially allows one to apply "infinite" state
-variable size in its system, at least in mathematical analysis. This reasoning
-makes PRVHASH comparable to PI in its reach of "infinite" bit-sequence
-length. Moreover, this also opens up a notion of "infinite frequency" (arising
-from Fourier analysis of "infinite" bit-sequence) and thus, "infinite energy"
-(if integrated). Note that PRVHASH does not require any "magic
-numbers" to function, it is completely algorithmic.
+variable size in its system, at least in theoretical mathematical analysis.
+This reasoning makes PRVHASH comparable to PI in its reach of "infinite"
+bit-sequence length. Moreover, this also opens up a notion of "infinite
+frequency" (arising from Fourier analysis of "infinite" bit-sequence) and
+thus, "infinite energy" (if integrated). Note that PRVHASH does not require
+any "magic numbers" to function, it is completely algorithmic. An alternative
+explanation: In the discrete Fourier transform (DFT) domain, such
+understanding is possible: although usually the size of the transformation
+window is limited to small values, theoretically this size can be directed to
+infinity and it turns out that the limiting frequency is equal to half this
+infinite value. Moreover, individual components of such an "infinite"
+transformation also affect the resulting spectrum, but on an infinity scale.
+Mathematics forbids manipulating infinities, but as outlined with the DFT, in
+the field of discrete series of numbers, infinities can be manipulated. This
+echoes PRVHASH - although now it is implemented in a maximum of 128-bit
+numbers, theoretically nothing forbids the state variable size to go to
+infinity, and PRVHASH should still work. Thus, PRVHASH recreates an analog of
+the number PI, and it should be possible to prove that an infinite sequence of
+bits like PI is completely realistic, a person can create such sequence too
+(in theory).
 
 The mathematics offers an interesting understanding. Take in your mind a
 moment before the "Big Bang". Did mathematical rules exist at that moment? Of
