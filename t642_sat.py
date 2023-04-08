@@ -11,14 +11,15 @@ import autosat
 
 ##### simulation parameters
 
+bits = 4 # state variable size
+hci = 1 # number of keyed hash elements in use (key length-2)
+ivlen = 4 # nonce vector length
+
 seed_i = 4 # keyed prng init (key value 1)
 seed1_i = 12 # firewall prng init (key value 2)
 hcv = [3,14,3,13,14,4,2,15,2,5,6,11,9,1,11,5,8,6,10,7,5,6,3,10,3,0,2,9,9,12,15,11] # key values
-hci = 2 # number of keyed hash elements in use (key length-2)
 iv = [15,9,4,6] # nonce vector
-ivlen = 4 # nonce vector length
 
-bits = 4 # state variable size
 hc = 16 # keyed hash array length
 hc2 = 16 # firewall prng init length
 num_obs = 16 # number of observations to use for solving
@@ -90,6 +91,8 @@ def prvhash_core_calc(seed, lcg, h):
     out = lcg ^ rs
     return seed, lcg, h, out
 
+# calculate real outputs
+
 calc_seed = seed_i&bmask
 calc_lcg = 0
 calc_h = []
@@ -101,7 +104,7 @@ calc_seed3 = 0
 calc_lcg3 = 0
 calc_seed4 = 0
 calc_lcg4 = 0
-calc_h2 = [0,0,0,0]
+calc_h2 = [0,0,0,0,0]
 
 for i in range(hc):
     if(i < hci):
@@ -132,10 +135,10 @@ for i in range(hc2+num_obs):
     calc_x += 1
 
     calc_seed4 ^= out1^out2
-    calc_seed1, calc_lcg1, calc_h2[(calc_x2+0)&3], outf1 = prvhash_core_calc(calc_seed1, calc_lcg1, calc_h2[(calc_x2+0)&3])
-    calc_seed2, calc_lcg2, calc_h2[(calc_x2+1)&3], outf2 = prvhash_core_calc(calc_seed2, calc_lcg2, calc_h2[(calc_x2+1)&3])
-    calc_seed3, calc_lcg3, calc_h2[(calc_x2+2)&3], outf3 = prvhash_core_calc(calc_seed3, calc_lcg3, calc_h2[(calc_x2+2)&3])
-    calc_seed4, calc_lcg4, calc_h2[(calc_x2+3)&3], outf4 = prvhash_core_calc(calc_seed4, calc_lcg4, calc_h2[(calc_x2+3)&3])
+    calc_seed1, calc_lcg1, calc_h2[(calc_x2+0)%5], outf1 = prvhash_core_calc(calc_seed1, calc_lcg1, calc_h2[(calc_x2+0)%5])
+    calc_seed2, calc_lcg2, calc_h2[(calc_x2+1)%5], outf2 = prvhash_core_calc(calc_seed2, calc_lcg2, calc_h2[(calc_x2+1)%5])
+    calc_seed3, calc_lcg3, calc_h2[(calc_x2+2)%5], outf3 = prvhash_core_calc(calc_seed3, calc_lcg3, calc_h2[(calc_x2+2)%5])
+    calc_seed4, calc_lcg4, calc_h2[(calc_x2+3)%5], outf4 = prvhash_core_calc(calc_seed4, calc_lcg4, calc_h2[(calc_x2+3)%5])
     calc_x2 += 1
 
     if(i>=hc2):
@@ -145,6 +148,8 @@ for i in range(hc2+num_obs):
         obs.append(outf4)
 
 print("----")
+
+# solve initial state
 
 inst = autosat.Instance()
 
@@ -183,7 +188,7 @@ seed3 = inibits(inst, bits, 0)
 lcg3 = inibits(inst, bits, 0)
 seed4 = inibits(inst, bits, 0)
 lcg4 = inibits(inst, bits, 0)
-h2 = [inibits(inst, bits, 0),inibits(inst, bits, 0),inibits(inst, bits, 0),inibits(inst, bits, 0)]
+h2 = [inibits(inst, bits, 0),inibits(inst, bits, 0),inibits(inst, bits, 0),inibits(inst, bits, 0),inibits(inst, bits, 0)]
 
 x = 0
 x2 = 0
@@ -208,10 +213,10 @@ for k in range(hc2+num_obs):
     x += 1
 
     seed4 = xor(seed4, xor(out1, out2))
-    seed1, lcg1, h2[(x2+0)&3], outf1 = prvhash_core_sat(seed1, lcg1, h2[(x2+0)&3])
-    seed2, lcg2, h2[(x2+1)&3], outf2 = prvhash_core_sat(seed2, lcg2, h2[(x2+1)&3])
-    seed3, lcg3, h2[(x2+2)&3], outf3 = prvhash_core_sat(seed3, lcg3, h2[(x2+2)&3])
-    seed4, lcg4, h2[(x2+3)&3], outf4 = prvhash_core_sat(seed4, lcg4, h2[(x2+3)&3])
+    seed1, lcg1, h2[(x2+0)%5], outf1 = prvhash_core_sat(seed1, lcg1, h2[(x2+0)%5])
+    seed2, lcg2, h2[(x2+1)%5], outf2 = prvhash_core_sat(seed2, lcg2, h2[(x2+1)%5])
+    seed3, lcg3, h2[(x2+2)%5], outf3 = prvhash_core_sat(seed3, lcg3, h2[(x2+2)%5])
+    seed4, lcg4, h2[(x2+3)%5], outf4 = prvhash_core_sat(seed4, lcg4, h2[(x2+3)%5])
     x2 += 1
 
     if(k>=hc2):
