@@ -1,22 +1,24 @@
-# tango642 4.3.5 SAT solving simulation -
-# finds a key specified in seed_i, seed1_i and hcv.
+# tango642 4.3.6 SAT solving simulation -
+# finds a key specified in seed_i and hcv[].
 # requires autosat from https://github.com/petersn/autosat
 # and python-sat
 #
 # use "time python t642_sat.py" to measure solving time.
 # increase "bits" (an even value) and "hci" (any positive value) to estimate
-# solving complexity. "bits=64" corresponds to tango642 variables.
+# solving complexity. "bits=64" corresponds to real tango642 variable size.
+# a minimal reasonable "bits" value is 6, lower values solve instantly.
+# base exponential time increase can be assessed by setting hci=0 and
+# incrementally assigning various "bits" values.
 
 import autosat
 
 ##### simulation parameters
 
-bits = 4 # state variable size
-hci = 1 # number of keyed hash elements in use (key length-2)
+bits = 6 # state variable size
+hci = 2 # number of keyed hash elements in use (key length-1)
 ivlen = 4 # nonce vector length
 
 seed_i = 4 # keyed prng init (key value 1)
-seed1_i = 12 # firewall prng init (key value 2)
 hcv = [3,14,3,13,14,4,2,15,2,5,6,11,9,1,11,5,8,6,10,7,5,6,3,10,3,0,2,9,9,12,15,11] # key values
 iv = [15,9,4,6] # nonce vector
 
@@ -96,7 +98,7 @@ def prvhash_core_calc(seed, lcg, h):
 calc_seed = seed_i&bmask
 calc_lcg = 0
 calc_h = []
-calc_seed1 = seed1_i&bmask
+calc_seed1 = 0
 calc_lcg1 = 0
 calc_seed2 = 0
 calc_lcg2 = 0
@@ -116,11 +118,11 @@ calc_x = 0
 calc_x2 = 0
 ivpos = 0
 
-for i in range(5):
+for i in range(4):
     calc_seed, calc_lcg, calc_h[calc_x%hc], out1 = prvhash_core_calc(calc_seed, calc_lcg, calc_h[calc_x%hc])
 
 for i in range(hc):
-    if((i&1)==0 and ivpos < ivlen):
+    if((i&1)==1 and ivpos < ivlen):
         calc_seed ^= iv[ivpos]&bmask
         calc_lcg ^= iv[ivpos]&bmask
         ivpos += 1
@@ -167,11 +169,9 @@ def prvhash_core_sat(seed, lcg, h):
 
 start_seed = inst.new_vars(bits)
 start_h = []
-start_seed1 = inst.new_vars(bits)
 
 seed = start_seed[:]
 h = []
-seed1 = start_seed1[:]
 
 for i in range(hc):
     if(i < hci):
@@ -181,6 +181,7 @@ for i in range(hc):
         h.append(inibits(inst, bits, 0))
 
 lcg = inibits(inst, bits, 0)
+seed1 = inibits(inst, bits, 0)
 lcg1 = inibits(inst, bits, 0)
 seed2 = inibits(inst, bits, 0)
 lcg2 = inibits(inst, bits, 0)
@@ -194,11 +195,11 @@ x = 0
 x2 = 0
 ivpos = 0
 
-for k in range(5):
+for k in range(4):
     seed, lcg, h[x % hc], out1 = prvhash_core_sat(seed, lcg, h[x % hc])
 
 for k in range(hc):
-    if((k&1)==0 and ivpos < ivlen):
+    if((k&1)==1 and ivpos < ivlen):
         seed = xor(seed, inibits(inst,bits,iv[ivpos]))
         lcg = xor(lcg, inibits(inst,bits,iv[ivpos]))
         ivpos += 1
@@ -233,7 +234,6 @@ model = inst.solve(solver_name="Glucose3",decode_model=False)
 #print(model)
 
 print("seed = %4i (%4i)" % (autosat.decode_number(start_seed, model), (seed_i&bmask)))
-print("seed1= %4i (%4i)" % (autosat.decode_number(start_seed1, model), (seed1_i&bmask)))
 
 for i in range(hci):
     print("hash = %4i (%4i)" % (autosat.decode_number(start_h[i], model), (hcv[i]&bmask)))

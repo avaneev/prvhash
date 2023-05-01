@@ -17,7 +17,8 @@ based on 64-bit math. The use of the function beyond 1024-bit hashes is easily
 possible, but has to be statistically tested. For example, any 32-bit element
 extracted from 2048-, or 4096-bit resulting hash is as collision resistant as
 just a 32-bit hash. It is a fixed execution time hash function that depends
-only on message's length. A streamed hashing implementation is available.
+only on message's length. A streamed, higher-security, hashing implementation
+is available.
 
 PRVHASH is solely based on the butterfly effect, inspired by [LCG](https://en.wikipedia.org/wiki/Linear_congruential_generator)
 pseudo-random number generators. The generated hashes have good avalanche
@@ -665,7 +666,12 @@ purely local), but is genuinely based on PRNG position "jumps".
 This is an efficient implementation of a PRVHASH PRNG-based streamed XOR
 function. Since no cryptanalysis nor certification of this function were
 performed yet, it cannot be called a "cipher", but rather a cipher-alike
-random number generator.
+random number generator. It is based on a conjunction of two PRNGs: a keyed
+PRNG which provides "secure" output via XOR of its adjacent outputs, and a
+firewalling PRNG which is constantly re-seeded (via daisy-chaining) by the
+output of keyed PRNG. A performance benefit is obtained due to efficient
+parallel arrangement of firewalling PRNG while security is provided by the
+keyed PRNG.
 
 The performance (expressed in cycles/byte) of this function on various
 platforms can be evaluated at the

@@ -1,5 +1,5 @@
 /**
- * tango642.h version 4.3.5
+ * tango642.h version 4.3.6
  *
  * The inclusion file for the "tango642" PRVHASH PRNG-based streamed XOR
  * function.
@@ -8,7 +8,7 @@
  *
  * License
  *
- * Copyright (c) 2020-2022 Aleksey Vaneev
+ * Copyright (c) 2020-2023 Aleksey Vaneev
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -115,22 +115,19 @@ static inline void tango642_init( TANGO642_CTX* const ctx,
 
 	memset( ctx, 0, sizeof( TANGO642_CTX ));
 
-	ctx -> Seed = TANGO642_LUEC( key );
-	ctx -> SeedF[ 0 ] = TANGO642_LUEC( key + TANGO642_S );
+	TANGO642_T Seed = TANGO642_LUEC( key );
+	TANGO642_T lcg = 0;
 
 	uint8_t* const ha = (uint8_t*) ctx -> Hash;
-	uint8_t* ha2 = ha - TANGO642_S_2;
+	uint8_t* ha2 = ha - TANGO642_S;
 	size_t i;
 
-	for( i = TANGO642_S_2; i < keylen; i += TANGO642_S )
+	for( i = TANGO642_S; i < keylen; i += TANGO642_S )
 	{
 		*(TANGO642_T*) ( ha2 + i ) = TANGO642_LUEC( key + i );
 	}
 
-	TANGO642_T Seed = ctx -> Seed;
-	TANGO642_T lcg = ctx -> lcg;
-
-	for( i = 0; i < PRVHASH_INIT_COUNT; i++ )
+	for( i = 0; i < PRVHASH_INIT_COUNT - 1; i++ )
 	{
 		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ha );
 	}
@@ -139,12 +136,13 @@ static inline void tango642_init( TANGO642_CTX* const ctx,
 
 	for( i = 0; i < ivlen; i += TANGO642_S )
 	{
+		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ha2 );
+
 		const TANGO642_T v = TANGO642_LUEC( iv + i );
 
 		Seed ^= v;
 		lcg ^= v;
 
-		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ha2 );
 		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha2 + TANGO642_S ));
 
 		ha2 += TANGO642_S_2;
