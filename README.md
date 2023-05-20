@@ -691,16 +691,16 @@ although usually the size of the transformation window is limited to small
 values (e.g. 2048 samples), theoretically this size can be directed to
 infinity thus producing a spectrum of an infinite number of individual
 frequency bins. Moreover, individual components of such an "infinite"
-transformation also affect the resulting spectrum, but on an infinity scale.
-Mathematics forbids manipulating infinities, but as outlined with the DFT, in
-the field of discrete series of numbers, infinities can be manipulated. This
-echoes PRVHASH - although now it is implemented in a maximum of 128-bit
-numbers, theoretically nothing forbids the state variable size to go to
-infinity, and PRVHASH should still work (practically tested with up to
-524288-bit state variables). Thus, PRVHASH recreates an analog of the number
-PI, and it should be possible to prove that existence of an infinite sequence
-of bits like PI is completely realistic; a person can create such sequence,
-too (in theory).
+transformation also affect the resulting spectrum, but on an
+infinitely-precise frequency scale. Mathematics forbids manipulating
+infinities, but as outlined with the DFT, in the field of discrete series of
+numbers, infinities can be manipulated. This echoes PRVHASH - although now it
+is implemented in a maximum of 128-bit numbers, theoretically nothing forbids
+the state variable size to go to infinity, and PRVHASH should still work
+(practically tested with up to 524288-bit state variables). Thus, PRVHASH
+recreates an analog of the number PI, and it should be possible to prove that
+existence of an infinite sequence of bits like PI is completely realistic;
+a person can create such sequence, too (in theory).
 
 The mathematics offers an interesting understanding. Take in your mind a
 moment before the "Big Bang". Did mathematical rules exist at that moment? Of
