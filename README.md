@@ -688,18 +688,19 @@ thus, "infinite energy" (if integrated). Note that PRVHASH does not require
 any "magic numbers" to function, it is completely algorithmic. An alternative
 explanation: In the discrete Fourier transform (DFT) domain, such
 understanding is possible: although usually the size of the transformation
-window is limited to small values, theoretically this size can be directed to
-infinity and it turns out that the limiting frequency is equal to half this
-infinite value. Moreover, individual components of such an "infinite"
+window is limited to small values (e.g. 2048), theoretically this size can be
+directed to infinity and it turns out that the limiting frequency is equal to
+half this infinite size. Moreover, individual components of such an "infinite"
 transformation also affect the resulting spectrum, but on an infinity scale.
 Mathematics forbids manipulating infinities, but as outlined with the DFT, in
 the field of discrete series of numbers, infinities can be manipulated. This
 echoes PRVHASH - although now it is implemented in a maximum of 128-bit
 numbers, theoretically nothing forbids the state variable size to go to
-infinity, and PRVHASH should still work. Thus, PRVHASH recreates an analog of
-the number PI, and it should be possible to prove that an infinite sequence of
-bits like PI is completely realistic, a person can create such sequence too
-(in theory).
+infinity, and PRVHASH should still work (practically tested with up to
+524288-bit state variables). Thus, PRVHASH recreates an analog of the number
+PI, and it should be possible to prove that existence of an infinite sequence
+of bits like PI is completely realistic; a person can create such sequence,
+too (in theory).
 
 The mathematics offers an interesting understanding. Take in your mind a
 moment before the "Big Bang". Did mathematical rules exist at that moment? Of
@@ -1049,7 +1050,7 @@ PH_SEED_COUNT=64, note the appearance of a lot of glyph-like elements.
 
 <img src="img/prvhash1-reptile.jpg" width="240"><img src="img/prvhash1-reptile1.png" width="240"><img src="img/prvhash1-reptile64.png" width="240">
 
-## Architectural Ruler (Gradilac Ruler) ##
+### Architectural Ruler (Gradilac Ruler) ###
 
 Whatever the true source of imagery is, the produced imagery seems to be
 useful if applied as some architectural measurement ruler/tool since it can be
