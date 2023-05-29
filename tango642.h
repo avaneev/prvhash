@@ -1,5 +1,5 @@
 /**
- * tango642.h version 4.3.7
+ * tango642.h version 4.3.8
  *
  * The inclusion file for the "tango642" PRVHASH PRNG-based streamed XOR
  * function.
@@ -243,7 +243,7 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 {
 	uint8_t* msg = (uint8_t*) msg0;
 
-	while( true )
+	while( 1 )
 	{
 		if( ctx -> RndPos == TANGO642_PAR )
 		{
@@ -339,7 +339,7 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 
 		size_t p = ctx -> RndPos;
 
-		while( true )
+		while( 1 )
 		{
 			size_t rl = ctx -> RndLeft[ p ];
 
