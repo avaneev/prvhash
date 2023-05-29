@@ -1,5 +1,5 @@
 /**
- * tango642.h version 4.3.6
+ * tango642.h version 4.3.7
  *
  * The inclusion file for the "tango642" PRVHASH PRNG-based streamed XOR
  * function.
@@ -115,6 +115,8 @@ static inline void tango642_init( TANGO642_CTX* const ctx,
 
 	memset( ctx, 0, sizeof( TANGO642_CTX ));
 
+	// Load a key.
+
 	TANGO642_T Seed = TANGO642_LUEC( key );
 	TANGO642_T lcg = 0;
 
@@ -127,10 +129,14 @@ static inline void tango642_init( TANGO642_CTX* const ctx,
 		*(TANGO642_T*) ( ha2 + i ) = TANGO642_LUEC( key + i );
 	}
 
-	for( i = 0; i < PRVHASH_INIT_COUNT - 1; i++ )
+	// Initialize keyed PRNG.
+
+	for( i = 0; i < PRVHASH_INIT_COUNT - 1; i++ ) // +1 in the next part.
 	{
 		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ha );
 	}
+
+	// Input "iv" as external unstructured entropy.
 
 	ha2 = ha;
 
@@ -153,6 +159,19 @@ static inline void tango642_init( TANGO642_CTX* const ctx,
 		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + i ));
 	}
 
+	// Eliminate traces of input entropy, like it is done in hashing.
+
+	for( i = 0; i < TANGO642_HASH_SIZE; i += TANGO642_S )
+	{
+		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + i ));
+	}
+
+	TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ha );
+
+	// Initialize firewalling PRNG, making sure each lcg and hash value
+	// receives keyed entropy twice, or otherwise the "iv" helps to reveal
+	// the "key".
+
 	TANGO642_T SeedF1 = ctx -> SeedF[ 0 ];
 	TANGO642_T SeedF2 = ctx -> SeedF[ 1 ];
 	TANGO642_T SeedF3 = ctx -> SeedF[ 2 ];
@@ -167,15 +186,19 @@ static inline void tango642_init( TANGO642_CTX* const ctx,
 	TANGO642_T HashF4 = ctx -> HashF[ 3 ];
 	TANGO642_T HashF5 = ctx -> HashF[ 4 ];
 
-	size_t hp = 0;
+	size_t hp = TANGO642_S;
 
-	for( i = 0; i < TANGO642_HASH_SIZE; i += TANGO642_S )
+	for( i = 0; i < ( TANGO642_PAR + 1 ) * 2; i++ )
 	{
+		// Keyed PRNG output's XORing produces CSPRNG.
+
 		SeedF4 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + hp ));
 		hp = ( hp + TANGO642_S ) & TANGO642_HASH_MASK;
 
 		SeedF4 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + hp ));
 		hp = ( hp + TANGO642_S ) & TANGO642_HASH_MASK;
+
+		// Parallel arrangement PRNG for efficiency.
 
 		TANGO642_FN( &SeedF1, &lcgF1, &HashF1 );
 		TANGO642_FN( &SeedF2, &lcgF2, &HashF2 );
@@ -210,8 +233,9 @@ static inline void tango642_init( TANGO642_CTX* const ctx,
  * called.
  *
  * @param[in,out] ctx Pointer to the context structure.
- * @param[in,out] msg0 Message buffer, address alignment is unimportant.
- * @param msglen Message length, in bytes.
+ * @param[in,out] msg0 Message buffer, address alignment is unimportant,
+ * can be zero if msglen is zero.
+ * @param msglen Message length, in bytes, can be zero.
  */
 
 static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
@@ -219,7 +243,7 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 {
 	uint8_t* msg = (uint8_t*) msg0;
 
-	while( TANGO642_LIKELY( msglen != 0 ))
+	while( true )
 	{
 		if( ctx -> RndPos == TANGO642_PAR )
 		{
@@ -295,8 +319,6 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 			ctx -> RndLeft[ 3 ] = TANGO642_S;
 			ctx -> RndPos = 0;
 
-			TANGO642_SH( HashF1, HashF2, HashF3, HashF4, HashF5 );
-
 			ctx -> Seed = Seed;
 			ctx -> lcg = lcg;
 			ctx -> SeedF[ 0 ] = SeedF1;
@@ -307,49 +329,57 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 			ctx -> lcgF[ 1 ] = lcgF2;
 			ctx -> lcgF[ 2 ] = lcgF3;
 			ctx -> lcgF[ 3 ] = lcgF4;
-			ctx -> HashF[ 0 ] = HashF1;
-			ctx -> HashF[ 1 ] = HashF2;
-			ctx -> HashF[ 2 ] = HashF3;
-			ctx -> HashF[ 3 ] = HashF4;
-			ctx -> HashF[ 4 ] = HashF5;
+			ctx -> HashF[ 0 ] = HashF2; // Store shifted.
+			ctx -> HashF[ 1 ] = HashF3;
+			ctx -> HashF[ 2 ] = HashF4;
+			ctx -> HashF[ 3 ] = HashF5;
+			ctx -> HashF[ 4 ] = HashF1;
 			ctx -> HashPos = hp;
 		}
 
 		size_t p = ctx -> RndPos;
 
-		while( p < TANGO642_PAR )
+		while( true )
 		{
 			size_t rl = ctx -> RndLeft[ p ];
-			size_t c = ( msglen > rl ? rl : msglen );
 
-			if( c == 0 )
+			if( msglen < rl )
 			{
-				break;
+				if( msglen != 0 )
+				{
+					TANGO642_T RndBytes = ctx -> RndBytes[ p ];
+					ctx -> RndLeft[ p ] = rl - msglen;
+
+					do
+					{
+						*msg ^= (uint8_t) RndBytes;
+						RndBytes >>= 8;
+						msg++;
+					} while( --msglen != 0 );
+
+					ctx -> RndBytes[ p ] = RndBytes;
+				}
+
+				ctx -> RndPos = p;
+				return;
 			}
 
-			msglen -= c;
-			rl -= c;
 			TANGO642_T RndBytes = ctx -> RndBytes[ p ];
-			ctx -> RndLeft[ p ] = rl;
+			msglen -= rl;
 
 			do
 			{
 				*msg ^= (uint8_t) RndBytes;
-				msg++;
 				RndBytes >>= 8;
-			} while( --c != 0 );
+				msg++;
+			} while( --rl != 0 );
 
-			ctx -> RndBytes[ p ] = RndBytes;
-
-			if( rl > 0 )
+			if( ++p == TANGO642_PAR )
 			{
+				ctx -> RndPos = p;
 				break;
 			}
-
-			p++;
 		}
-
-		ctx -> RndPos = p;
 	}
 }
 

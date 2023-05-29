@@ -1,14 +1,18 @@
-# tango642 4.3.6 SAT solving simulation -
+# tango642 4.3.7 SAT solving simulation -
 # finds a key specified in seed_i and hcv[].
 # requires autosat from https://github.com/petersn/autosat
 # and python-sat
 #
 # use "time python t642_sat.py" to measure solving time.
-# increase "bits" (an even value) and "hci" (any positive value) to estimate
-# solving complexity. "bits=64" corresponds to real tango642 variable size.
-# a minimal reasonable "bits" value is 6, lower values solve instantly.
-# base exponential time increase can be assessed by setting hci=0 and
-# incrementally assigning various "bits" values.
+# increase "bits" (an even value) to estimate solving complexity. "bits=64"
+# corresponds to real tango642 variable size. a minimal reasonable "bits"
+# value is 6; lower values solve instantly. base exponential time increase can
+# be assessed by setting hci=0 and incrementally assigning various "bits"
+# values. note that the SAT solver may have to consider most of the system
+# anyway, so a time difference between various "hci" values may not be
+# pronounced. the time exponent dependence on "hci" itself depends on "bits"
+# asymptotically, with higher "bits" values producing a more linear "hci*bits"
+# exponent.
 
 import autosat
 
@@ -23,7 +27,7 @@ hcv = [3,14,3,13,14,4,2,15,2,5,6,11,9,1,11,5,8,6,10,7,5,6,3,10,3,0,2,9,9,12,15,1
 iv = [15,9,4,6] # nonce vector
 
 hc = 16 # keyed hash array length
-hc2 = 16 # firewall prng init length
+fc = 10 # firewall prng init length
 num_obs = 16 # number of observations to use for solving
 
 #####
@@ -130,7 +134,11 @@ for i in range(hc):
     calc_seed, calc_lcg, calc_h[calc_x%hc], out1 = prvhash_core_calc(calc_seed, calc_lcg, calc_h[calc_x%hc])
     calc_x += 1
 
-for i in range(hc2+num_obs):
+for i in range(hc+1):
+    calc_seed, calc_lcg, calc_h[calc_x%hc], out1 = prvhash_core_calc(calc_seed, calc_lcg, calc_h[calc_x%hc])
+    calc_x += 1
+
+for i in range(fc+num_obs):
     calc_seed, calc_lcg, calc_h[calc_x%hc], out1 = prvhash_core_calc(calc_seed, calc_lcg, calc_h[calc_x%hc])
     calc_x += 1
     calc_seed, calc_lcg, calc_h[calc_x%hc], out2 = prvhash_core_calc(calc_seed, calc_lcg, calc_h[calc_x%hc])
@@ -143,7 +151,7 @@ for i in range(hc2+num_obs):
     calc_seed4, calc_lcg4, calc_h2[(calc_x2+3)%5], outf4 = prvhash_core_calc(calc_seed4, calc_lcg4, calc_h2[(calc_x2+3)%5])
     calc_x2 += 1
 
-    if(i>=hc2):
+    if(i>=fc):
         obs.append(outf1)
         obs.append(outf2)
         obs.append(outf3)
@@ -207,7 +215,11 @@ for k in range(hc):
     seed, lcg, h[x % hc], out1 = prvhash_core_sat(seed, lcg, h[x % hc])
     x += 1
 
-for k in range(hc2+num_obs):
+for k in range(hc+1):
+    seed, lcg, h[x % hc], out1 = prvhash_core_sat(seed, lcg, h[x % hc])
+    x += 1
+
+for k in range(fc+num_obs):
     seed, lcg, h[x % hc], out1 = prvhash_core_sat(seed, lcg, h[x % hc])
     x += 1
     seed, lcg, h[x % hc], out2 = prvhash_core_sat(seed, lcg, h[x % hc])
@@ -220,15 +232,15 @@ for k in range(hc2+num_obs):
     seed4, lcg4, h2[(x2+3)%5], outf4 = prvhash_core_sat(seed4, lcg4, h2[(x2+3)%5])
     x2 += 1
 
-    if(k>=hc2):
+    if(k>=fc):
         for i, b in enumerate(outf1):
-            b.make_equal(bool((obs[(k-hc2)*4+0] >> i) & 1))
+            b.make_equal(bool((obs[(k-fc)*4+0] >> i) & 1))
         for i, b in enumerate(outf2):
-            b.make_equal(bool((obs[(k-hc2)*4+1] >> i) & 1))
+            b.make_equal(bool((obs[(k-fc)*4+1] >> i) & 1))
         for i, b in enumerate(outf3):
-            b.make_equal(bool((obs[(k-hc2)*4+2] >> i) & 1))
+            b.make_equal(bool((obs[(k-fc)*4+2] >> i) & 1))
         for i, b in enumerate(outf4):
-            b.make_equal(bool((obs[(k-hc2)*4+3] >> i) & 1))
+            b.make_equal(bool((obs[(k-fc)*4+3] >> i) & 1))
 
 model = inst.solve(solver_name="Glucose3",decode_model=False)
 #print(model)
