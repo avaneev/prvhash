@@ -114,7 +114,11 @@ output):
 
 A similar approach is to simply skip the next generated random number, but it
 is slightly less secure. It is likely that PRVHASH's k-equidistribution of
-separate outputs is implicitly secure.
+separate outputs is implicitly secure. The reason is that skipping or XORing
+creates uncertainty or entanglement of current output with system's state
+hash-array number of outputs back. 3 XORs are needed to provide pre-image
+resistance, or resistance against selection of entropy input that leads to
+a particular output.
 
 ## TPDF Dithering ##
 
