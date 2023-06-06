@@ -1,4 +1,4 @@
-# tango642 4.3.7 SAT solving simulation -
+# tango642 4.3.9 SAT solving simulation -
 # finds a key specified in seed_i and hcv[].
 # requires autosat from https://github.com/petersn/autosat
 # and python-sat
@@ -27,8 +27,8 @@ hcv = [3,14,3,13,14,4,2,15,2,5,6,11,9,1,11,5,8,6,10,7,5,6,3,10,3,0,2,9,9,12,15,1
 iv = [15,9,4,6] # nonce vector
 
 hc = 16 # keyed hash array length
-fc = 10 # firewall prng init length
-num_obs = 16 # number of observations to use for solving
+fc = 15 # firewall prng init length
+num_obs = 16 # number of observations to use for solving (*4)
 
 #####
 
@@ -122,7 +122,7 @@ calc_x = 0
 calc_x2 = 0
 ivpos = 0
 
-for i in range(4):
+for i in range(5):
     calc_seed, calc_lcg, calc_h[calc_x%hc], out1 = prvhash_core_calc(calc_seed, calc_lcg, calc_h[calc_x%hc])
 
 for i in range(hc):
@@ -141,10 +141,8 @@ for i in range(hc+1):
 for i in range(fc+num_obs):
     calc_seed, calc_lcg, calc_h[calc_x%hc], out1 = prvhash_core_calc(calc_seed, calc_lcg, calc_h[calc_x%hc])
     calc_x += 1
-    calc_seed, calc_lcg, calc_h[calc_x%hc], out2 = prvhash_core_calc(calc_seed, calc_lcg, calc_h[calc_x%hc])
-    calc_x += 1
 
-    calc_seed4 ^= out1^out2
+    calc_seed4 ^= out1
     calc_seed1, calc_lcg1, calc_h2[(calc_x2+0)%5], outf1 = prvhash_core_calc(calc_seed1, calc_lcg1, calc_h2[(calc_x2+0)%5])
     calc_seed2, calc_lcg2, calc_h2[(calc_x2+1)%5], outf2 = prvhash_core_calc(calc_seed2, calc_lcg2, calc_h2[(calc_x2+1)%5])
     calc_seed3, calc_lcg3, calc_h2[(calc_x2+2)%5], outf3 = prvhash_core_calc(calc_seed3, calc_lcg3, calc_h2[(calc_x2+2)%5])
@@ -203,7 +201,7 @@ x = 0
 x2 = 0
 ivpos = 0
 
-for k in range(4):
+for k in range(5):
     seed, lcg, h[x % hc], out1 = prvhash_core_sat(seed, lcg, h[x % hc])
 
 for k in range(hc):
@@ -222,10 +220,8 @@ for k in range(hc+1):
 for k in range(fc+num_obs):
     seed, lcg, h[x % hc], out1 = prvhash_core_sat(seed, lcg, h[x % hc])
     x += 1
-    seed, lcg, h[x % hc], out2 = prvhash_core_sat(seed, lcg, h[x % hc])
-    x += 1
 
-    seed4 = xor(seed4, xor(out1, out2))
+    seed4 = xor(seed4, out1)
     seed1, lcg1, h2[(x2+0)%5], outf1 = prvhash_core_sat(seed1, lcg1, h2[(x2+0)%5])
     seed2, lcg2, h2[(x2+1)%5], outf2 = prvhash_core_sat(seed2, lcg2, h2[(x2+1)%5])
     seed3, lcg3, h2[(x2+2)%5], outf3 = prvhash_core_sat(seed3, lcg3, h2[(x2+2)%5])

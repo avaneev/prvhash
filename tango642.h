@@ -1,5 +1,5 @@
 /**
- * tango642.h version 4.3.8
+ * tango642.h version 4.3.9
  *
  * The inclusion file for the "tango642" PRVHASH PRNG-based streamed XOR
  * function.
@@ -48,18 +48,6 @@
 	{ TANGO642_T t = v1; v1 = v2; v2 = v3; v3 = v4; v4 = v5; v5 = t; }
 	// 5-value shift macro.
 
-// Likelihood macros that are used for manually-guided micro-optimization.
-
-#if defined( __GNUC__ ) || defined( __clang__ )
-
-	#define TANGO642_LIKELY( x )  __builtin_expect( x, 1 )
-
-#else // likelihood macros
-
-	#define TANGO642_LIKELY( x ) ( x )
-
-#endif // likelihood macros
-
 /**
  * tango642 context structure, can be placed on stack. On systems where this
  * is relevant, the structure should be aligned to TANGO642_S bytes.
@@ -72,8 +60,8 @@ typedef struct
 	TANGO642_T Hash[ TANGO642_HASH_COUNT ]; ///< Keyed PRNG hash values.
 	TANGO642_T SeedF[ TANGO642_PAR ]; ///< Firewalling PRNG Seed values.
 	TANGO642_T lcgF[ TANGO642_PAR ]; ///< Firewalling PRNG lcg values.
-	TANGO642_T HashF[ TANGO642_PAR + 1 ]; ///< Firewalling PRNG Hash values.
-	TANGO642_T RndBytes[ TANGO642_PAR ]; ///< The left-over random output.
+	TANGO642_T HashF[ TANGO642_PAR + 1 ]; ///< Firewalling PRNG hash values.
+	TANGO642_T RndBytes[ TANGO642_PAR ]; ///< The leftover random output.
 	size_t RndLeft[ TANGO642_PAR ]; ///< The number of bytes left in RndBytes.
 	size_t RndPos; ///< Position within the RndLeft array.
 	size_t HashPos; ///< Keyed PRNG hash array position, in bytes.
@@ -89,10 +77,10 @@ typedef struct
  * structure can be stored as a whole, and used as a substitute for key+iv
  * pair.
  *
- * When "keylen+ivlen" is larger than 1168 bits, there can be theoretical
+ * When "keylen+ivlen" is larger than 1104 bits, there can be theoretical
  * "key+iv" collisions: such collisions should not pose a security threat
  * (negligible probability), but may be perceived as "non-ideal". However,
- * when the "keylen" is 1024 bits long it still allows "iv" to be 128 bits
+ * when the "keylen" is 1024 bits long it still allows "iv" to be 64 bits
  * long "safely".
  *
  * @param[out] ctx Pointer to the context structure. Should be aligned to
@@ -103,7 +91,7 @@ typedef struct
  * @param iv0 Uniformly-random "unsecure" initialization vector (nonce),
  * address alignment is unimportant. Can be 0 if "ivlen" is also 0.
  * @param ivlen Length of "iv", in bytes, in increments of 8; can be zero.
- * Should not exceed 56 bytes.
+ * Should not exceed 64 bytes.
  */
 
 static inline void tango642_init( TANGO642_CTX* const ctx,
@@ -131,7 +119,7 @@ static inline void tango642_init( TANGO642_CTX* const ctx,
 
 	// Initialize keyed PRNG.
 
-	for( i = 0; i < PRVHASH_INIT_COUNT - 1; i++ ) // +1 in the next part.
+	for( i = 0; i < PRVHASH_INIT_COUNT; i++ )
 	{
 		TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ha );
 	}
@@ -169,8 +157,9 @@ static inline void tango642_init( TANGO642_CTX* const ctx,
 	TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ha );
 
 	// Initialize firewalling PRNG, making sure each lcg and hash value
-	// receives keyed entropy twice, or otherwise the "iv" helps to reveal
-	// the "key".
+	// receives keyed entropy thrice, or otherwise a further keyed entropy
+	// input helps to reveal the key. Such entropy accumulation is the essence
+	// of "firewalling".
 
 	TANGO642_T SeedF1 = ctx -> SeedF[ 0 ];
 	TANGO642_T SeedF2 = ctx -> SeedF[ 1 ];
@@ -188,12 +177,9 @@ static inline void tango642_init( TANGO642_CTX* const ctx,
 
 	size_t hp = TANGO642_S;
 
-	for( i = 0; i < ( TANGO642_PAR + 1 ) * 2; i++ )
+	for( i = 0; i < ( TANGO642_PAR + 1 ) * 3; i++ )
 	{
-		// Keyed PRNG output's XORing produces CSPRNG.
-
-		SeedF4 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + hp ));
-		hp = ( hp + TANGO642_S ) & TANGO642_HASH_MASK;
+		// Input from keyed PRNG extends PRNG period's exponent of the output.
 
 		SeedF4 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + hp ));
 		hp = ( hp + TANGO642_S ) & TANGO642_HASH_MASK;
@@ -265,7 +251,7 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 			uint8_t* const ha = (uint8_t*) ctx -> Hash;
 			size_t hp = ctx -> HashPos;
 
-			while( TANGO642_LIKELY( msglen > TANGO642_S * TANGO642_PAR ))
+			while( msglen >= TANGO642_S * TANGO642_PAR )
 			{
 				SeedF4 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + hp ));
 				hp = ( hp + TANGO642_S ) & TANGO642_HASH_MASK;
@@ -281,9 +267,6 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 				mx2 ^= TANGO642_EC( TANGO642_FN( &SeedF2, &lcgF2, &HashF2 ));
 				memcpy( msg, &mx2, TANGO642_S );
 				msg += TANGO642_S;
-
-				SeedF4 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + hp ));
-				hp = ( hp + TANGO642_S ) & TANGO642_HASH_MASK;
 
 				TANGO642_T mx3, mx4;
 				memcpy( &mx3, msg, TANGO642_S );
@@ -301,9 +284,6 @@ static inline void tango642_xor( TANGO642_CTX* const ctx, void* const msg0,
 
 				msglen -= TANGO642_S * TANGO642_PAR;
 			}
-
-			SeedF4 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + hp ));
-			hp = ( hp + TANGO642_S ) & TANGO642_HASH_MASK;
 
 			SeedF4 ^= TANGO642_FN( &Seed, &lcg, (TANGO642_T*) ( ha + hp ));
 			hp = ( hp + TANGO642_S ) & TANGO642_HASH_MASK;
