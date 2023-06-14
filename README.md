@@ -1081,3 +1081,6 @@ PRVHASH "computer program" authorship and copyright were registered at the
 [fips.ru](https://new.fips.ru/en/)). Please note that these are not "invention
 patents"; the registrations assure you that the author has the required rights
 to grant the software license to you.
+
+The project is 100% self-sponsored from legal software sales income, without
+any third-party or state affiliation nor sponsorship.
