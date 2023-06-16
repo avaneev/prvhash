@@ -485,7 +485,10 @@ whose state is passed back into the "bivariable shuffler" continuously, and
 the new shuffled values stored in this working buffer for the next pass.
 
 In general, PRVHASH core function represents a "building block" that permits
-design of practically any entropy-generating constructs.
+design of practically any entropy-generating constructs. It has an important
+advantage in that the state space of these constructs can be completely
+analyzed using small state variables, with the obtained statistics being
+extrapolatable to larger state variables.
 
 ## PRNG Period Assessment ##
 
@@ -1082,5 +1085,5 @@ PRVHASH "computer program" authorship and copyright were registered at the
 patents"; the registrations assure you that the author has the required rights
 to grant the software license to you.
 
-The project is 100% self-sponsored from legal software sales income, without
-any third-party or state affiliation nor sponsorship.
+The project is 100% self-funded from legal software sales income, without any
+third-party or state affiliation nor sponsorship.
