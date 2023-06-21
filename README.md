@@ -768,14 +768,6 @@ easy scalability, self-start without any special initialization and from any
 initial state, state variable size invariance, not-stalling on various entropy
 input.
 
-The `Seed >> 32 | Seed << 32` operation used in PRVHASH may look like it was
-derived from the middle-square method. This is purely a coincidence. During
-PRVHASH development, in many cases a better option was bit-reversal (and
-probably still is), and not such register "halves-swapping", but due to
-performance considerations (absence of such processor instruction),
-bit-reversal was not used. Practically, both are equivalent (see e.g. 2-bit
-PRVHASH), and exhibit difference in hashing mainly.
-
 During the course of PRVHASH development, the author has found that the
 simplest low-frequency sine-wave oscillator can be used as a pseudo-random
 number generator, if its mantissa is treated as an integer number. This means
@@ -1070,8 +1062,9 @@ used to quickly measure architectural features as whole-number ratios:
 ## Thanks ##
 
 The author would like to thank Reini Urban for [his SMHasher
-fork](https://github.com/rurban/smhasher), Chris Doty-Humphrey for
-[PractRand](http://pracrand.sourceforge.net/), and 
+fork](https://github.com/rurban/smhasher), Austin Appleby for
+[the original SMHasher](https://github.com/aappleby/smhasher),
+Chris Doty-Humphrey for [PractRand](http://pracrand.sourceforge.net/), and 
 Peter Schmidt-Nielsen for [AutoSat](https://github.com/petersn/autosat).
 Without these tools it would not be possible to create PRVHASH which stands
 state-of-the-art statistical tests.
@@ -1086,4 +1079,4 @@ patents"; the registrations assure you that the author has the required rights
 to grant the software license to you.
 
 The project is 100% self-funded from legal software sales income, without any
-third-party or state affiliation nor sponsorship.
+third-party nor state affiliation nor sponsorship.
