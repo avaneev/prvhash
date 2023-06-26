@@ -1,5 +1,5 @@
 /**
- * prvhash16.h version 4.3
+ * prvhash16.h version 4.3.1
  *
  * The inclusion file for the "prvhash16" hash function. For demonstration
  * purposes, not practically useful.
@@ -8,7 +8,7 @@
  *
  * License
  *
- * Copyright (c) 2020-2021 Aleksey Vaneev
+ * Copyright (c) 2020-2023 Aleksey Vaneev
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -53,7 +53,7 @@
  */
 
 static inline void prvhash16( const void* const Msg0, const size_t MsgLen,
-	void* const Hash0, const size_t HashLen, const uint32_t UseSeed )
+	void* const Hash0, const size_t HashLen, uint32_t UseSeed )
 {
 	const uint8_t* Msg = (const uint8_t*) Msg0;
 	uint8_t* const Hash = (uint8_t*) Hash0;
@@ -64,7 +64,7 @@ static inline void prvhash16( const void* const Msg0, const size_t MsgLen,
 
 	state_t Seed = 0x128D; // The state after 5 PRVHASH rounds from the
 	state_t lcg = 0x8D5B; // "zero-state".
-	*(uint32_t*) Hash = 0x0932 ^ UseSeed;
+	*(state_t*) Hash = 0x0932;
 
 	const state_t* const HashEnd = (state_t*) ( Hash + HashLen );
 	state_t* hc = (state_t*) Hash;
@@ -73,6 +73,26 @@ static inline void prvhash16( const void* const Msg0, const size_t MsgLen,
 	if( MsgLen > 0 )
 	{
 		fbm <<= ( Msg[ MsgLen - 1 ] >> 7 );
+	}
+
+	size_t k;
+
+	if( UseSeed != 0 )
+	{
+		for( k = 0; k < 2; k++ )
+		{
+			Seed ^= (state_t) UseSeed;
+			lcg ^= (state_t) UseSeed;
+
+			prvhash_core16( &Seed, &lcg, hc );
+
+			if( ++hc == HashEnd )
+			{
+				hc = (state_t*) Hash;
+			}
+
+			UseSeed >>= 16;
+		}
 	}
 
 	const uint8_t* const MsgEnd = Msg + MsgLen;
@@ -116,8 +136,6 @@ static inline void prvhash16( const void* const Msg0, const size_t MsgLen,
 
 	const size_t fc = HashLen + ( MsgLen < HashLen - sizeof( state_t ) ?
 		(uint8_t*) HashEnd - (uint8_t*) hc : 0 );
-
-	size_t k;
 
 	for( k = 0; k <= fc; k += sizeof( state_t ))
 	{

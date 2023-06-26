@@ -23,10 +23,7 @@ is available.
 PRVHASH is solely based on the butterfly effect, inspired by [LCG](https://en.wikipedia.org/wiki/Linear_congruential_generator)
 pseudo-random number generators. The generated hashes have good avalanche
 properties. For best security, a random seed should be supplied to the hash
-function, but this is not a requirement. In practice, the `InitVec` (instead
-of `UseSeed`), and initial hash, can both be randomly seeded (see the
-suggestions in `prvhash64.h`), adding useful initial entropy (`InitVec` plus
-`Hash` total bits of entropy).
+function, but this is not a requirement.
 
 64-, 128-, 192-, 256-, 512-, and 1024-bit PRVHASH hashes pass all
 [SMHasher](https://github.com/rurban/smhasher) tests. Other hash lengths were
