@@ -1,5 +1,5 @@
 /**
- * prvrng.h version 4.3.1
+ * prvrng.h version 4.3.2
  *
  * The inclusion file for the "prvrng" entropy pseudo-random number generator.
  * This is mostly an example PRNG that demonstrates use of infrequent external
@@ -164,14 +164,14 @@ static inline int prvrng_init64p2( PRVRNG_CTX* const ctx )
 
 		ctx -> f = fopen( "/dev/random", "rb" );
 
-		if( ctx -> f == NULL )
+		if( ctx -> f == 0 )
 		{
 			return( 0 );
 		}
 
 	#else // defined( PRVRNG_UNIX )
 
-		if( !CryptAcquireContext( &ctx -> prov, NULL, NULL, PROV_RSA_FULL,
+		if( !CryptAcquireContext( &ctx -> prov, 0, 0, PROV_RSA_FULL,
 			CRYPT_VERIFYCONTEXT ))
 		{
 			return( 0 );

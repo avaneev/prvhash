@@ -1,5 +1,5 @@
 /**
- * prvhash64.h version 4.3.2
+ * prvhash64.h version 4.3.3
  *
  * The inclusion file for the "prvhash64" and "prvhash64_64m" hash functions.
  *
@@ -52,7 +52,7 @@
  * @param fb Final byte used for padding.
  */
 
-static inline uint64_t prvhash_lpu64ec( const uint8_t* const Msg,
+static PRVHASH_INLINE uint64_t prvhash_lpu64ec( const uint8_t* const Msg,
 	const uint8_t* const MsgEnd, uint64_t fb )
 {
 	const size_t MsgLen = MsgEnd - Msg;

@@ -1,15 +1,16 @@
 /**
- * prvhash_core.h version 4.3.1
+ * prvhash_core.h version 4.3.2
  *
  * The inclusion file for the "prvhash_core*" PRVHASH core functions for
  * various state variable sizes. Also includes several auxiliary functions and
  * macros for endianness-correction.
  *
  * Description is available at https://github.com/avaneev/prvhash
+ * E-mail: aleksey.vaneev@gmail.com or info@voxengo.com
  *
  * License
  *
- * Copyright (c) 2020-2022 Aleksey Vaneev
+ * Copyright (c) 2020-2023 Aleksey Vaneev
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -38,6 +39,31 @@
 
 #define PRVHASH_INIT_COUNT 5 // Common number of initialization rounds.
 
+// Macro that denotes availability of required GCC-style built-in functions.
+
+#if defined( __GNUC__ ) || defined( __clang__ ) || \
+	defined( __IBMC__ ) || defined( __IBMCPP__ ) || defined( __COMPCERT__ )
+
+	#define PRVHASH_GCC_BUILTINS
+
+#endif // GCC built-ins.
+
+// Macro to force code inlining.
+
+#if defined( PRVHASH_GCC_BUILTINS )
+
+	#define PRVHASH_INLINE inline __attribute__((always_inline))
+
+#elif defined( _MSC_VER )
+
+	#define PRVHASH_INLINE inline __forceinline
+
+#else // defined( _MSC_VER )
+
+	#define PRVHASH_INLINE inline
+
+#endif // defined( _MSC_VER )
+
 /**
  * This function runs a single PRVHASH random number generation round. This
  * function can be used both as a hash generator and as a general-purpose
@@ -63,7 +89,7 @@
  * @return Current random value.
  */
 
-static inline uint64_t prvhash_core64( uint64_t* const Seed0,
+static PRVHASH_INLINE uint64_t prvhash_core64( uint64_t* const Seed0,
 	uint64_t* const lcg0, uint64_t* const Hash0 )
 {
 	uint64_t Seed = *Seed0; uint64_t lcg = *lcg0; uint64_t Hash = *Hash0;
@@ -80,7 +106,7 @@ static inline uint64_t prvhash_core64( uint64_t* const Seed0,
 	return( out );
 }
 
-static inline uint32_t prvhash_core32( uint32_t* const Seed0,
+static PRVHASH_INLINE uint32_t prvhash_core32( uint32_t* const Seed0,
 	uint32_t* const lcg0, uint32_t* const Hash0 )
 {
 	uint32_t Seed = *Seed0; uint32_t lcg = *lcg0; uint32_t Hash = *Hash0;
@@ -97,7 +123,7 @@ static inline uint32_t prvhash_core32( uint32_t* const Seed0,
 	return( out );
 }
 
-static inline uint16_t prvhash_core16( uint16_t* const Seed0,
+static PRVHASH_INLINE uint16_t prvhash_core16( uint16_t* const Seed0,
 	uint16_t* const lcg0, uint16_t* const Hash0 )
 {
 	uint16_t Seed = *Seed0; uint16_t lcg = *lcg0; uint16_t Hash = *Hash0;
@@ -114,7 +140,7 @@ static inline uint16_t prvhash_core16( uint16_t* const Seed0,
 	return( out );
 }
 
-static inline uint8_t prvhash_core8( uint8_t* const Seed0,
+static PRVHASH_INLINE uint8_t prvhash_core8( uint8_t* const Seed0,
 	uint8_t* const lcg0, uint8_t* const Hash0 )
 {
 	uint8_t Seed = *Seed0; uint8_t lcg = *lcg0; uint8_t Hash = *Hash0;
@@ -131,7 +157,7 @@ static inline uint8_t prvhash_core8( uint8_t* const Seed0,
 	return( out );
 }
 
-static inline uint8_t prvhash_core4( uint8_t* const Seed0,
+static PRVHASH_INLINE uint8_t prvhash_core4( uint8_t* const Seed0,
 	uint8_t* const lcg0, uint8_t* const Hash0 )
 {
 	uint8_t Seed = *Seed0; uint8_t lcg = *lcg0; uint8_t Hash = *Hash0;
@@ -151,7 +177,7 @@ static inline uint8_t prvhash_core4( uint8_t* const Seed0,
 	return( out );
 }
 
-static inline uint8_t prvhash_core2( uint8_t* const Seed0,
+static PRVHASH_INLINE uint8_t prvhash_core2( uint8_t* const Seed0,
 	uint8_t* const lcg0, uint8_t* const Hash0 )
 {
 	uint8_t Seed = *Seed0; uint8_t lcg = *lcg0; uint8_t Hash = *Hash0;
@@ -173,21 +199,23 @@ static inline uint8_t prvhash_core2( uint8_t* const Seed0,
 
 #if defined( __SIZEOF_INT128__ )
 
-static inline __uint128_t prvhash_core128( __uint128_t* const Seed0,
-	__uint128_t* const lcg0, __uint128_t* const Hash0 )
+static PRVHASH_INLINE unsigned __int128 prvhash_core128(
+	unsigned __int128* const Seed0, unsigned __int128* const lcg0,
+	unsigned __int128* const Hash0 )
 {
-	__uint128_t Seed = *Seed0; __uint128_t lcg = *lcg0; __uint128_t Hash = *Hash0;
+	unsigned __int128 Seed = *Seed0; unsigned __int128 lcg = *lcg0;
+	unsigned __int128 Hash = *Hash0;
 
 	Seed *= lcg * 2 + 1;
-	const __uint128_t rs = Seed >> 64 | Seed << 64;
+	const unsigned __int128 rs = Seed >> 64 | Seed << 64;
 	Hash += rs +
-		( 0xAAAAAAAAAAAAAAAA | (__uint128_t) 0xAAAAAAAAAAAAAAAA << 64 );
+		( 0xAAAAAAAAAAAAAAAA | (unsigned __int128) 0xAAAAAAAAAAAAAAAA << 64 );
 
 	lcg += Seed +
-		( 0x5555555555555555 | (__uint128_t) 0x5555555555555555 << 64 );
+		( 0x5555555555555555 | (unsigned __int128) 0x5555555555555555 << 64 );
 
 	Seed ^= Hash;
-	const __uint128_t out = lcg ^ rs;
+	const unsigned __int128 out = lcg ^ rs;
 
 	*Seed0 = Seed; *lcg0 = lcg; *Hash0 = Hash;
 
@@ -196,46 +224,19 @@ static inline __uint128_t prvhash_core128( __uint128_t* const Seed0,
 
 #endif // defined( __SIZEOF_INT128__ )
 
-// Macros that apply byte-swapping.
+// Endianness definition macro, can be used as a logical constant.
 
-#if defined( __GNUC__ ) || defined( __clang__ )
-
-	#define PRVHASH_BYTESW32( v ) __builtin_bswap32( v )
-	#define PRVHASH_BYTESW64( v ) __builtin_bswap64( v )
-
-#elif defined( _MSC_VER )
-
-	#define PRVHASH_BYTESW32( v ) _byteswap_ulong( v )
-	#define PRVHASH_BYTESW64( v ) _byteswap_uint64( v )
-
-#else // defined( _MSC_VER )
-
-	#define PRVHASH_BYTESW32( v ) ( \
-		( v & 0xFF000000 ) >> 24 | \
-		( v & 0x00FF0000 ) >> 8 | \
-		( v & 0x0000FF00 ) << 8 | \
-		( v & 0x000000FF ) << 24 )
-
-	#define PRVHASH_BYTESW64( v ) ( \
-		( v & 0xFF00000000000000 ) >> 56 | \
-		( v & 0x00FF000000000000 ) >> 40 | \
-		( v & 0x0000FF0000000000 ) >> 24 | \
-		( v & 0x000000FF00000000 ) >> 8 | \
-		( v & 0x00000000FF000000 ) << 8 | \
-		( v & 0x0000000000FF0000 ) << 24 | \
-		( v & 0x000000000000FF00 ) << 40 | \
-		( v & 0x00000000000000FF ) << 56 )
-
-#endif // defined( _MSC_VER )
-
-// Endianness definition macro.
-
-#if defined( _WIN32 ) || defined( __LITTLE_ENDIAN__ ) || \
+#if defined( __LITTLE_ENDIAN__ ) || defined( __LITTLE_ENDIAN ) || \
+	defined( _LITTLE_ENDIAN ) || defined( _WIN32 ) || defined( i386 ) || \
+	defined( __i386 ) || defined( __i386__ ) || defined( __x86_64__ ) || \
 	( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ )
 
 	#define PRVHASH_LITTLE_ENDIAN 1
 
-#elif defined( __BIG_ENDIAN__ ) || \
+#elif defined( __BIG_ENDIAN__ ) || defined( __BIG_ENDIAN ) || \
+	defined( _BIG_ENDIAN ) || defined( __SYSC_ZARCH__ ) || \
+	defined( __zarch__ ) || defined( __s390x__ ) || defined( __sparc ) || \
+	defined( __sparc__ ) || \
 	( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ )
 
 	#define PRVHASH_LITTLE_ENDIAN 0
@@ -257,8 +258,37 @@ static inline __uint128_t prvhash_core128( __uint128_t* const Seed0,
 
 #else // PRVHASH_LITTLE_ENDIAN
 
-	#define PRVHASH_EC32( v ) PRVHASH_BYTESW32( v )
-	#define PRVHASH_EC64( v ) PRVHASH_BYTESW64( v )
+	#if defined( PRVHASH_GCC_BUILTINS )
+
+		#define PRVHASH_EC32( v ) __builtin_bswap32( v )
+		#define PRVHASH_EC64( v ) __builtin_bswap64( v )
+
+	#elif defined( _MSC_VER )
+
+		#include <intrin.h>
+
+		#define PRVHASH_EC32( v ) _byteswap_ulong( v )
+		#define PRVHASH_EC64( v ) _byteswap_uint64( v )
+
+	#else // defined( _MSC_VER )
+
+		#define PRVHASH_EC32( v ) ( \
+			( v & 0xFF000000 ) >> 24 | \
+			( v & 0x00FF0000 ) >> 8 | \
+			( v & 0x0000FF00 ) << 8 | \
+			( v & 0x000000FF ) << 24 )
+
+		#define PRVHASH_EC64( v ) ( \
+			( v & 0xFF00000000000000 ) >> 56 | \
+			( v & 0x00FF000000000000 ) >> 40 | \
+			( v & 0x0000FF0000000000 ) >> 24 | \
+			( v & 0x000000FF00000000 ) >> 8 | \
+			( v & 0x00000000FF000000 ) << 8 | \
+			( v & 0x0000000000FF0000 ) << 24 | \
+			( v & 0x000000000000FF00 ) << 40 | \
+			( v & 0x00000000000000FF ) << 56 )
+
+	#endif // defined( _MSC_VER )
 
 #endif // PRVHASH_LITTLE_ENDIAN
 
@@ -270,7 +300,7 @@ static inline __uint128_t prvhash_core128( __uint128_t* const Seed0,
  * @param p 4-byte buffer. Alignment is unimportant.
  */
 
-static inline uint32_t prvhash_lu32ec( const uint8_t* const p )
+static PRVHASH_INLINE uint32_t prvhash_lu32ec( const uint8_t* const p )
 {
 	uint32_t v;
 	memcpy( &v, p, 4 );
@@ -286,7 +316,7 @@ static inline uint32_t prvhash_lu32ec( const uint8_t* const p )
  * @param p 8-byte buffer. Alignment is unimportant.
  */
 
-static inline uint64_t prvhash_lu64ec( const uint8_t* const p )
+static PRVHASH_INLINE uint64_t prvhash_lu64ec( const uint8_t* const p )
 {
 	uint64_t v;
 	memcpy( &v, p, 8 );
