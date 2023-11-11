@@ -707,9 +707,10 @@ recreates an analog of the number PI, and it should be possible to prove that
 existence of an infinite sequence of bits like PI is completely realistic;
 a person can create such sequence, too (in theory). Additionally, if such
 infinitely-precise spectrum is mapped to space- and time-bound physical
-processes (where Planck length and time are considerably greater than zero,
-relatively), it brings a notion of existence of infinite Nyquist frequency and
-thus infinite energy.
+processes, where Planck length and time are considerably greater than zero -
+one can't sample these processes more densely or more frequently than Planck
+constants permit, - it brings a notion of existence of infinite Nyquist
+frequency and thus infinite energy.
 
 The mathematics offers an interesting understanding. Take in your mind a
 moment before the "Big Bang". Did mathematical rules exist at that moment? Of
