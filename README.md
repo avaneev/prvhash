@@ -710,7 +710,9 @@ infinitely-precise spectrum is mapped to space- and time-bound physical
 processes, where Planck length and time are considerably greater than zero -
 one can't sample these processes more densely or more frequently than Planck
 constants permit, - it brings a notion of existence of infinite Nyquist
-frequency and thus infinite energy.
+frequency and thus infinite energy. While we as observers are limited by
+Planck time, the physical processes like movement due to inertia are
+continuous.
 
 The mathematics offers an interesting understanding. Take in your mind a
 moment before the "Big Bang". Did mathematical rules exist at that moment? Of
