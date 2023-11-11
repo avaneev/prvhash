@@ -13,7 +13,8 @@ and an "extendable-output function" (XOF).
 
 PRVHASH can generate 64- to unlimited-bit hashes, yielding hashes of
 approximately equal quality independent of the chosen hash length. PRVHASH is
-based on 64-bit math. The use of the function beyond 1024-bit hashes is easily
+based on 64-bit math, which is scalar, portable, cross-platform, inlineable,
+C++ compatible. The use of the function beyond 1024-bit hashes is easily
 possible, but has to be statistically tested. For example, any 32-bit element
 extracted from 2048-, or 4096-bit resulting hash is as collision resistant as
 just a 32-bit hash. It is a fixed execution time hash function that depends
@@ -455,13 +456,11 @@ be fruitless. Note that to reduce such "control risks", the entropy input
 should use as fewer bits as possible, like demonstrated in the `prvrng.h`
 file.
 
-P.S. The reason the InitVec in the `prvhash64` hash function has the value
-quality constraints, and an initial non-zero state, is that otherwise the
-function would require 5 preliminary "conditioning" rounds (core function
-calls) to neutralize any oddities (including zero values) in InitVec; that
-would reduce the performance of the hash function dramatically, for hash-table
-uses. Note that the `prvhash64s` function starts from the "full zero" state
-and then performs acceptably.
+P.S. The reason the `prvhash64` hash function has an initial non-zero state,
+is that otherwise the function would require 5 preliminary "conditioning"
+rounds (core function calls); that would reduce the performance of the hash
+function dramatically, for hash-table uses. Note that the `prvhash64s`
+function starts from the "full zero" state and then performs acceptably.
 
 ## Hashing Method's Philosophy ##
 
