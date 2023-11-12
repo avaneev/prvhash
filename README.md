@@ -855,6 +855,10 @@ std::string get_name() const {return "LCG";}
 
 (PRVHASH-1)
 
+$$ Hash = (Hash + Seed + 1) \mod{2} $$
+$$ lcg = (lcg + Seed) \mod{2} $$
+$$ Seed = (Seed + Hash) \mod{2} $$
+
 <img src="img/proof_math_is_engineered.jpg" width="600">
 
 This image depicts data acquired from 2 runs of the `proof_math_is_engineered.c`
