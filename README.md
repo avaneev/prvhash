@@ -855,11 +855,11 @@ std::string get_name() const {return "LCG";}
 
 (PRVHASH-1)
 
-$$ Hash = (Hash + Seed + 1) \mod{2} $$
+$$ h = (h + s + 1) \mod{2} $$
 
-$$ lcg = (lcg + Seed) \mod{2} $$
+$$ l = (l + s) \mod{2} $$
 
-$$ Seed = (Seed + Hash) \mod{2} $$
+$$ s = (s + h) \mod{2} $$
 
 <img src="img/proof_math_is_engineered.jpg" width="600">
 
