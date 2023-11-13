@@ -857,7 +857,7 @@ std::string get_name() const {return "LCG";}
 
 $$ h = (h + s + 1) \mod{2} $$
 
-$$ l = (l + s) \mod{2} $$
+$$ l = (l + s + 0 \parallel 1) \mod{2} $$
 
 $$ s = (s + h) \mod{2} $$
 
