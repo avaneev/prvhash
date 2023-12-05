@@ -1,4 +1,4 @@
-# PRVHASH - Pseudo-Random-Value Hash #
+# PRVHASH - Pseudo-Random-Value Hash (in C/C++) #
 
 ## Introduction ##
 
@@ -14,12 +14,12 @@ and an "extendable-output function" (XOF).
 PRVHASH can generate 64- to unlimited-bit hashes, yielding hashes of
 approximately equal quality independent of the chosen hash length. PRVHASH is
 based on 64-bit math, which is scalar, portable, cross-platform, inlineable,
-C++ compatible. The use of the function beyond 1024-bit hashes is easily
-possible, but has to be statistically tested. For example, any 32-bit element
-extracted from 2048-, or 4096-bit resulting hash is as collision resistant as
-just a 32-bit hash. It is a fixed execution time hash function that depends
-only on message's length. A streamed, higher-security, hashing implementation
-is available.
+C++ compatible (fairly efficient on 32-bit systems as well). The use of the
+function beyond 1024-bit hashes is easily possible, but has to be
+statistically tested. For example, any 32-bit element extracted from 2048-, or
+4096-bit resulting hash is as collision resistant as just a 32-bit hash. It is
+a fixed execution time hash function that depends only on message's length.
+A streamed, higher-security, hashing implementation is available.
 
 PRVHASH is solely based on the butterfly effect, inspired by [LCG](https://en.wikipedia.org/wiki/Linear_congruential_generator)
 pseudo-random number generators. The generated hashes have good avalanche
@@ -47,7 +47,7 @@ The default `prvhash64.h`-based 64-bit hash of the string `The cat is out of
 the bag` is `eb405f05cfc4ae1c`.
 
 A proposed short name for hashes created with `prvhash64.h` is `PRH64-N`,
-where `N` is the hash length in bits (e.g. `PRH64-256`).
+where `N` is the hash length in bits (e.g., `PRH64-256`).
 
 ## Minimal PRNG for Everyday Use ##
 
@@ -308,7 +308,7 @@ for hash-tables and in-memory data blocks, `prvhash64s` can be used to create
 hashes of large data blocks like files, in streamed mode.
 
 A proposed short name for hashes created with `prvhash64s.h` is `PRH64S-N`,
-where `N` is the hash length in bits (e.g. `PRH64S-256`). Or simply, `SH4-N`,
+where `N` is the hash length in bits (e.g., `PRH64S-256`). Or simply, `SH4-N`,
 `Secure Hash 4`.
 
 ## Description ##
@@ -678,6 +678,11 @@ output of keyed PRNG. A performance benefit is obtained due to efficient
 parallel arrangement of firewalling PRNG while security is provided by the
 keyed PRNG.
 
+This construction, which is resistant to SAT solving, may become a viable and
+more efficient alternative to AES and ChaCha/Salsa ciphers, if the research
+community decides to invest the time and resources into producing a
+formalized, or at least a widely-acceptable, proof of its security.
+
 The performance (expressed in cycles/byte) of this function on various
 platforms can be evaluated at the
 [ECRYPT/eBASC project](https://bench.cr.yp.to/results-stream.html).
@@ -693,7 +698,7 @@ bit-sequence). Note that PRVHASH does not require any "magic numbers" to
 function, it is completely algorithmic. An alternative explanation: In the
 discrete Fourier transform (DFT) domain, such understanding is possible:
 although usually the size of the transformation window is limited to small
-values (e.g. 2048 samples), theoretically this size can be directed to
+values (e.g., 2048 samples), theoretically this size can be directed to
 infinity thus producing a spectrum of an infinite number of individual
 frequency bins. Moreover, individual components of such an "infinite"
 transformation also affect the resulting spectrum, but on an
@@ -891,7 +896,7 @@ known in DSP engineering field. 8. Period of the blue graph is 255; orange is
 
 In author's opinion, the program "reads data" directly from the entropy pool
 which is "embedded" into mathematics from its inception, like any mathematical
-constant is (e.g. PI). This poses an interesting and **probably very
+constant is (e.g., PI). This poses an interesting and **probably very
 questionable** proposition: the "intelligent impulses" or even "human mind"
 itself (because a musician can understand these impulses) existed long before
 the "Big Bang" happened. This discovery is **probably** both the most
