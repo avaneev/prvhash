@@ -36,12 +36,14 @@ PRVHASH core function can be used as a PRNG with an arbitrarily-chosen
 (practically unlimited) period, depending on the number of hashwords in the
 system.
 
+## PRVHASH64 ##
+
 Please see the `prvhash64.h` file for the details of the basic hash function
-implementation (the `prvhash.h`, `prvhash4.h`, `prvhash42.h` are outdated
-versions). While this hash function is most likely irreversible, according to
-SAT solver-based testing, it does not feature a preimage resistance. This
-function should not be used in open systems, without a secret seed. Note that
-`64` refers to core function's variable size.
+implementation (the `prvhash.h`, `prvhash4.h`, `prvhash42.h`, and versions
+below 4.3 are outdated versions). While this hash function is most likely
+irreversible, according to SAT solver-based testing, it does not feature a
+preimage resistance. This function should not be used in open systems, without
+a secret seed. Note that `64` refers to core function's variable size.
 
 The default `prvhash64.h`-based 64-bit hash of the string `The cat is out of
 the bag` is `eb405f05cfc4ae1c`.
@@ -114,9 +116,10 @@ A similar approach is to simply skip the next generated random number, but it
 is slightly less secure. It is likely that PRVHASH's k-equidistribution of
 separate outputs is implicitly secure. The reason is that skipping or XORing
 creates uncertainty or entanglement of current output with system's state
-hash-array number of outputs back. 3 XORs are needed to provide pre-image
+"hash-array length" of outputs back. 3 XORs are needed to provide preimage
 resistance, or resistance against selection of entropy input that leads to
-a particular output.
+a desired output. The security becomes effective only after system's
+initialization: initial "conditioning" rounds and full hash-array pass.
 
 ## TPDF Dithering ##
 
