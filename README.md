@@ -51,6 +51,70 @@ the bag` is `eb405f05cfc4ae1c`.
 A proposed short name for hashes created with `prvhash64.h` is `PRH64-N`,
 where `N` is the hash length in bits (e.g., `PRH64-256`).
 
+## PRVHASH64_64M ##
+
+This is a minimized implementation of the `prvhash64` hash function. Arguably,
+it is the smallest hash function in the world, that produces 64-bit hashes of
+this quality level. While this function does not provide a throughput that can
+be considered "fast", due to its statistical properties it is practically fast
+for hash-maps and hash-tables.
+
+## Streamed Hashing ##
+
+The file `prvhash64s.h` includes a relatively fast streamed hashing function
+which utilizes a "fused" PRVHASH arrangement. Please take a look at the
+`prvhash64s_oneshot()` function for usage example. The `prvhash64s` offers
+both an increased security and hashing speed.
+
+This function has an increased preimage resistance compared to the basic
+hash function implementation. Preimage resistance cannot be currently
+estimated exactly, but the hash length affects it exponentially. Also,
+preimage attack usually boils down to exchange of forged symbols to "trash"
+symbols (at any place of the data stream); substitutions usually end up as
+being quite random, possibly damaging to any compressed or otherwise
+structured file. Which means that data compression software and libraries
+should always check any left-over, "unused", data beyond the valid compressed
+stream, for security reasons.
+
+Time complexity for preimage attack fluctuates greatly as preimage resistance
+likely has a random-logarithmic PDF of timing.
+
+Even though a formal proof is not yet available, the author assumes this
+hash function can compete with widely-used SHA2 and SHA3 families of hash
+functions while at the same time offering a considerably higher performance
+and scalability. When working in open systems, supplying a secret seed is not
+a requirement for this hash function.
+
+The performance (expressed in cycles/byte) of this hash function on various
+platforms can be evaluated at the
+[ECRYPT/eBASH project](https://bench.cr.yp.to/results-hash.html).
+
+The default `prvhash64s.h`-based 64-bit hash of the string `The cat is out of
+the bag` is `2043ccf52ae2ca6f`.
+
+The default `prvhash64s.h`-based 256-bit hash of the string
+`Only a toilet bowl does not leak` is
+`b13683799b840002689a1a42d93c826c25cc2d1f1bc1e48dcd005aa566a47ad8`.
+
+The default `prvhash64s.h`-based 256-bit hash of the string
+`Only a toilet bowl does not leaj` is
+`d4534a922fd4f15ae8c6cc637006d1f33f655b06d60007a226d350e87e866250`.
+
+This demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect).
+On a set of 216553 English words, pair-wise hash comparisons give average
+50.0% difference in resulting hash bits, which fully satisfies the strict
+avalanche criterion.
+
+This streamed hash function produces hash values that are different to the
+`prvhash64` hash function. It is incorrect to use both of these hash function
+implementations on the same data set. While `prvhash64` can be used as a hash
+for hash-tables and in-memory data blocks, `prvhash64s` can be used to create
+hashes of large data blocks like files, in streamed mode.
+
+A proposed short name for hashes created with `prvhash64s.h` is `PRH64S-N`,
+where `N` is the hash length in bits (e.g., `PRH64S-256`). Or simply, `SH4-N`,
+`Secure Hash 4`.
+
 ## Minimal PRNG for Everyday Use ##
 
 The core function can be easily integrated into your applications, to be used
@@ -116,10 +180,10 @@ A similar approach is to simply skip the next generated random number, but it
 is slightly less secure. It is likely that PRVHASH's k-equidistribution of
 separate outputs is implicitly secure. The reason is that skipping or XORing
 creates uncertainty or entanglement of current output with system's state
-"hash-array length" of outputs back. 3 XORs are needed to provide preimage
+"hashword array length" of outputs back. 3 XORs are needed to provide preimage
 resistance, or resistance against selection of entropy input that leads to
 a desired output. The security becomes effective only after system's
-initialization: initial "conditioning" rounds and full hash-array pass.
+initialization: initial "conditioning" rounds and a full hashword array pass.
 
 ## TPDF Dithering ##
 
@@ -153,14 +217,6 @@ Note that this class may not be as efficient for "bulk" random number
 generation as a custom-written code. Nevertheless, Gradilac PRNG class, with
 its 1.0 cycles/byte floating-point performance (at default template settings),
 is competitive among other C++ PRNGs.
-
-## PRVHASH64_64M ##
-
-This is a minimized implementation of the `prvhash64` hash function. Arguably,
-it is the smallest hash function in the world, that produces 64-bit hashes of
-this quality level. While this function does not provide a throughput that can
-be considered "fast", due to its statistical properties it is practically fast
-for hash-maps and hash-tables.
 
 ## Entropy PRNG ##
 
@@ -257,62 +313,6 @@ int main()
 	}
 }
 ```
-
-## Streamed Hashing ##
-
-The file `prvhash64s.h` includes a relatively fast streamed hashing function
-which utilizes a "fused" PRVHASH arrangement. Please take a look at the
-`prvhash64s_oneshot()` function for usage example. The `prvhash64s` offers
-an increased security and hashing speed.
-
-This function has an increased preimage resistance compared to the basic
-hash function implementation. Preimage resistance cannot be currently
-estimated exactly, but the hash length affects it exponentially. Also,
-preimage attack usually boils down to exchange of forged symbols to "trash"
-symbols (at any place of the data stream); substitutions usually end up as
-being quite random, possibly damaging to any compressed or otherwise
-structured file. Which means that data compression software and libraries
-should always check any left-over, "unused", data beyond the valid compressed
-stream, for security reasons.
-
-Time complexity for preimage attack fluctuates greatly as preimage resistance
-likely has a random-logarithmic PDF of timing.
-
-Even though a formal proof is not yet available, the author assumes this
-hash function can compete with widely-used SHA2 and SHA3 families of hash
-functions while at the same time offering a considerably higher performance
-and scalability. When working in open systems, supplying a secret seed is not
-a requirement for this hash function.
-
-The performance (expressed in cycles/byte) of this hash function on various
-platforms can be evaluated at the
-[ECRYPT/eBASH project](https://bench.cr.yp.to/results-hash.html).
-
-The default `prvhash64s.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `2043ccf52ae2ca6f`.
-
-The default `prvhash64s.h`-based 256-bit hash of the string
-`Only a toilet bowl does not leak` is
-`b13683799b840002689a1a42d93c826c25cc2d1f1bc1e48dcd005aa566a47ad8`.
-
-The default `prvhash64s.h`-based 256-bit hash of the string
-`Only a toilet bowl does not leaj` is
-`d4534a922fd4f15ae8c6cc637006d1f33f655b06d60007a226d350e87e866250`.
-
-This demonstrates the [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect).
-On a set of 216553 English words, pair-wise hash comparisons give average
-50.0% difference in resulting hash bits, which fully satisfies the strict
-avalanche criterion.
-
-This streamed hash function produces hash values that are different to the
-`prvhash64` hash function. It is incorrect to use both of these hash function
-implementations on the same data set. While `prvhash64` can be used as a hash
-for hash-tables and in-memory data blocks, `prvhash64s` can be used to create
-hashes of large data blocks like files, in streamed mode.
-
-A proposed short name for hashes created with `prvhash64s.h` is `PRH64S-N`,
-where `N` is the hash length in bits (e.g., `PRH64S-256`). Or simply, `SH4-N`,
-`Secure Hash 4`.
 
 ## Description ##
 
@@ -614,8 +614,8 @@ While this "parallel-3" arrangement is currently not used in the hash function
 implementations, it is also working fine with the core function. For example,
 while the "minimal PRNG" described earlier has `0.90` cycles/byte performance,
 the "parallel" arrangement has a PRNG performance of `0.35` cycles/byte, with
-a possibility of further scaling using AVX-512 instructions. Note that the
-number of "parallel" elements should not be a multiple of hashword array size,
+a possibility of further scaling using SIMD instructions. Note that the number
+of "parallel" elements should not be a multiple of hashword array length,
 otherwise PRNG stalls.
 
 ```
@@ -700,8 +700,8 @@ between isolated frequencies (arising from Fourier analysis of "infinite"
 bit-sequence). Note that PRVHASH does not require any "magic numbers" to
 function, it is completely algorithmic. An alternative explanation: In the
 discrete Fourier transform (DFT) domain, such understanding is possible:
-although usually the size of the transformation window is limited to small
-values (e.g., 2048 samples), theoretically this size can be directed to
+although usually the length of the transformation window is limited to small
+values (e.g., 2048 samples), theoretically this length can be directed to
 infinity thus producing a spectrum of an infinite number of individual
 frequency bins. Moreover, individual components of such an "infinite"
 transformation also affect the resulting spectrum, but on an
