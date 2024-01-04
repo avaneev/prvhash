@@ -124,25 +124,25 @@ as an effective PRNG. The period of this minimal PRNG is at least
 point within the whole PRNG period, with at least 2<sup>64</sup> spacing.
 The code follows.
 
-```
+```c
 #include "prvhash_core.h"
 #include <stdio.h>
 
 int main()
 {
-	uint64_t Seed = 0;
-	uint64_t lcg = 0;
-	uint64_t Hash = 0;
+    uint64_t Seed = 0;
+    uint64_t lcg = 0;
+    uint64_t Hash = 0;
 
-	uint64_t v = 0;
-	uint64_t i;
+    uint64_t v = 0;
+    uint64_t i;
 
-	for( i = 0; i < ( 1ULL << 28 ); i++ )
-	{
-		v = prvhash_core64( &Seed, &lcg, &Hash );
-	}
+    for( i = 0; i < ( (uint64_t) 1 << 28 ); i++ )
+    {
+        v = prvhash_core64( &Seed, &lcg, &Hash );
+    }
 
-	printf( "%llu\n", v );
+    printf( "%llu\n", v );
 }
 ```
 
@@ -150,10 +150,10 @@ For implementation assurance, here are the first 16 output values in hex
 (starting from the all-zeroes state):
 
 ```
-	0x5555555555555555 0x00000000DB6DB6DB 0x2492492192492492 0x75D75DA0AAAAAA79
-	0x93064E905C127FE5 0xE2585C9CA95671A3 0x28A44B31D428179E 0x11B0B6A8D4BA3A73
-	0x195C6A4C23EE71AD 0x5AA47859226BA23E 0xA7D42121695056D4 0x142D7CD5D83342F2
-	0x3D42E83328C09C8F 0x7E691C66BAC23222 0x82E1032F441F23A5 0xA4BDE5C4A05E6256
+0x5555555555555555 0x00000000DB6DB6DB 0x2492492192492492 0x75D75DA0AAAAAA79
+0x93064E905C127FE5 0xE2585C9CA95671A3 0x28A44B31D428179E 0x11B0B6A8D4BA3A73
+0x195C6A4C23EE71AD 0x5AA47859226BA23E 0xA7D42121695056D4 0x142D7CD5D83342F2
+0x3D42E83328C09C8F 0x7E691C66BAC23222 0x82E1032F441F23A5 0xA4BDE5C4A05E6256
 ```
 
 Note that such minimal 1-hashword PRNG is most definitely not
@@ -171,9 +171,9 @@ So, the basic PRNG with some, currently not formally-proven, security is as
 follows (XOR two adjacent outputs to produce a single "compressed" PRNG
 output):
 
-```
-		v = prvhash_core64( &Seed, &lcg, &Hash );
-		v ^= prvhash_core64( &Seed, &lcg, &Hash );
+```c
+v = prvhash_core64( &Seed, &lcg, &Hash );
+v ^= prvhash_core64( &Seed, &lcg, &Hash );
 ```
 
 A similar approach is to simply skip the next generated random number, but it
@@ -191,16 +191,20 @@ The core function can be used to implement a "statistically-good" and
 "neutrally-sounding" dithering noise for audio signals; for both
 floating-point to fixed-point, and bit-depth conversions.
 
-	uint64_t rv = prvhash_core64( &Seed, &lcg, &Hash );
-	double tpdf = ( (int64_t) (uint32_t) rv - (int64_t) ( rv >> 32 )) * 0x1p-32;
+```c
+uint64_t rv = prvhash_core64( &Seed, &lcg, &Hash );
+double tpdf = ( (int64_t) (uint32_t) rv - (int64_t) ( rv >> 32 )) * 0x1p-32;
+```
 
 ## Floating-Point PRNG ##
 
 The following expression can be used to convert 64-bit unsigned value to
 full-mantissa floating-point value, without a truncation bias:
 
-	uint64_t rv = prvhash_core64( &Seed, &lcg, &Hash );
-	double v = ( rv >> ( 64 - 53 )) * 0x1p-53;
+```c
+uint64_t rv = prvhash_core64( &Seed, &lcg, &Hash );
+double v = ( rv >> ( 64 - 53 )) * 0x1p-53;
+```
 
 ## Gradilac PRNG (C++) ##
 
@@ -275,42 +279,42 @@ This is a "just for fun" example, but it passes 256 MB PractRand threshold.
 You CAN generate pseudo-random numbers by using 2-bit shuffles; moreover, you
 can input external entropy into the system.
 
-```
+```c
 #include <stdio.h>
 #include "prvhash_core.h"
 #define PH_HASH_COUNT 42
 
 int main()
 {
-	uint8_t Seed = 0;
-	uint8_t lcg = 0;
-	uint8_t Hash[ PH_HASH_COUNT ] = { 0 };
-	int HashPos = 0;
-	int l;
+    uint8_t Seed = 0;
+    uint8_t lcg = 0;
+    uint8_t Hash[ PH_HASH_COUNT ] = { 0 };
+    int HashPos = 0;
+    int l;
 
-	for( l = 0; l < 256; l++ )
-	{
-		uint8_t r = 0;
-		int k;
+    for( l = 0; l < 256; l++ )
+    {
+        uint8_t r = 0;
+        int k;
 
-		for( k = 0; k < 4; k++ )
-		{
-			r <<= 2;
-			r |= prvhash_core2( &Seed, &lcg, Hash + HashPos );
+        for( k = 0; k < 4; k++ )
+        {
+            r <<= 2;
+            r |= prvhash_core2( &Seed, &lcg, Hash + HashPos );
 
-			HashPos++;
+            HashPos++;
 
-			if( HashPos == PH_HASH_COUNT )
-			{
-				HashPos = 0;
-			}
-		}
+            if( HashPos == PH_HASH_COUNT )
+            {
+                HashPos = 0;
+            }
+        }
 
-		if( l > PH_HASH_COUNT / 3 ) // Skip PRNG initialization.
-		{
-			printf( "%4i ", (int) r );
-		}
-	}
+        if( l > PH_HASH_COUNT / 3 ) // Skip PRNG initialization.
+        {
+            printf( "%4i ", (int) r );
+        }
+    }
 }
 ```
 
@@ -320,14 +324,16 @@ Here is the author's vision on how the core function works. In actuality,
 coming up with this solution was accompanied by a lot of trial and error.
 It was especially hard to find a better "hashing finalization" solution.
 
-	Seed ^= msgw; lcg ^= msgw; // Mix in external entropy (or daisy-chain).
+```c
+Seed ^= msgw; lcg ^= msgw; // Mix in external entropy (or daisy-chain).
 
-	Seed *= lcg * 2 + 1; // Multiply random by random, without multiply by zero.
-	const uint64_t rs = Seed >> 32 | Seed << 32; // Produce halves-swapped copy.
-	Hash += rs + 0xAAAAAAAAAAAAAAAA; // Accumulate to hash, add raw entropy (self-start).
-	lcg += Seed + 0x5555555555555555; // Output-bound entropy accumulation, add raw entropy.
-	Seed ^= Hash; // Mix new seed value with hash. Entropy feedback.
-	const uint64_t out = lcg ^ rs; // Produce "compressed" output.
+Seed *= lcg * 2 + 1; // Multiply random by random, without multiply by zero.
+const uint64_t rs = Seed >> 32 | Seed << 32; // Produce halves-swapped copy.
+Hash += rs + 0xAAAAAAAAAAAAAAAA; // Accumulate to hash, add raw entropy (self-start).
+lcg += Seed + 0x5555555555555555; // Output-bound entropy accumulation, add raw entropy.
+Seed ^= Hash; // Mix new seed value with hash. Entropy feedback.
+const uint64_t out = lcg ^ rs; // Produce "compressed" output.
+```
 
 This function can be arbitrarily scaled to any even-sized variables: 2-, 4-,
 8-, 16-, 32-, 64-bit variable sizes were tested, with similar statistical
@@ -510,7 +516,7 @@ instructions: PRVHASH supports feedback onto itself (it is like hashing its
 own output). This operation, which can be applied to any fused element,
 maximizes the achieved PRNG period.
 
-```
+```c++
 #include "prvhash_core.h"
 #include <string.h>
 
@@ -618,43 +624,43 @@ a possibility of further scaling using SIMD instructions. Note that the number
 of "parallel" elements should not be a multiple of hashword array length,
 otherwise PRNG stalls.
 
-```
+```c
 #include "prvhash_core.h"
 #include <stdio.h>
 
 int main()
 {
-	uint64_t Seed = 0;
-	uint64_t lcg = 0;
-	uint64_t Hash = 0;
-	uint64_t Seed2 = 0;
-	uint64_t lcg2 = 0;
-	uint64_t Hash2 = 0;
-	uint64_t Seed3 = 0;
-	uint64_t lcg3 = 0;
-	uint64_t Hash3 = 0;
-	uint64_t Hash4 = 0;
+    uint64_t Seed = 0;
+    uint64_t lcg = 0;
+    uint64_t Hash = 0;
+    uint64_t Seed2 = 0;
+    uint64_t lcg2 = 0;
+    uint64_t Hash2 = 0;
+    uint64_t Seed3 = 0;
+    uint64_t lcg3 = 0;
+    uint64_t Hash3 = 0;
+    uint64_t Hash4 = 0;
 
-	uint64_t v = 0;
-	uint64_t v2 = 0;
-	uint64_t v3 = 0;
+    uint64_t v = 0;
+    uint64_t v2 = 0;
+    uint64_t v3 = 0;
 
-	uint64_t i;
+    uint64_t i;
 
-	for( i = 0; i < ( 1ULL << 27 ); i++ )
-	{
-		v = prvhash_core64( &Seed, &lcg, &Hash );
-		v2 = prvhash_core64( &Seed2, &lcg2, &Hash2 );
-		v3 = prvhash_core64( &Seed3, &lcg3, &Hash3 );
+    for( i = 0; i < ( (uint64_t) 1 << 27 ); i++ )
+    {
+        v = prvhash_core64( &Seed, &lcg, &Hash );
+        v2 = prvhash_core64( &Seed2, &lcg2, &Hash2 );
+        v3 = prvhash_core64( &Seed3, &lcg3, &Hash3 );
 
-		uint64_t t = Hash;
-		Hash = Hash2;
-		Hash2 = Hash3;
-		Hash3 = Hash4;
-		Hash4 = t;
-	}
+        uint64_t t = Hash;
+        Hash = Hash2;
+        Hash2 = Hash3;
+        Hash3 = Hash4;
+        Hash4 = t;
+    }
 
-	printf( "%llu %llu %llu\n", v, v2, v3 );
+    printf( "%llu %llu %llu\n", v, v2, v3 );
 }
 ```
 
@@ -784,7 +790,7 @@ simplest low-frequency sine-wave oscillator can be used as a pseudo-random
 number generator, if its mantissa is treated as an integer number. This means
 that every point on a sinusoid has properties of a random bit-sequence.
 
-```
+```c++
 #include <math.h>
 #include <stdint.h>
 
@@ -796,26 +802,26 @@ double svalue1;
 double svalue2;
 
 DummyRNG() {
-	si = 0.001;
-	sincr = 2.0 * cos( si );
-	seed( 0 );
+    si = 0.001;
+    sincr = 2.0 * cos( si );
+    seed( 0 );
 }
 
 Uint16 raw16() {
-	uint64_t Value = ( *(uint64_t*) &svalue1 ) >> 4;
+    uint64_t Value = ( *(uint64_t*) &svalue1 ) >> 4;
 
-	const double tmp = svalue1;
-	svalue1 = sincr * svalue1 - svalue2;
-	svalue2 = tmp;
+    const double tmp = svalue1;
+    svalue1 = sincr * svalue1 - svalue2;
+    svalue2 = tmp;
 
-	return (Uint16) ( Value ^ Value >> 16 ^ Value >> 32 );
+    return (Uint16) ( Value ^ Value >> 16 ^ Value >> 32 );
 }
 void walk_state(PractRand::StateWalkingObject *walker) {}
 void seed(Uint64 sv) {
-	const double ph = sv * 3.40612158008655459e-19; // Random seed to phase.
+    const double ph = sv * 3.40612158008655459e-19; // Random seed to phase.
 
-	svalue1 = sin( ph );
-	svalue2 = sin( ph - si );
+    svalue1 = sin( ph );
+    svalue2 = sin( ph - si );
 }
 std::string get_name() const {return "SINEWAVE";}
 };
@@ -825,33 +831,33 @@ Another finding is that the `lcg * 2 + 1` construct works as PRNG even if the
 multiplier is a simple increasing counter variable, when the second multiplier
 is a high-entropy number.
 
-```
+```c++
 #include <stdint.h>
 
 class DummyRNG : public PractRand::RNGs::vRNG8 {
 public:
 uint64_t Ctr1;
 DummyRNG() {
-	Ctr1 = 1;
+    Ctr1 = 1;
 }
 uint8_t compress( const uint64_t v )
 {
-	uint8_t r = 0;
-	for( int i = 0; i < 64; i++ )
-	{
-		r ^= (uint8_t) (( v >> i ) & 1 );
-	}
-	return( r );
+    uint8_t r = 0;
+    for( int i = 0; i < 64; i++ )
+    {
+        r ^= (uint8_t) (( v >> i ) & 1 );
+    }
+    return( r );
 }
 Uint8 raw8() {
-	uint8_t ov = 0;
-	for( int l = 0; l < 8; l++ )
-	{
-		ov <<= 1;
-		ov ^= compress( 0x243F6A8885A308D3 * Ctr1 );
-		Ctr1 += 2;
-	}
-	return( ov );
+    uint8_t ov = 0;
+    for( int l = 0; l < 8; l++ )
+    {
+        ov <<= 1;
+        ov ^= compress( 0x243F6A8885A308D3 * Ctr1 );
+        Ctr1 += 2;
+    }
+    return( ov );
 }
 void walk_state(PractRand::StateWalkingObject *walker) {}
 void seed(Uint64 sv) {}
