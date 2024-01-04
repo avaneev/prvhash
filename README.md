@@ -528,7 +528,8 @@ maximizes the achieved PRNG period.
 #define PH_RAW_BITS 8 // Raw output bits.
 #define PH_RAW_ROUNDS ( PH_RAW_BITS / PH_BITS ) // Rounds per raw output.
 
-class DummyRNG : public PractRand::RNGs::vRNG8 {
+class DummyRNG : public PractRand::RNGs::vRNG8
+{
 public:
     PH_STATE_TYPE Seed[ PH_FUSE_COUNT ];
     PH_STATE_TYPE lcg[ PH_FUSE_COUNT ];
@@ -794,36 +795,35 @@ that every point on a sinusoid has properties of a random bit-sequence.
 #include <math.h>
 #include <stdint.h>
 
-class DummyRNG : public PractRand::RNGs::vRNG16 {
+class DummyRNG : public PractRand::RNGs::vRNG16
+{
 public:
-double si;
-double sincr;
-double svalue1;
-double svalue2;
+    double si;
+    double sincr;
+    double svalue1;
+    double svalue2;
 
-DummyRNG() {
-    si = 0.001;
-    sincr = 2.0 * cos( si );
-    seed( 0 );
-}
+    DummyRNG() {
+        si = 0.001;
+        sincr = 2.0 * cos( si );
+        seed( 0 );
+    }
+    Uint16 raw16() {
+        uint64_t Value = ( *(uint64_t*) &svalue1 ) >> 4;
 
-Uint16 raw16() {
-    uint64_t Value = ( *(uint64_t*) &svalue1 ) >> 4;
+        const double tmp = svalue1;
+        svalue1 = sincr * svalue1 - svalue2;
+        svalue2 = tmp;
 
-    const double tmp = svalue1;
-    svalue1 = sincr * svalue1 - svalue2;
-    svalue2 = tmp;
-
-    return (Uint16) ( Value ^ Value >> 16 ^ Value >> 32 );
-}
-void walk_state(PractRand::StateWalkingObject *walker) {}
-void seed(Uint64 sv) {
-    const double ph = sv * 3.40612158008655459e-19; // Random seed to phase.
-
-    svalue1 = sin( ph );
-    svalue2 = sin( ph - si );
-}
-std::string get_name() const {return "SINEWAVE";}
+        return (Uint16) ( Value ^ Value >> 16 ^ Value >> 32 );
+    }
+    void walk_state(PractRand::StateWalkingObject *walker) {}
+    void seed(Uint64 sv) {
+        const double ph = sv * 3.40612158008655459e-19; // Seed to phase.
+        svalue1 = sin( ph );
+        svalue2 = sin( ph - si );
+    }
+    std::string get_name() const {return "SINEWAVE";}
 };
 ```
 
@@ -834,34 +834,36 @@ is a high-entropy number.
 ```c++
 #include <stdint.h>
 
-class DummyRNG : public PractRand::RNGs::vRNG8 {
-public:
-uint64_t Ctr1;
-DummyRNG() {
-    Ctr1 = 1;
-}
-uint8_t compress( const uint64_t v )
+class DummyRNG : public PractRand::RNGs::vRNG8
 {
-    uint8_t r = 0;
-    for( int i = 0; i < 64; i++ )
-    {
-        r ^= (uint8_t) (( v >> i ) & 1 );
+public:
+    uint64_t Ctr1;
+
+    DummyRNG() {
+        Ctr1 = 1;
     }
-    return( r );
-}
-Uint8 raw8() {
-    uint8_t ov = 0;
-    for( int l = 0; l < 8; l++ )
+    uint8_t compress( const uint64_t v )
     {
-        ov <<= 1;
-        ov ^= compress( 0x243F6A8885A308D3 * Ctr1 );
-        Ctr1 += 2;
+        uint8_t r = 0;
+        for( int i = 0; i < 64; i++ )
+        {
+            r ^= (uint8_t) (( v >> i ) & 1 );
+        }
+        return( r );
     }
-    return( ov );
-}
-void walk_state(PractRand::StateWalkingObject *walker) {}
-void seed(Uint64 sv) {}
-std::string get_name() const {return "LCG";}
+    Uint8 raw8() {
+        uint8_t ov = 0;
+        for( int l = 0; l < 8; l++ )
+        {
+            ov <<= 1;
+            ov ^= compress( 0x243F6A8885A308D3 * Ctr1 );
+            Ctr1 += 2;
+        }
+        return( ov );
+    }
+    void walk_state(PractRand::StateWalkingObject *walker) {}
+    void seed(Uint64 sv) {}
+    std::string get_name() const {return "LCG";}
 };
 ```
 
