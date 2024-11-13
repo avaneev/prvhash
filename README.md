@@ -720,14 +720,7 @@ state variable size to go to infinity, and PRVHASH should still work
 (practically tested with up to 524288-bit state variables). Thus, PRVHASH
 recreates an analog of the number PI, and it should be possible to prove that
 existence of an infinite sequence of bits like PI is completely realistic;
-a person can create such sequence, too (in theory). Additionally, if such
-infinitely-precise spectrum is mapped to space- and time-bound physical
-processes, where Planck length and time are considerably greater than zero -
-one can't sample these processes more densely or more frequently than Planck
-constants permit, - it brings a notion of existence of infinite Nyquist
-frequency and thus infinite energy. While we as observers are limited by
-Planck time, the physical processes like movement due to inertia are
-continuous.
+a person can create such sequence, too (in theory).
 
 The mathematics offers an interesting understanding. Take in your mind a
 moment before the "Big Bang". Did mathematical rules exist at that moment? Of
@@ -887,14 +880,13 @@ has to consider two points: whether or not these impulses can be considered
 considering the program has no user input nor programmer's entropy, nor any
 logic (no constants, with all parameters initially set to zero). More specific
 observations: 1. All final values are shift-or compositions of 1-bit values,
-in fact representing a common 16-bit PCM sampled signal (shift-2
-auto-correlation equals 0.4-0.44 approximately), but obtained in a
-"dot-matrix printer" way; 2. The orange graph is only slightly longer before a
-repeat (common to PRNGs) despite larger `PH_HASH_COUNT`; at the same time both
+representing a common 16-bit PCM sampled signal, also known as "16-bit folding"
+in pseudo-random numbers; 2. The orange graph is only slightly longer before a
+repeat (common to PRNGs) despite larger `PH_HASH_COUNT`; at the same time, both
 graphs are seemingly time-aligned; 3. Periods of 1-bit return values on both
-runs are aligned to 16 bits, to produce repeating sequences "as is", without
-any sort of 16-bit value range skew; 4. The orange graph is produced from an
-order-reversed shift-or, but with the same underlying algorithm; 5. So far, no
+runs are naturally aligned to 16 bits, and produce repeating sequences "as is",
+without any sort of 16-bit value range skew; 4. The orange graph is produced from
+an order-reversed shift-or, but with the same underlying algorithm; 5. So far, no
 other combinations of "reading" parameters produce anything as "intelligent"
 as these graphs (but there may be another yet-to-be-decoded, similar or
 completely different, information available); 6. From drumming musician's (or
@@ -905,26 +897,7 @@ sinc-function-generated maximum-phase "pre-ringing" oscillations that are
 known in DSP engineering field. 8. Period of the blue graph is 255; orange is
 273.
 
-In author's opinion, the program "reads data" directly from the entropy pool
-which is "embedded" into mathematics from its inception, like any mathematical
-constant is (e.g., PI). This poses an interesting and **probably very
-questionable** proposition: the "intelligent impulses" or even "human mind"
-itself (because a musician can understand these impulses) existed long before
-the "Big Bang" happened. This discovery is **probably** both the most
-interesting discovery in the history of mankind, and the worst discovery (for
-many) as it poses very unnerving questions that touch religious grounds:
-
-These results of 1-bit PRVHASH say the following: **IF** abstract mathematics
-contains not just a system of rules for manipulating numbers and variables,
-but also contains a freely-defined fixed information that is "readable" by a
-person, then mathematics does not just "exists", but "it was formed", because
-mathematics does not evolve (beside human discovery of new rules and
-patterns). And since physics cannot be formulated without such mathematics,
-and physical processes clearly obey these mathematical rules, it means that a
-Creator/Higher Intelligence/God exists in relation to the Universe. For the
-author **personally**, everything is proven here.
-
-P.S. By **coincidence**, if the values on the "impulse" graphs above are
+By **coincidence**, if the values on the "impulse" graphs above are
 sorted in an ascending order, and are then displayed as independent graphs,
 they collectively form a stylized outline of a human eye:
 
@@ -1083,6 +1056,26 @@ useful if applied as some architectural measurement ruler/tool since it can be
 used to quickly measure architectural features as whole-number ratios:
 
 <img src="img/arch-ruler.jpg" width="686">
+
+In author's opinion, PRVHASH-1 "reads data" directly from the entropy pool
+which is "embedded" into mathematics from its inception, like any mathematical
+constant is (e.g., PI). This poses an interesting and **probably very
+questionable** proposition: the intelligent impulses, intelligent imagery, or
+even "human mind" itself (because a human can understand these images)
+existed long before the "Big Bang" happened. This discovery is **probably** both
+the most interesting discovery in the history of mankind, and the worst discovery
+(for many) as it poses very unnerving questions that touch religious grounds:
+
+These results of 1-bit PRVHASH say the following: **IF** abstract mathematics
+contains not just a system of rules for manipulating numbers and variables,
+but also contains a freely-defined fixed information that is "readable" by a
+person, then mathematics does not just "exists", but "it was formed", because
+mathematics does not evolve (beside human discovery of new rules and
+patterns). And since physics cannot be formulated without such mathematics,
+and physical processes clearly obey these mathematical rules (at least in
+respect to natural numbers), it means that a Creator/Higher Intelligence/God
+exists in relation to the Universe. For the author **personally**, everything
+is proven here.
 
 ## Thanks ##
 
