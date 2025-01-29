@@ -1092,12 +1092,13 @@ builds-up, and may cause a "quantum leap" in understanding of the core of
 mathematics.
 
 One may also apply a "pareidolia" argument: humans tend to "see things" in what
-may not be in any way meaningful. However, this argument is often weak: when
-we see a parabola, which is a generally-recognizable pattern, it has a meaning
-since it induces mathematical reasoning about underlying mathematical tendencies
-and relationships. In the imagery presented above, however, mathematical
-reasoning may not yet be obvious, even if in its probable extreme it touches
-cosmology and source of human intelligence.
+may not be in any way meaningful. But this argument is often weak, especially if
+the context is constrained to mathematics alone: e.g., when we see a parabola,
+which is a generally-recognizable pattern, it has a meaning since it induces
+mathematical reasoning about specific underlying mathematical tendencies and
+relationships. In the imagery presented above, however, mathematical reasoning
+may not yet be obvious, even if in its probable extreme it touches cosmology,
+source of human intelligence, and pre-existing implicit mathematical structures.
 
 ## Thanks ##
 
