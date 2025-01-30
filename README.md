@@ -746,9 +746,15 @@ random number generation, transforms into a notion of ability of a system to
 generate independent uniformly-random number sequences. Which means that two
 different initial states of a PRNG system may refer to different "isolated"
 PRNG sequences. This is what happens in PRVHASH: on entropy input the system
-may "jump" or "converge" into an unrelated random sub-sequence. Moreover, with
-small variable sizes, PRVHASH can produce a train of `0`s longer than the
-bit-size of the system.
+may "jump" or "converge" into an unrelated random sub-sequence.
+
+In other words, per author's PRNG practice and intuition, when PRNG output
+is limited to 64 or 128 bits, the usual `1/(2^N)` linear probability of
+generating a specific combination of bits holds, but with larger output
+(256 bits and above) the more-sparse combinations map to less-sparse
+combinations, reducing the effective combinatorial capacity. This intuition,
+if rigorously proven valid, may have adverse effects on cryptography as a
+whole.
 
 On the Birthday Paradox vs hash collision estimates: while the Birthday
 Paradox is a good "down-to-earth" model for collision estimation, it may be
@@ -767,7 +773,8 @@ generator to create random sequences in many dimensions (known as
 k-equidistribution) just by selecting any sequence of its outputs.
 
 (...`10` in binary is `2` in decimal, `1010` is `10`, `101010` is `42`,
-`01` is `1`, `0101` is `5`, `010101` is `21`...)
+`01` is `1`, `0101` is `5`, `010101` is `21`...these are remarkable
+coincidences)
 
 The author has no concrete theory why PRVHASH PRNG works, especially its 2-bit
 variant (which is a very close empirical proof that mathematics has entropy
