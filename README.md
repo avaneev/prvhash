@@ -46,7 +46,7 @@ preimage resistance. This function should not be used in open systems, without
 a secret seed. Note that `64` refers to core function's variable size.
 
 The default `prvhash64.h`-based 64-bit hash of the string `The cat is out of
-the bag` is `eb405f05cfc4ae1c`.
+the bag` is `6ac39f7ac0c94d63`.
 
 A proposed short name for hashes created with `prvhash64.h` is `PRH64-N`,
 where `N` is the hash length in bits (e.g., `PRH64-256`).
@@ -262,8 +262,8 @@ minimal PRNG).
 Moreover, the PRVHASH systems can be freely daisy-chained by feeding their
 outputs to `Seed`/`lcg` inputs, adding some security firewalls, and increasing
 the PRNG period of the final output accordingly. Note that any external PRNG
-output can be inputted via either `Seed`, `lcg`, or both, yielding PRNG period
-exponent summation. For hashing and external unstructured entropy, only
+output can be inputted via `Seed`, or via both `Seed` and `lcg`, yielding PRNG
+period exponent summation. For hashing and external unstructured entropy, only
 simultaneous input via `Seed` and `lcg` works in practice (period's exponent
 increase occurs as well).
 
@@ -334,6 +334,10 @@ lcg += Seed + 0x5555555555555555; // Output-bound entropy accumulation, add raw 
 Seed ^= Hash; // Mix new seed value with hash. Entropy feedback.
 const uint64_t out = lcg ^ rs; // Produce "compressed" output.
 ```
+
+(for even better statistical results, the `rs` variable should receive a
+bit-reversed `Seed` value, with `lcg ^= msgw;` operation performed after the
+`out` is obtained)
 
 This function can be arbitrarily scaled to any even-sized variables: 2-, 4-,
 8-, 16-, 32-, 64-bit variable sizes were tested, with similar statistical

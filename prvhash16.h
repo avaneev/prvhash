@@ -1,5 +1,5 @@
 /**
- * prvhash16.h version 4.3.1
+ * prvhash16.h version 4.3.2
  *
  * The inclusion file for the "prvhash16" hash function. For demonstration
  * purposes, not practically useful.
@@ -8,7 +8,7 @@
  *
  * License
  *
- * Copyright (c) 2020-2023 Aleksey Vaneev
+ * Copyright (c) 2020-2025 Aleksey Vaneev
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -55,44 +55,31 @@
 static inline void prvhash16( const void* const Msg0, const size_t MsgLen,
 	void* const Hash0, const size_t HashLen, uint32_t UseSeed )
 {
+	typedef uint16_t state_t;
+
 	const uint8_t* Msg = (const uint8_t*) Msg0;
-	uint8_t* const Hash = (uint8_t*) Hash0;
+	state_t* const Hash = (state_t*) Hash0;
 
 	memset( Hash, 0, HashLen );
 
-	typedef uint16_t state_t;
-
 	state_t Seed = 0x128D; // The state after 5 PRVHASH rounds from the
 	state_t lcg = 0x8D5B; // "zero-state".
-	*(state_t*) Hash = 0x0932;
+	Hash[ 0 ] = 0x0932;
 
-	const state_t* const HashEnd = (state_t*) ( Hash + HashLen );
-	state_t* hc = (state_t*) Hash;
-	state_t fbm = 0x0101;
-
-	if( MsgLen > 0 )
-	{
-		fbm <<= ( Msg[ MsgLen - 1 ] >> 7 );
-	}
+	const state_t* const HashEnd = Hash + HashLen / sizeof( state_t );
+	state_t* hc = Hash;
+	state_t fbm = 0x1010;
 
 	size_t k;
 
-	if( UseSeed != 0 )
+	for( k = 0; k < 2; k++ )
 	{
-		for( k = 0; k < 2; k++ )
-		{
-			Seed ^= (state_t) UseSeed;
-			lcg ^= (state_t) UseSeed;
+		Seed ^= (state_t) UseSeed;
+		lcg ^= (state_t) UseSeed;
+		prvhash_core16( &Seed, &lcg, hc );
+		hc = ( ++hc == HashEnd ? Hash : hc );
 
-			prvhash_core16( &Seed, &lcg, hc );
-
-			if( ++hc == HashEnd )
-			{
-				hc = (state_t*) Hash;
-			}
-
-			UseSeed >>= 16;
-		}
+		UseSeed >>= 16;
 	}
 
 	const uint8_t* const MsgEnd = Msg + MsgLen;
@@ -123,38 +110,25 @@ static inline void prvhash16( const void* const Msg0, const size_t MsgLen,
 
 		Seed ^= msgw;
 		lcg ^= msgw;
-
 		prvhash_core16( &Seed, &lcg, hc );
-
-		if( ++hc == HashEnd )
-		{
-			hc = (state_t*) Hash;
-		}
+		hc = ( ++hc == HashEnd ? Hash : hc );
 
 		Msg += sizeof( state_t );
 	}
 
-	const size_t fc = HashLen + ( MsgLen < HashLen - sizeof( state_t ) ?
+	const size_t fc = HashLen + ( MsgLen + sizeof( state_t ) * 3 < HashLen ?
 		(uint8_t*) HashEnd - (uint8_t*) hc : 0 );
 
 	for( k = 0; k <= fc; k += sizeof( state_t ))
 	{
 		prvhash_core16( &Seed, &lcg, hc );
-
-		if( ++hc == HashEnd )
-		{
-			hc = (state_t*) Hash;
-		}
+		hc = ( ++hc == HashEnd ? Hash : hc );
 	}
 
 	for( k = 0; k < HashLen; k += sizeof( state_t ))
 	{
 		*hc = prvhash_core16( &Seed, &lcg, hc );
-
-		if( ++hc == HashEnd )
-		{
-			hc = (state_t*) Hash;
-		}
+		hc = ( ++hc == HashEnd ? Hash : hc );
 	}
 }
 

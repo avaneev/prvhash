@@ -1,5 +1,5 @@
 /**
- * prvhash64.h version 4.3.3
+ * prvhash64.h version 4.3.4
  *
  * The inclusion file for the "prvhash64" and "prvhash64_64m" hash functions.
  *
@@ -7,7 +7,7 @@
  *
  * License
  *
- * Copyright (c) 2020-2023 Aleksey Vaneev
+ * Copyright (c) 2020-2025 Aleksey Vaneev
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -56,7 +56,7 @@ static PRVHASH_INLINE uint64_t prvhash_lpu64ec( const uint8_t* const Msg,
 	const uint8_t* const MsgEnd, uint64_t fb )
 {
 	const size_t MsgLen = MsgEnd - Msg;
-	const int ml8 = (int) ( MsgLen * 8 );
+	const int ml8 = (int) ( MsgLen << 3 );
 
 	if( MsgLen < 4 )
 	{
@@ -109,27 +109,25 @@ static inline void prvhash64( const void* const Msg0, const size_t MsgLen,
 	void* const HashOut, const size_t HashLen, const PRH64_T UseSeed )
 {
 	const uint8_t* Msg = (const uint8_t*) Msg0;
-	uint8_t* const Hash = (uint8_t*) HashOut;
+	PRH64_T* const Hash = (PRH64_T*) HashOut;
 
 	memset( Hash, 0, HashLen );
 
-	PRH64_T Seed = 0x217992B44669F46A; // The state after 5 PRVHASH rounds
-	PRH64_T lcg = 0xB5E2CC2FE9F0B35B; // from the "zero-state".
-	*(PRH64_T*) Hash = 0x949B5E0A608D76D5 ^ UseSeed;
+	// The state after 5 prvhash_core64() rounds from the "zero-state".
+
+	PRH64_T Seed = 0x217992B44669F46A ^ UseSeed;
+	PRH64_T lcg = 0xB5E2CC2FE9F0B35B ^ UseSeed;
+	Hash[ 0 ] = 0x949B5E0A608D76D5;
 
 	const uint8_t* const MsgEnd = Msg + MsgLen;
-	const PRH64_T* const HashEnd = (PRH64_T*) ( Hash + HashLen );
-	PRH64_T* hc = (PRH64_T*) Hash;
-
-	PRH64_T fb = 1;
-
-	if( MsgLen != 0 )
-	{
-		fb <<= ( MsgEnd[ -1 ] >> 7 );
-	}
+	const PRH64_T* const HashEnd = Hash + HashLen / PRH64_S;
+	PRH64_T* hc = Hash;
 
 	while( 1 )
 	{
+		PRH64_FN( &Seed, &lcg, hc );
+		hc = ( ++hc == HashEnd ? Hash : hc );
+
 		PRH64_T msgw;
 
 		if( Msg < MsgEnd - PRH64_Sm1 )
@@ -143,24 +141,17 @@ static inline void prvhash64( const void* const Msg0, const size_t MsgLen,
 				break;
 			}
 
-			msgw = PRH64_LPUEC( Msg, MsgEnd, fb );
+			msgw = PRH64_LPUEC( Msg, MsgEnd, 0x10 );
 		}
 
 		Seed ^= msgw;
 		lcg ^= msgw;
 
-		PRH64_FN( &Seed, &lcg, hc );
-
-		if( ++hc == HashEnd )
-		{
-			hc = (PRH64_T*) Hash;
-		}
-
 		Msg += PRH64_S;
 	}
 
 	const size_t fc = ( HashLen == PRH64_S ? 0 :
-		HashLen + ( MsgLen < HashLen - PRH64_S ?
+		HashLen + ( MsgLen + PRH64_S * 2 < HashLen ?
 		(uint8_t*) HashEnd - (uint8_t*) hc : 0 ));
 
 	size_t k;
@@ -168,21 +159,13 @@ static inline void prvhash64( const void* const Msg0, const size_t MsgLen,
 	for( k = 0; k <= fc; k += PRH64_S )
 	{
 		PRH64_FN( &Seed, &lcg, hc );
-
-		if( ++hc == HashEnd )
-		{
-			hc = (PRH64_T*) Hash;
-		}
+		hc = ( ++hc == HashEnd ? Hash : hc );
 	}
 
 	for( k = 0; k < HashLen; k += PRH64_S )
 	{
 		*hc = PRH64_EC( PRH64_FN( &Seed, &lcg, hc ));
-
-		if( ++hc == HashEnd )
-		{
-			hc = (PRH64_T*) Hash;
-		}
+		hc = ( ++hc == HashEnd ? Hash : hc );
 	}
 }
 
@@ -208,21 +191,18 @@ static inline uint64_t prvhash64_64m( const void* const Msg0,
 {
 	const uint8_t* Msg = (const uint8_t*) Msg0;
 
-	PRH64_T Seed = 0x217992B44669F46A; // The state after 5 PRVHASH rounds
-	PRH64_T lcg = 0xB5E2CC2FE9F0B35B; // from the "zero-state".
-	PRH64_T Hash = 0x949B5E0A608D76D5 ^ UseSeed;
+	// The state after 5 prvhash_core64() rounds from the "zero-state".
+
+	PRH64_T Seed = 0x217992B44669F46A ^ UseSeed;
+	PRH64_T lcg = 0xB5E2CC2FE9F0B35B ^ UseSeed;
+	PRH64_T Hash = 0x949B5E0A608D76D5;
 
 	const uint8_t* const MsgEnd = Msg + MsgLen;
 
-	PRH64_T fb = 1;
-
-	if( MsgLen != 0 )
-	{
-		fb <<= ( MsgEnd[ -1 ] >> 7 );
-	}
-
 	while( 1 )
 	{
+		PRH64_FN( &Seed, &lcg, &Hash );
+
 		PRH64_T msgw;
 
 		if( Msg < MsgEnd - PRH64_Sm1 )
@@ -238,13 +218,11 @@ static inline uint64_t prvhash64_64m( const void* const Msg0,
 				return( PRH64_FN( &Seed, &lcg, &Hash ));
 			}
 
-			msgw = PRH64_LPUEC( Msg, MsgEnd, fb );
+			msgw = PRH64_LPUEC( Msg, MsgEnd, 0x10 );
 		}
 
 		Seed ^= msgw;
 		lcg ^= msgw;
-
-		PRH64_FN( &Seed, &lcg, &Hash );
 
 		Msg += PRH64_S;
 	}

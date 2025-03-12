@@ -1,5 +1,5 @@
 /**
- * prvhash_core.h version 4.3.2
+ * prvhash_core.h version 4.3.3
  *
  * The inclusion file for the "prvhash_core*" PRVHASH core functions for
  * various state variable sizes. Also includes several auxiliary functions and
@@ -10,7 +10,7 @@
  *
  * License
  *
- * Copyright (c) 2020-2023 Aleksey Vaneev
+ * Copyright (c) 2020-2025 Aleksey Vaneev
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -199,23 +199,22 @@ static PRVHASH_INLINE uint8_t prvhash_core2( uint8_t* const Seed0,
 
 #if defined( __SIZEOF_INT128__ )
 
-static PRVHASH_INLINE unsigned __int128 prvhash_core128(
-	unsigned __int128* const Seed0, unsigned __int128* const lcg0,
-	unsigned __int128* const Hash0 )
+static PRVHASH_INLINE __uint128_t prvhash_core128( __uint128_t* const Seed0,
+	__uint128_t* const lcg0, __uint128_t* const Hash0 )
 {
-	unsigned __int128 Seed = *Seed0; unsigned __int128 lcg = *lcg0;
-	unsigned __int128 Hash = *Hash0;
+	__uint128_t Seed = *Seed0; __uint128_t lcg = *lcg0;
+	__uint128_t Hash = *Hash0;
 
 	Seed *= lcg * 2 + 1;
-	const unsigned __int128 rs = Seed >> 64 | Seed << 64;
+	const __uint128_t rs = Seed >> 64 | Seed << 64;
 	Hash += rs +
-		( 0xAAAAAAAAAAAAAAAA | (unsigned __int128) 0xAAAAAAAAAAAAAAAA << 64 );
+		( 0xAAAAAAAAAAAAAAAA | (__uint128_t) 0xAAAAAAAAAAAAAAAA << 64 );
 
 	lcg += Seed +
-		( 0x5555555555555555 | (unsigned __int128) 0x5555555555555555 << 64 );
+		( 0x5555555555555555 | (__uint128_t) 0x5555555555555555 << 64 );
 
 	Seed ^= Hash;
-	const unsigned __int128 out = lcg ^ rs;
+	const __uint128_t out = lcg ^ rs;
 
 	*Seed0 = Seed; *lcg0 = lcg; *Hash0 = Hash;
 
