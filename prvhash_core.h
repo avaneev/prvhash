@@ -1,5 +1,5 @@
 /**
- * prvhash_core.h version 4.3.3
+ * prvhash_core.h version 4.3.4
  *
  * The inclusion file for the "prvhash_core*" PRVHASH core functions for
  * various state variable sizes. Also includes several auxiliary functions and
@@ -37,18 +37,29 @@
 #include <stdint.h>
 #include <string.h>
 
-#define PRVHASH_INIT_COUNT 5 // Common number of initialization rounds.
+/**
+ * @def PRVHASH_INIT_COUNT
+ * @brief Common number of PRVHASH initialization rounds.
+ */
 
-// Macro that denotes availability of required GCC-style built-in functions.
+#define PRVHASH_INIT_COUNT 5
+
+/**
+ * @def PRVHASH_GCC_BUILTINS
+ * @brief Macro that denotes availability of GCC-style built-in functions.
+ */
 
 #if defined( __GNUC__ ) || defined( __clang__ ) || \
 	defined( __IBMC__ ) || defined( __IBMCPP__ ) || defined( __COMPCERT__ )
 
 	#define PRVHASH_GCC_BUILTINS
 
-#endif // GCC built-ins.
+#endif // GCC built-ins check
 
-// Macro to force code inlining.
+/**
+ * @def PRVHASH_INLINE
+ * @brief Macro to force code inlining.
+ */
 
 #if defined( PRVHASH_GCC_BUILTINS )
 
@@ -223,11 +234,16 @@ static PRVHASH_INLINE __uint128_t prvhash_core128( __uint128_t* const Seed0,
 
 #endif // defined( __SIZEOF_INT128__ )
 
-// Endianness definition macro, can be used as a logical constant.
+/**
+ * @def PRVHASH_LITTLE_ENDIAN
+ * @brief Endianness definition macro, can be used as a logical constant.
+ */
 
 #if defined( __LITTLE_ENDIAN__ ) || defined( __LITTLE_ENDIAN ) || \
 	defined( _LITTLE_ENDIAN ) || defined( _WIN32 ) || defined( i386 ) || \
-	defined( __i386 ) || defined( __i386__ ) || defined( __x86_64__ ) || \
+	defined( __i386 ) || defined( __i386__ ) || defined( _M_IX86 ) || \
+	defined( _M_X64 ) || defined( _M_AMD64 ) || defined( __x86_64__ ) || \
+	defined( __amd64 ) || defined( __amd64__ ) || \
 	( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ )
 
 	#define PRVHASH_LITTLE_ENDIAN 1
@@ -248,7 +264,17 @@ static PRVHASH_INLINE __uint128_t prvhash_core128( __uint128_t* const Seed0,
 
 #endif // defined( __BIG_ENDIAN__ )
 
-// Macros that apply byte-swapping, used for endianness-correction.
+/**
+ * @def PRVHASH_EC32( x )
+ * @brief Endianness-correction macro, for 32-bit variables.
+ * @param x Value to correct.
+ */
+
+/**
+ * @def PRVHASH_EC64( x )
+ * @brief Endianness-correction macro, for 64-bit variables.
+ * @param x Value to correct.
+ */
 
 #if PRVHASH_LITTLE_ENDIAN
 
