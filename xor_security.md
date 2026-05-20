@@ -2,8 +2,10 @@
 
 (produced by DeepSeek-V4-Thinking)
 
-We consider the C function `prvhash_core64`, a working PRNG.  
-Given two consecutive outputs, we prove that their XOR is a function of the full internal state whose inversion requires exponential time.
+To prove that the XOR of two adjacent outputs of `prvhash_core64` is
+irreversible in exponential time, we first derive the exact relationship
+between the internal state and the outputs, then analyse the computational
+complexity of inverting this relationship.
 
 ---
 
@@ -77,10 +79,9 @@ with
 
 $$
 \begin{aligned}
-G = &\bigl[A \oplus \mathrm{rot32}(X_i)\bigr] \;\oplus \\
-    &\bigl[(A + X_{i+1} + C_2) \oplus \mathrm{rot32}(X_{i+1})\bigr], \\
+G = &\bigl[A \oplus \mathrm{rot32}(X_i)\bigr] \oplus &\bigl[(A + X_{i+1} + C_2) \oplus \mathrm{rot32}(X_{i+1})\bigr], \\
 X_{i+1} = &\bigl(X_i \oplus H_i \oplus \mathrm{rot32}(X_i) \oplus C_1\bigr) \cdot (2A + 1), \\
-A = &\; L_i + X_i + C_2.
+A = L_i + X_i + C_2.
 \end{aligned}
 $$
 
