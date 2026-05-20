@@ -28,12 +28,12 @@ We define:
 
 $$
 \begin{aligned}
-X_i      &= S_i \cdot (2L_i + 1), \\
-\operatorname{rot32}(X_i) &= (X_i \ll 32) \lor (X_i \gg 32), \\
-L_{i+1}  &= L_i + X_i + C_2, \\
-H_{i+1}  &= H_i + \operatorname{rot32}(X_i) + C_1, \\
-S_{i+1}  &= X_i \oplus H_{i+1}, \\
-\text{out}_i &= L_{i+1} \oplus \operatorname{rot32}(X_i).
+X_i      = S_i \cdot (2L_i + 1), \\
+\mathrm{rot32}(X_i) = (X_i \ll 32) \lor (X_i \gg 32), \\
+L_{i+1}  = L_i + X_i + C_2, \\
+H_{i+1}  = H_i + \mathrm{rot32}(X_i) + C_1, \\
+S_{i+1}  = X_i \oplus H_{i+1}, \\
+\text{out}_i = L_{i+1} \oplus \mathrm{rot32}(X_i).
 \end{aligned}
 $$
 
@@ -41,8 +41,8 @@ The next output $\text{out}_{i+1}$ is:
 
 $$
 \begin{aligned}
-X_{i+1}   &= S_{i+1} \cdot (2L_{i+1} + 1), \\
-\text{out}_{i+1} &= (L_{i+1} + X_{i+1} + C_2) \oplus \operatorname{rot32}(X_{i+1}).
+X_{i+1}   = S_{i+1} \cdot (2L_{i+1} + 1), \\
+\text{out}_{i+1} = (L_{i+1} + X_{i+1} + C_2) \oplus \mathrm{rot32}(X_{i+1}).
 \end{aligned}
 $$
 
@@ -54,10 +54,10 @@ Let $A = L_{i+1} = L_i + X_i + C_2$. Then:
 
 $$
 \begin{aligned}
-\text{out}_i        &= A \oplus \operatorname{rot32}(X_i), \\
-\text{out}_{i+1}    &= (A + X_{i+1} + C_2) \oplus \operatorname{rot32}(X_{i+1}), \\
-X_{i+1}             &= S_{i+1} \cdot (2A + 1), \\
-S_{i+1}             &= X_i \oplus H_i \oplus \operatorname{rot32}(X_i) \oplus C_1.
+\text{out}_i        = A \oplus \mathrm{rot32}(X_i), \\
+\text{out}_{i+1}    = (A + X_{i+1} + C_2) \oplus \mathrm{rot32}(X_{i+1}), \\
+X_{i+1}             = S_{i+1} \cdot (2A + 1), \\
+S_{i+1}             = X_i \oplus H_i \oplus \mathrm{rot32}(X_i) \oplus C_1.
 \end{aligned}
 $$
 
@@ -77,9 +77,9 @@ with
 
 $$
 \begin{aligned}
-G = &\bigl[A \oplus \operatorname{rot32}(X_i)\bigr] \;\oplus \\
-    &\bigl[(A + X_{i+1} + C_2) \oplus \operatorname{rot32}(X_{i+1})\bigr], \\
-X_{i+1} = &\bigl(X_i \oplus H_i \oplus \operatorname{rot32}(X_i) \oplus C_1\bigr) \cdot (2A + 1), \\
+G = &\bigl[A \oplus \mathrm{rot32}(X_i)\bigr] \;\oplus \\
+    &\bigl[(A + X_{i+1} + C_2) \oplus \mathrm{rot32}(X_{i+1})\bigr], \\
+X_{i+1} = &\bigl(X_i \oplus H_i \oplus \mathrm{rot32}(X_i) \oplus C_1\bigr) \cdot (2A + 1), \\
 A = &\; L_i + X_i + C_2.
 \end{aligned}
 $$
