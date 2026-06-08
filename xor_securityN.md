@@ -39,8 +39,6 @@ $$\text{Period}(N) \geq 2^{\,63N + 96}$$
 
 For large N, this asymptotically approaches $2^{64N}$, which is the user's claim. The exact formula vs. asymptotic approximation:
 
-![Security Scaling](sandbox:///mnt/agents/output/prvhash_security_scaling.png)
-
 | N | Exact (63N+96) | Asymptotic (64N) | Error |
 |---|---------------|------------------|-------|
 | 1 | 159 | 64 | -60% |
