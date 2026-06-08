@@ -9,21 +9,17 @@ Before giving the analysis, an essential caveat: **a formal, unconditional proof
 ### 1. The State-to-Difference Mapping
 
 Let the state at step $t$ be the triplet  
-$
-S_t = (Seed_t,\; lcg_t,\; Hash_t) \in (\mathbb{Z}/2^{64}\mathbb{Z})^3
-$
+$$S_t = (Seed_t,\; lcg_t,\; Hash_t) \in (\mathbb{Z}/2^{64}\mathbb{Z})^3$$
 (192 bits total). Define the core update:
 
-$
-\begin{aligned}
+$$\begin{aligned}
 M_t      &= Seed_t \cdot (2\cdot lcg_t + 1) \pmod{2^{64}}
 rs_t     &= \operatorname{rot}_{32}(M_t)
 Hash_{t+1}&= Hash_t + rs_t + \mathtt{0xAAAAAAAAAAAAAAAA} \pmod{2^{64}}
 lcg_{t+1} &= lcg_t + M_t + \mathtt{0x5555555555555555} \pmod{2^{64}}
 Seed_{t+1}&= M_t \oplus Hash_{t+1}
 out_t     &= lcg_t \oplus rs_t
-\end{aligned}
-$
+\end{aligned}$$
 
 The quantity you ask about is the **adjacent-output XOR**:
 $
