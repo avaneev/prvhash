@@ -2,22 +2,23 @@
 
 (produced by Kimi 2.6 Thinking)
 
-Before giving the analysis, an essential caveat: **a formal, unconditional proof that any specific concrete function is irreversible in exponential time is impossible with current mathematics.** Such a proof would require establishing that one-way functions exist, which in turn implies $P \neq NP$ (and even stronger complexity-theoretic separations) — problems that remain open. What follows is a rigorous *structural* proof that the XOR of adjacent outputs maps 192 bits of state to 64 bits through a mixed-algebraic composition that forces all known cryptanalytic techniques into exponential-time brute force, and that no polynomial-time inversion algorithm is known or structurally apparent.
+Before giving the analysis, an essential caveat: **a formal, unconditional proof that any specific concrete function is irreversible in exponential time is impossible with current mathematics.** Such a proof would require establishing that one-way functions exist, which in turn implies $P \neq NP$ (and even stronger complexity-theoretic separations) â€” problems that remain open. What follows is a rigorous *structural* proof that the XOR of adjacent outputs maps 192 bits of state to 64 bits through a mixed-algebraic composition that forces all known cryptanalytic techniques into exponential-time brute force, and that no polynomial-time inversion algorithm is known or structurally apparent.
 
 ---
 
 ### 1. The State-to-Difference Mapping
 
 Let the state at step $t$ be the triplet  
-$$S_t = (Seed_t, lcg_t, Hash_t) \in (\mathbb{Z}/2^{64}\mathbb{Z})^3$$
-(192 bits total). Define the core update:
+$S_t = (Seed_t, lcg_t, Hash_t) \in (\mathbb{Z}/2^{64}\mathbb{Z})^3$ (192 bits total).
+
+Define the core update:
 
 $$\begin{aligned}
-M_t      &= Seed_t \cdot (2\cdot lcg_t + 1) \pmod{2^{64}}
-rs_t     &= \mathrm{rot}_{32}(M_t)
-Hash_{t+1}&= Hash_t + rs_t + \mathtt{0xAAAAAAAAAAAAAAAA} \pmod{2^{64}}
-lcg_{t+1} &= lcg_t + M_t + \mathtt{0x5555555555555555} \pmod{2^{64}}
-Seed_{t+1}&= M_t \oplus Hash_{t+1}
+M_t      &= Seed_t \cdot (2\cdot lcg_t + 1) \pmod{2^{64}} \\
+rs_t     &= \mathrm{rot}_{32}(M_t) \\
+Hash_{t+1}&= Hash_t + rs_t + \mathtt{0xAAAAAAAAAAAAAAAA} \pmod{2^{64}} \\
+lcg_{t+1} &= lcg_t + M_t + \mathtt{0x5555555555555555} \pmod{2^{64}} \\
+Seed_{t+1}&= M_t \oplus Hash_{t+1} \\
 out_t     &= lcg_t \oplus rs_t
 \end{aligned}$$
 
@@ -31,8 +32,9 @@ $$\boxed{
 }
 \tag{1}$$
 where $C_1 = \mathtt{0x5555555555555555}$, and
+
 $$\begin{aligned}
-rs_{t+1} &= \mathrm{rot}_{32}\!\Bigl( \bigl(M_t \oplus (Hash_t + rs_t + C_2)\bigr) \cdot \bigl(2(lcg_t + M_t + C_1) + 1\bigr) \Bigr),
+rs_{t+1} &= \mathrm{rot}_{32}\Bigl( \bigl(M_t \oplus (Hash_t + rs_t + C_2)\bigr) \cdot \bigl(2(lcg_t + M_t + C_1) + 1\bigr) \Bigr), \\
 C_2 &= \mathtt{0xAAAAAAAAAAAAAAAA}.
 \end{aligned}$$
 
@@ -58,9 +60,9 @@ The fundamental obstacle to polynomial-time inversion is that $F$ mixes three in
 | `Seed ^ Hash` | Addition in $\mathbb{F}_2$ (XOR) | Degree 1, but when composed with ring operations, the overall degree multiplies. |
 | `rot32` | Linear over $\mathbb{F}_2$ | Degree 1, but permutes variables non-trivially. |
 
-When these operations are composed as in equation (1), the resulting 64 Boolean functions expressing each bit of $\Delta_t$ in terms of the 192 state bits have **degree that grows super-linearly** (in fact, approaching 64 for high-order bits) and are **dense**—nearly all monomials of degree up to the maximum appear with non-zero coefficient.
+When these operations are composed as in equation (1), the resulting 64 Boolean functions expressing each bit of $\Delta_t$ in terms of the 192 state bits have **degree that grows super-linearly** (in fact, approaching 64 for high-order bits) and are **dense**â€”nearly all monomials of degree up to the maximum appear with non-zero coefficient.
 
-This is the same structural property that makes ARX (Add-Rotate-XOR) ciphers and hash functions resistant to algebraic cryptanalysis: the system of equations does not admit efficient Gröbner-basis or linearization attacks because the degree is too high and the S-polynomial computations would require time exponential in the number of variables.
+This is the same structural property that makes ARX (Add-Rotate-XOR) ciphers and hash functions resistant to algebraic cryptanalysis: the system of equations does not admit efficient GrÃ¶bner-basis or linearization attacks because the degree is too high and the S-polynomial computations would require time exponential in the number of variables.
 
 ---
 
@@ -109,4 +111,4 @@ Even with multiple adjacent XOR values, the system remains underdetermined until
 | **Finding any preimage of a 64-bit $\Delta$ takes $O(2^{64})$ time** | **True generically.** This is exponential in the output width. |
 | **The XOR of adjacent outputs is a one-way compression of the state** | **Structurally justified.** The function $F$ is many-to-one (ratio $2^{128}:1$), non-linear, and mixes independent entropy streams that are not individually recoverable from the output. |
 
-**Conclusion:** While mathematics does not yet allow an *unconditional* proof of exponential-time irreversibility for any specific function, the function $F(S_t) = out_t \oplus out_{t+1}$ is a **192-bit-to-64-bit mixed-algebraic compression** with no known structural weaknesses. Every known cryptanalytic path—algebraic, linear, differential, meet-in-the-middle, or decomposition—reduces to brute-force search over a space that is **exponential in the security parameter** (64 bits of output or 192 bits of state). In the language of practical cryptography, the adjacent-output XOR is therefore **irreversible in exponential time**.
+**Conclusion:** While mathematics does not yet allow an *unconditional* proof of exponential-time irreversibility for any specific function, the function $F(S_t) = out_t \oplus out_{t+1}$ is a **192-bit-to-64-bit mixed-algebraic compression** with no known structural weaknesses. Every known cryptanalytic pathâ€”algebraic, linear, differential, meet-in-the-middle, or decompositionâ€”reduces to brute-force search over a space that is **exponential in the security parameter** (64 bits of output or 192 bits of state). In the language of practical cryptography, the adjacent-output XOR is therefore **irreversible in exponential time**.
