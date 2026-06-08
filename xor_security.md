@@ -16,11 +16,11 @@ $$
 
 $$
 \begin{aligned}
-M_t      &= Seed_t \cdot (2\cdot lcg_t + 1) \pmod{2^{64}} \$$2pt]
-rs_t     &= \operatorname{rot}_{32}(M_t) \$$2pt]
-Hash_{t+1}&= Hash_t + rs_t + \mathtt{0xAAAAAAAAAAAAAAAA} \pmod{2^{64}} \$$2pt]
-lcg_{t+1} &= lcg_t + M_t + \mathtt{0x5555555555555555} \pmod{2^{64}} \$$2pt]
-Seed_{t+1}&= M_t \oplus Hash_{t+1} \$$2pt]
+M_t      &= Seed_t \cdot (2\cdot lcg_t + 1) \pmod{2^{64}}
+rs_t     &= \operatorname{rot}_{32}(M_t)
+Hash_{t+1}&= Hash_t + rs_t + \mathtt{0xAAAAAAAAAAAAAAAA} \pmod{2^{64}}
+lcg_{t+1} &= lcg_t + M_t + \mathtt{0x5555555555555555} \pmod{2^{64}}
+Seed_{t+1}&= M_t \oplus Hash_{t+1}
 out_t     &= lcg_t \oplus rs_t
 \end{aligned}
 $$
@@ -41,7 +41,7 @@ $$
 where $C_1 = \mathtt{0x5555555555555555}$, and
 $$
 \begin{aligned}
-rs_{t+1} &= \operatorname{rot}_{32}\!\Bigl( \bigl(M_t \oplus (Hash_t + rs_t + C_2)\bigr) \cdot \bigl(2(lcg_t + M_t + C_1) + 1\bigr) \Bigr), \$$2pt]
+rs_{t+1} &= \operatorname{rot}_{32}\!\Bigl( \bigl(M_t \oplus (Hash_t + rs_t + C_2)\bigr) \cdot \bigl(2(lcg_t + M_t + C_1) + 1\bigr) \Bigr),
 C_2 &= \mathtt{0xAAAAAAAAAAAAAAAA}.
 \end{aligned}
 $$
