@@ -9,12 +9,12 @@ Before giving the analysis, an essential caveat: **a formal, unconditional proof
 ### 1. The State-to-Difference Mapping
 
 Let the state at step $t$ be the triplet  
-$$S_t = (Seed_t,\; lcg_t,\; Hash_t) \in (\mathbb{Z}/2^{64}\mathbb{Z})^3$$
+$$S_t = (Seed_t, lcg_t, Hash_t) \in (\mathbb{Z}/2^{64}\mathbb{Z})^3$$
 (192 bits total). Define the core update:
 
 $$\begin{aligned}
 M_t      &= Seed_t \cdot (2\cdot lcg_t + 1) \pmod{2^{64}}
-rs_t     &= \operatorname{rot}_{32}(M_t)
+rs_t     &= \mathrm{rot}_{32}(M_t)
 Hash_{t+1}&= Hash_t + rs_t + \mathtt{0xAAAAAAAAAAAAAAAA} \pmod{2^{64}}
 lcg_{t+1} &= lcg_t + M_t + \mathtt{0x5555555555555555} \pmod{2^{64}}
 Seed_{t+1}&= M_t \oplus Hash_{t+1}
@@ -22,30 +22,22 @@ out_t     &= lcg_t \oplus rs_t
 \end{aligned}$$
 
 The quantity you ask about is the **adjacent-output XOR**:
-$
-\Delta_t \;=\; out_t \oplus out_{t+1}
-\;=\; lcg_t \oplus rs_t \oplus lcg_{t+1} \oplus rs_{t+1}.
-$
+$$\Delta_t = out_t \oplus out_{t+1}
+= lcg_t \oplus rs_t \oplus lcg_{t+1} \oplus rs_{t+1}.$$
 
 Substituting the state update:
-$
-\boxed{\;
-\Delta_t \;=\; lcg_t \oplus rs_t \oplus \bigl(lcg_t + M_t + C_1\bigr) \oplus rs_{t+1}
-\;}
-\tag{1}
-$
+$$\boxed{
+\Delta_t = lcg_t \oplus rs_t \oplus \bigl(lcg_t + M_t + C_1\bigr) \oplus rs_{t+1}
+}
+\tag{1}$$
 where $C_1 = \mathtt{0x5555555555555555}$, and
-$
-\begin{aligned}
-rs_{t+1} &= \operatorname{rot}_{32}\!\Bigl( \bigl(M_t \oplus (Hash_t + rs_t + C_2)\bigr) \cdot \bigl(2(lcg_t + M_t + C_1) + 1\bigr) \Bigr),
+$$\begin{aligned}
+rs_{t+1} &= \mathrm{rot}_{32}\!\Bigl( \bigl(M_t \oplus (Hash_t + rs_t + C_2)\bigr) \cdot \bigl(2(lcg_t + M_t + C_1) + 1\bigr) \Bigr),
 C_2 &= \mathtt{0xAAAAAAAAAAAAAAAA}.
-\end{aligned}
-$
+\end{aligned}$$
 
 Thus $\Delta_t = F(S_t)$ for a function
-$
-F : \{0,1\}^{192} \longrightarrow \{0,1\}^{64}.
-$
+$$F : \{0,1\}^{192} \longrightarrow \{0,1\}^{64}.$$
 
 ---
 
