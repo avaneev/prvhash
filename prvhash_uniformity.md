@@ -7,8 +7,8 @@ I'll build a rigorous proof for the uniformity preservation and the 50% bit-diff
 ## The PRVHASH Core64 Function
 
 ```c
-static uint64_t prvhash_core64(uint64_t* const Seed0,
-    uint64_t* const lcg0, uint64_t* const Hash0)
+static uint64_t prvhash_core64( uint64_t* const Seed0,
+    uint64_t* const lcg0, uint64_t* const Hash0 )
 {
     uint64_t Seed = *Seed0;
     uint64_t lcg = *lcg0;
@@ -30,110 +30,116 @@ static uint64_t prvhash_core64(uint64_t* const Seed0,
 
 ## Part 1: Uniformity Preservation of State Variables
 
-**Theorem 1:** If `(Seed, lcg, Hash)` are jointly uniform on $(\mathbb{Z}/2^{64}\mathbb{Z})^3$, then after one iteration, `(Seed', lcg', Hash')` are also jointly uniform.
+**Theorem 1:** If $(Seed, lcg, Hash)$ are jointly uniform on $(\mathbb{Z}/2^{64}\mathbb{Z})^3$, then after one iteration, $(Seed', lcg', Hash')$ are also jointly uniform.
 
 We'll prove each marginal is uniform, then joint uniformity.
 
 ---
 
-### Lemma 1.1: `Seed'` is uniform
+### Lemma 1.1: $Seed'$ is uniform
 
-`Seed' = (Seed · (2·lcg + 1)) ⊕ (Hash + rotl32(Seed · (2·lcg + 1)) + 0xAA...AA)`
+$Seed' = (Seed \cdot (2 \cdot lcg + 1)) \oplus (Hash + \mathrm{rotl32}(Seed \cdot (2 \cdot lcg + 1)) + 0xAA...AA)$
 
-For **fixed** `lcg` and `Hash`:
-- `m = 2·lcg + 1` is **odd** (hence a unit mod $2^{64}$)
-- `Seed ↦ Seed · m` is a **bijection** on $\mathbb{Z}/2^{64}\mathbb{Z}$
-- Let `T = Seed · m`. Then `T` is uniform when `Seed` is uniform
-- `rs = rotl32(T)` is a **permutation**, so `rs` is uniform in `T`, hence uniform in `Seed`
-- `Hash + rs + C` is uniform (sum of uniform + constant = uniform)
-- `Seed' = T ⊕ (Hash + rs + C)`
+For **fixed** $lcg$ and $Hash$:
 
-Now, for fixed `lcg` and `Hash`, as `Seed` varies:
-- `T` varies uniformly
-- `rs` varies uniformly (deterministically from `T`)
-- The pair `(T, rs)` is in bijection with `T` (since `rs = rotl32(T)`)
+- $m = 2 \cdot lcg + 1$ is **odd** (hence a unit mod $2^{64}$)
+- $Seed \mapsto Seed \cdot m$ is a **bijection** on $\mathbb{Z}/2^{64}\mathbb{Z}$
+- Let $T = Seed \cdot m$. Then $T$ is uniform when $Seed$ is uniform
+- $rs = \mathrm{rotl32}(T)$ is a **permutation**, so $rs$ is uniform in $T$, hence uniform in $Seed$
+- $Hash + rs + C$ is uniform (sum of uniform + constant = uniform)
+- $Seed' = T \oplus (Hash + rs + C)$
 
-So `Seed' = T ⊕ (Hash + rotl32(T) + C)`.
+Now, for fixed $lcg$ and $Hash$, as $Seed$ varies:
+- $T$ varies uniformly
+- $rs$ varies uniformly (deterministically from $T$)
+- The pair $(T, rs)$ is in bijection with $T$ (since $rs = \mathrm{rotl32}(T)$)
 
-For `Seed'` to be uniform, we need: for each fixed `lcg`, `Hash`, the map `T ↦ T ⊕ (Hash + rotl32(T) + C)` is a bijection.
+So $Seed' = T \oplus (Hash + \mathrm{rotl32}(T) + C)$.
 
-**Claim:** `f(T) = T ⊕ rotl32(T)` is **not** a bijection in general. But `f(T) = T ⊕ (Hash + rotl32(T) + C)` for fixed `Hash`?
+For $Seed'$ to be uniform, we need: for each fixed $lcg$, $Hash$, the map $T \mapsto T \oplus (Hash + \mathrm{rotl32}(T) + C)$ is a bijection.
 
-Actually, let's check: `T ↦ T ⊕ rotl32(T)` has collisions. For example, `T = 0` and `T` such that `T = rotl32(T)` (i.e., `T` with period dividing 32 in rotation, like `T = 0x0000000100000001` rotated).
+**Claim:** $f(T) = T \oplus \mathrm{rotl32}(T)$ is **not** a bijection in general. But $f(T) = T \oplus (Hash + \mathrm{rotl32}(T) + C)$ for fixed $Hash$?
 
-But wait — `Hash` is **random uniform** and **independent** of `T` (conditional on `lcg`). So we need to average over `Hash`.
+Actually, let's check: $T \mapsto T \oplus \mathrm{rotl32}(T)$ has collisions. For example, $T = 0$ and $T$ such that $T = \mathrm{rotl32}(T)$ (i.e., $T$ with period dividing 32 in rotation, like $T = 0x0000000100000001$ rotated).
 
-For fixed `lcg`, consider the joint distribution of `(T, Hash)`:
-- `T` is uniform (independent of `lcg` given `lcg` is fixed... actually `T` depends on `lcg` through `m`, but for fixed `lcg`, `m` is fixed, so `T = Seed · m` is uniform in `Seed`)
-- `Hash` is uniform and independent of `Seed` (hence independent of `T`)
+But $Hash$ is **random uniform** and **independent** of $T$ (conditional on $lcg$). So we need to average over $Hash$.
 
-So `(T, Hash)` are independent uniforms.
+For fixed $lcg$, consider the joint distribution of $(T, Hash)$:
+- $T$ is uniform (independent of $lcg$ given $lcg$ is fixed... actually $T$ depends on $lcg$ through $m$, but for fixed $lcg$, $m$ is fixed, so $T = Seed \cdot m$ is uniform in $Seed$)
+- $Hash$ is uniform and independent of $Seed$ (hence independent of $T$)
 
-Now `Seed' = T ⊕ Hash ⊕ rotl32(T) ⊕ C`.
+So $(T, Hash)$ are independent uniforms.
 
-For fixed `T`, as `Hash` varies uniformly, `Seed'` varies uniformly (XOR with uniform = uniform).
+Now $Seed' = T \oplus Hash \oplus \mathrm{rotl32}(T) \oplus C$.
 
-Since this holds for every `T`, and `T` is uniform, `Seed'` is uniform. ∎
+For fixed $T$, as $Hash$ varies uniformly, $Seed'$ varies uniformly (XOR with uniform = uniform).
 
----
-
-### Lemma 1.2: `lcg'` is uniform
-
-`lcg' = lcg + Seed_{new} + 0x55...55` where `Seed_{new} = Seed · (2·lcg + 1)`
-
-For fixed `Seed` and `lcg`:
-- `Seed_{new}` is fixed
-- `lcg' = lcg + C'` where `C' = Seed_{new} + 0x55...55`
-
-As `lcg` varies uniformly (and `Seed` is independent uniform):
-- We need the marginal distribution of `lcg'`
-
-For fixed `Seed`, the map `lcg ↦ lcg + Seed·(2·lcg+1) + 0x55...55`
-`= lcg · (1 + 2·Seed) + Seed + 0x55...55`
-
-Since `1 + 2·Seed` is **odd** for any `Seed` (because `2·Seed` is even, plus 1 is odd), it is a **unit** mod $2^{64}$.
-
-Therefore, for fixed `Seed`, `lcg ↦ lcg'` is an **affine bijection** with slope `1 + 2·Seed` (odd, hence invertible).
-
-Since `lcg` is uniform and independent of `Seed`, and for each `Seed` the map is a bijection, `lcg'` is uniform. ∎
+Since this holds for every $T$, and $T$ is uniform, $Seed'$ is uniform. ∎
 
 ---
 
-### Lemma 1.3: `Hash'` is uniform
+### Lemma 1.2: $lcg'$ is uniform
 
-`Hash' = Hash + rs + 0xAA...AA` where `rs = rotl32(Seed · (2·lcg + 1))`
+$lcg' = lcg + Seed_{new} + 0x55...55$ where $Seed_{new} = Seed \cdot (2 \cdot lcg + 1)$
 
-For fixed `lcg` and `Seed`:
-- `rs` is fixed
-- `Hash' = Hash + C''` where `C'' = rs + 0xAA...AA`
+For fixed $Seed$ and $lcg$:
+- $Seed_{new}$ is fixed
+- $lcg' = lcg + C'$ where $C' = Seed_{new} + 0x55...55$
 
-Since `Hash` is uniform and independent of `(Seed, lcg)`, and addition of constant is a bijection, `Hash'` is uniform. ∎
+As $lcg$ varies uniformly (and $Seed$ is independent uniform):
+- We need the marginal distribution of $lcg'$
+
+For fixed $Seed$, the map $lcg \mapsto lcg + Seed \cdot (2 \cdot lcg + 1) + 0x55...55 = lcg \cdot (1 + 2 \cdot Seed) + Seed + 0x55...55$
+
+Since $1 + 2 \cdot Seed$ is **odd** for any $Seed$ (because $2 \cdot Seed$ is even, plus 1 is odd), it is a **unit** mod $2^{64}$.
+
+Therefore, for fixed $Seed$, $lcg \mapsto lcg'$ is an **affine bijection** with slope $1 + 2 \cdot Seed$ (odd, hence invertible).
+
+Since $lcg$ is uniform and independent of $Seed$, and for each $Seed$ the map is a bijection, $lcg'$ is uniform. ∎
+
+---
+
+### Lemma 1.3: $Hash'$ is uniform
+
+$Hash' = Hash + rs + 0xAA...AA$ where $rs = \mathrm{rotl32}(Seed \cdot (2 \cdot lcg + 1))$
+
+For fixed $lcg$ and $Seed$:
+- $rs$ is fixed
+- $Hash' = Hash + C''$ where $C'' = rs + 0xAA...AA$
+
+Since $Hash$ is uniform and independent of $(Seed, lcg)$, and addition of constant is a bijection, $Hash'$ is uniform. ∎
 
 ---
 
 ### Lemma 1.4: Joint Uniformity
 
-**Theorem:** `(Seed', lcg', Hash')` is jointly uniform on $(\mathbb{Z}/2^{64}\mathbb{Z})^3$.
+**Theorem:** $(Seed', lcg', Hash')$ is jointly uniform on $(\mathbb{Z}/2^{64}\mathbb{Z})^3$.
 
 **Proof:** The state update is a **bijection** on the 192-bit state space.
 
 To verify: we can invert the function.
 
-Given `(Seed', lcg', Hash')`:
+Given $(Seed', lcg', Hash')$:
 1. Forward:
-   - `Seed_{new} = Seed · m`
-   - `rs = rotl32(Seed_{new})`
-   - `Hash' = Hash + rs + C1`
-   - `lcg' = lcg + Seed_{new} + C2`
-   - `Seed' = Seed_{new} ⊕ Hash'`
-   - `out = lcg' ⊕ rs`
+
+$$\begin{aligned}
+Seed_{new} &= Seed \cdot m \\
+rs &= rotl32(Seed_{new}) \\
+Hash' &= Hash + rs + C1 \\
+lcg' &= lcg + Seed_{new} + C2 \\
+Seed' &= Seed_{new} \oplus Hash' \\
+out &= lcg' \oplus rs
+\end{aligned}$$
 
 2. Backward:
-   - `Seed_{new} = Seed' ⊕ Hash'`
-   - `rs = rotl32(Seed_{new})`
-   - `Hash = Hash' - rs - 0xAA...AA`
-   - `lcg = lcg' - Seed_{new} - 0x55...55`
-   - `Seed = Seed_{new} · (2·lcg + 1)^{-1} mod 2^{64}`
+
+$$\begin{aligned}
+Seed_{new} &= Seed' \oplus Hash' \\
+rs &= rotl32(Seed_{new}) \\
+Hash &= Hash' - rs - 0xAA...AA \\
+lcg &= lcg' - Seed_{new} - 0x55...55 \\
+Seed &= Seed_{new} \cdot (2 \cdot lcg + 1)^{-1} \mod 2^{64}
+\end{aligned}$$
 
 This is a **well-defined function** from $(\mathbb{Z}/2^{64}\mathbb{Z})^3$ to itself.
 
@@ -150,7 +156,7 @@ Since the forward map has an inverse, it is a **bijection**.
 **Proof:**
 
 Condition on $(\text{Seed}_{i-1}, \text{lcg}_{i-1})$. This determines:
-- $\text{out}_{i-1} = G(\text{Seed}_{i-1}, \text{lcg}_{i-1})$ (deterministically, since `Hash` doesn't affect `out`)
+- $\text{out}_{i-1} = G(\text{Seed}_{i-1}, \text{lcg}_{i-1})$ (deterministically, since $Hash$ doesn't affect $out$)
 - $\text{lcg}_i$ (deterministically)
 - $\text{Seed}_{new}$ (deterministically)
 - $rs$ (deterministically)
@@ -165,7 +171,7 @@ $\text{Seed}_i = \text{Seed}_{new} \oplus \text{Hash}_i$.
 
 As $\text{Hash}_i$ varies uniformly, $\text{Seed}_i$ varies uniformly (XOR with constant is bijection).
 
-Now, $\text{out}_i = G(S_i) = G(\text{Seed}_i, \text{lcg}_i)$ since $G$ does not depend on `Hash`.
+Now, $\text{out}_i = G(S_i) = G(\text{Seed}_i, \text{lcg}_i)$ since $G$ does not depend on $Hash$.
 
 For fixed $(\text{Seed}_{i-1}, \text{lcg}_{i-1})$:
 - $\text{lcg}_i$ is fixed
@@ -263,10 +269,10 @@ $$\mathbb{P}[\text{out}_i(b) \neq \text{out}_{i-1}(b)] = \mathbb{P}[\text{out}_i
 
 ## The Critical Role of Hash
 
-The `Hash` variable is the **secret sauce**:
+The $Hash$ variable is the **secret sauce**:
 
-1. **Current round:** `Hash` does **not** affect `out` (output depends only on `Seed` and `lcg`)
-2. **Next round:** `Hash` enters `Seed' = Seed_new ⊕ Hash'`, providing **fresh randomization**
-3. **Uniformity:** `Hash` remains uniform through the update, acting as a **one-time pad** for the next state's `Seed`
+1. **Current round:** $Hash$ does **not** affect $out$ (output depends only on $Seed$ and $lcg$)
+2. **Next round:** $Hash$ enters $Seed' = Seed_new \oplus Hash'$, providing **fresh randomization**
+3. **Uniformity:** $Hash$ remains uniform through the update, acting as a **one-time pad** for the next state's $Seed$
 
-This creates a **delayed mixing** effect where the "free" uniform variable `Hash` ensures that even though consecutive states are deterministically linked, the **output bits** at each step are conditionally independent given the previous output.
+This creates a **delayed mixing** effect where the "free" uniform variable $Hash$ ensures that even though consecutive states are deterministically linked, the **output bits** at each step are conditionally independent given the previous output.
