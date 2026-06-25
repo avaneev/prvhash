@@ -1,554 +1,1 @@
-# Analysis and Verification of the Bi-Variable Shuffler Generator
-
-This document presents the formalized state transformation analysis, distribution theorems, and architectural bounds for the "Bi-Variable Shuffler" pseudo-random number generator (PRNG). The generator is modeled as an algebraic state machine, deriving its structural properties directly from its underlying modular update equations.
-
-The state at step $t$ is denoted as a vector $X_t = (S_t, L_t) \in \mathbb{Z}_{2^w} \times \mathbb{Z}_{2^w}$, where $w \ge 1$ represents the word bit-size. Using zero-based indexing, the $i$-th bit of a value $x$ is denoted $x^{[i]}$, and the reduction of $x$ modulo $2^m$ is denoted $[x]_m$. The single-step update equations are defined by the system:
-
-$$S_{t+1} \equiv S_t (2L_t + 1) \pmod{2^w}$$
-
-$$L_{t+1} \equiv L_t + S_{t+1} \equiv L_t + S_t(2L_t + 1) \pmod{2^w}$$
-
----
-
-## 1. Distribution and Input-Output Correlation
-
-Let $\chi_{a,b}(X) = \langle a, S \rangle \oplus \langle b, L \rangle$ be a linear component of the state vector using the Walsh-Hadamard linear masks $(a, b) \in \mathbb{F}_2^w \times \mathbb{F}_2^w$. We distinguish between the marginal distribution at step $t$ and the input-output cross-correlation across multiple steps.
-
-### Theorem 1 (Marginal Uniformity)
-
-Let the initial state $X_0 = (S_0, L_0)$ be sampled from a uniform probability distribution $\mathcal{D}_0 = \mathcal{U}(\mathbb{Z}_{2^w} \times \mathbb{Z}_{2^w})$. For all discrete steps $t \ge 0$, the marginal distribution $\mathcal{D}_t$ remains exactly uniform: $\mathcal{D}_t \equiv \mathcal{U}(\mathbb{Z}_{2^w} \times \mathbb{Z}_{2^w})$. Consequently, the marginal bias vanishes identically:
-
-$$\epsilon_{\mathcal{D}_t}(\chi_{a,b}) = \left|2\mathbb{P}_{X_t \sim \mathcal{D}_t}(\chi_{a,b}(X_t) = 1) - 1\right| = 0 \quad \forall (a,b) \neq (0,0)$$
-
-#### Proof
-
-Let the state transition be $(S', L') = f(S, L)$. The update equations are:
-
-1. $S' \equiv S(2L + 1) \pmod{2^w}$
-2. $L' \equiv L + S' \pmod{2^w}$
-
-From equation (2), we can uniquely recover $L$:
-
-$$L \equiv L' - S' \pmod{2^w}$$
-
-Substituting this into equation (1) yields:
-
-$$S' \equiv S(2(L' - S') + 1) \pmod{2^w}$$
-
-Because $2(L' - S') + 1$ is strictly odd for any integer values, $\gcd(2(L' - S') + 1, 2^w) = 1$. Thus, it possesses a unique multiplicative inverse modulo $2^w$. We can uniquely recover $S$:
-
-$$S \equiv S' \cdot (2(L' - S') + 1)^{-1} \pmod{2^w}$$
-
-Since every image $(S', L')$ has a unique, explicitly constructible preimage $(S, L)$, the mapping $f$ is a bijection. A bijective mapping on a finite state space preserves the uniform distribution exactly. $\blacksquare$
-
-### Theorem 2 (Persistent Cross-Correlation)
-
-Let $X_0 \sim \mathcal{U}(\mathbb{Z}_{2^w} \times \mathbb{Z}_{2^w})$ and let $X_t = f^t(X_0)$ be the deterministic state at step $t$. Define the least significant state bits as $s_t = S_t^{[0]}$ and $\ell_t = L_t^{[0]}$. Let $e_0 = (1, 0, 0, \dots, 0) \in \mathbb{F}_2^w$ be the standard basis vector representing the least significant bit position. For a fixed target step $t \ge 0$, choosing the step-dependent initial mask pair $a_0 = (t \bmod 2) \cdot e_0$, $b_0 = e_0$ and the output mask pair $a_t = \vec{0}$, $b_t = e_0$ yields an input-output correlation bias of:
-
-$$\epsilon(t) = \left| \mathbb{E}_{X_0 \sim \mathcal{U}} \left[ (-1)^{\chi_{a_0,b_0}(X_0) \oplus \chi_{a_t,b_t}(X_t)} \right] \right| = 1$$
-
-Notably, because the input masks $a_0, b_0$ depend on the step count $t$, this formulation identifies a time-varying linear correlation rather than a static linear correlation weakness.
-
-#### Proof
-
-Projecting the update equations onto the least significant bit layer isolates the dynamics modulo 2:
-
-$$S_{j+1} \equiv S_j(2L_j + 1) \equiv S_j \pmod 2 \implies s_t = s_0$$
-
-$$L_{j+1} \equiv L_j + S_{j+1} \equiv L_j + s_0 \pmod 2 \implies \ell_t = \ell_0 \oplus (t \bmod 2)s_0$$
-
-Evaluating the inner products with the vector masks collapses them to the 0-th bit components:
-
-$$\langle a_0, S_0 \rangle = (t \bmod 2)s_0, \quad \langle b_0, L_0 \rangle = \ell_0, \quad \langle a_t, S_t \rangle = 0, \quad \langle b_t, L_t \rangle = \ell_t$$
-
-The joint linear component combination evaluates to:
-
-$$\chi_{a_0,b_0}(X_0) \oplus \chi_{a_t,b_t}(X_t) = (t \bmod 2)s_0 \oplus \ell_0 \oplus \ell_t$$
-
-Substituting the propagation identity for $\ell_t$ yields:
-
-$$(t \bmod 2)s_0 \oplus \ell_0 \oplus \ell_0 \oplus (t \bmod 2)s_0 \equiv 0 \pmod 2$$
-
-Because this joint XOR combination evaluates to $0$ deterministically for all initial states, the expectation simplifies to $\epsilon(t) = \left| \mathbb{E}_{X_0 \sim \mathcal{U}} \left[ (-1)^0 \right] \right| = 1$. $\blacksquare$
-
----
-
-## 2. Cycle Structure and Period Bounds
-
-### Monotonicity of T-Function Projections
-
-Let $\pi_m: \mathbb{Z}_{2^w} \times \mathbb{Z}_{2^w} \to \mathbb{Z}_{2^m} \times \mathbb{Z}_{2^m}$ be the canonical projection mapping a state to its lower $m$ bits. Because the state update equations are T-functions, $\pi_m(f(X)) = f_m(\pi_m(X))$, where $f_m$ is the state update restricted to $\mathbb{Z}_{2^m} \times \mathbb{Z}_{2^m}$. If a state $X$ has period $\tau_w$ under $f$, its projection $\pi_m(X)$ has period $\tau_m$ under $f_m$, where $\tau_m \mid \tau_w$. For any $1 \le m \le w$, the period of the $(m-1)$-bit projection $\tau_{m-1}$ must divide the $m$-bit period $\tau_m$.
-
----
-
-### Lemma 1 (Maximum Sub-Space Period Bounds)
-
-Let $X_{t, m} = ([S_t]_m, [L_t]_m) \in \mathbb{Z}_{2^m} \times \mathbb{Z}_{2^m}$ represent the state vector restricted to its lower $m$ bits. For any initial state, the exact period $\tau_m$ satisfies $\tau_m = 2^j$ for some $j \le m$.
-
-#### Proof
-
-We proceed by mathematical induction on the bit-slice depth $m$.
-
-1. **Base Case ($m=1$):** Modulo 2, the system updates via $S_{t+1} \equiv S_t$ and $L_{t+1} \equiv L_t + S_t$.
-   - If $S_0 = 0$, then $S_{t} = 0$ and $L_{t} = L_0$, yielding $\tau_1 = 1 = 2^0$.
-   - If $S_0 = 1$, then $S_{t} = 1$ and $L_{t+1} \equiv L_t + 1 \pmod 2$, yielding $\tau_1 = 2 = 2^1$.
-
-2. **Inductive Step:** Assume that for the lower $m-1$ bits, the period $\tau_{m-1} = 2^j$ where $j \le m-1$. We analyze the bit layer at index $i = m-1$, defining $X_t^{[i]} = (S_t^{[i]}, L_t^{[i]})$. The updates for bit layer $i$ form an affine system over $\mathbb{F}_2^2$:
-   $$X_{t+1}^{[i]} = B X_t^{[i]} \oplus \vec{C}(t) \quad \text{where } B = \begin{pmatrix} 1 & 0 \\ 1 & 1 \end{pmatrix}$$
-   Let $\gamma_S(t)$ and $\gamma_L(t)$ be the carry bits into index $i$ from the lower $i$ bits of the multiplication $S_t(2L_t+1) \pmod{2^m}$ and the addition $L_t + S_{t+1} \pmod{2^m}$, respectively. The forcing vector is defined as:
-   $$\vec{C}(t) = \begin{pmatrix} \gamma_S(t) \\ \gamma_S(t) \oplus \gamma_L(t) \end{pmatrix}$$
-   Unrolling this recurrence over $\tau_{m-1}$ steps gives the affine map $X_{t+\tau_{m-1}}^{[i]} = B^{\tau_{m-1}} X_t^{[i]} \oplus \vec{\Delta}(t)$. We evaluate the system across two regimes of $\tau_{m-1}$:
-   - **Case 1: $\tau_{m-1} = 2^j$ is even ($j \ge 1$)**. Since the projection $\pi_{m-1}$ commutes with the state update $f$ (i.e., $f_{m-1} \circ \pi_{m-1,m} = \pi_{m-1,m} \circ f_m$), the orbit of the $(m-1)$-bit projection is the projection of the $m$-bit orbit, which guarantees that the period $\tau_{m-1}$ divides $\tau_m$. Since $B^2 \equiv I \pmod 2$, the matrix exponent reduces to the identity: $B^{\tau_{m-1}} = (B^2)^{2^{j-1}} \equiv I \pmod 2$. The map simplifies to $X_{t+\tau_{m-1}}^{[i]} = X_t^{[i]} \oplus \vec{\Delta}(t)$. Because the lower-bit carries $\gamma_S(t), \gamma_L(t)$ are periodic with period $\tau_{m-1}$, the displacement vector satisfies the shift identity $\vec{\Delta}(t+\tau_{m-1}) = \vec{\Delta}(t)$. Applying this map a second time yields $X_{t+2\tau_{m-1}}^{[i]} = X_t^{[i]} \oplus \vec{\Delta}(t) \oplus \vec{\Delta}(t+\tau_{m-1}) = X_t^{[i]}$. By projection divisibility $\tau_{m-1} \mid \tau_m$, the new period must satisfy $\tau_m \in \{\tau_{m-1}, 2\tau_{m-1}\}$, both of which are powers of two bounded by $2^m$.
-   - **Case 2: $\tau_{m-1} = 1$ ($j = 0$)**. A lower period of 1 implies that the state projection modulo $2^{m-1}$ is a fixed point, so $L_{t+1} \equiv L_t \pmod{2^{m-1}}$. Since $L_{t+1} \equiv L_t + S_{t+1} \pmod{2^{m-1}}$, this forces $S_{t+1} \equiv 0 \pmod{2^{m-1}}$, which requires $[S_t]_{m-1} \equiv 0 \pmod{2^{m-1}}$ as the state is constant. Thus, modulo $2^m$, the coordinate satisfies $S_t \in \{0, 2^{m-1}\}$.
-     - If $S_t \equiv 0 \pmod{2^m}$, then $S_t^{[n]} = 0$ for all $0 \le n \le m-1$. Since the lower $m-1$ bits of $S_t$ are zero, the multiplication $S_t(2L_t+1) \pmod{2^m}$ produces no carry into bit $m-1$, yielding $\gamma_S(t) = 0$. Similarly, $S_{t+1} \equiv 0 \pmod{2^m}$ means $S_{t+1}^{[n]} = 0$ for all $0 \le n \le m-1$, so the addition $L_t + S_{t+1} \pmod{2^m}$ generates no carry from the lower $m-1$ bits into bit $m-1$, yielding $\gamma_L(t) = 0$. Hence, $\vec{C}(t) = \vec{0}$, reducing the recurrence to the autonomous map $X_{t+1}^{[i]} = B X_t^{[i]}$. Since $B^2 = I$, the period is at most 2.
-     - If $S_t \equiv 2^{m-1} \pmod{2^m}$, then $S_t^{[m-1]} = 1$ and $S_t^{[n]} = 0$ for all $0 \le n < m-1$. The multiplication $S_t(2L_t+1) \equiv 2^{m-1}(2L_t+1) \equiv 2^{m-1} \pmod{2^m}$ is carry-free from the lower bits, so $\gamma_S(t) = 0$. Since $S_{t+1} \equiv S_t(2L_t+1) \equiv 2^{m-1} \pmod{2^m}$ is also constant with $S_{t+1}^{[n]} = 0$ for $0 \le n < m-1$, the addition $L_t + S_{t+1} \pmod{2^m}$ produces no carry from the lower bits into bit $m-1$, yielding $\gamma_L(t) = 0$. Hence, $\vec{C}(t) = \vec{0}$, reducing the system to the autonomous map $X_{t+1}^{[i]} = B X_t^{[i]}$, which repeats with period 1 or 2 since $B^2 = I$.
-   Thus $\tau_m \in \{1, 2\}$, both powers of two bounded by $2^m$, completing the inductive step. $\blacksquare$
-
----
-
-### Lemma 2 (Multiplicative Cycle Valuation and Period Doubling)
-
-Let $m \ge 2$, $S_0 \equiv 1 \pmod{2}$, and $\tau_{m-1} = 2^{m-1}$. Then $P_{m-1} = \prod_{t=0}^{2^{m-1}-1}(2L_t+1) \equiv 1 + 2^{m-1} \pmod{2^m}$, and $\tau_m = 2^m$.
-
-#### Proof
-
-1. **Telescoping Product and Shift Invariance:** Since $S_0$ is odd, all $S_t$ are odd and hence invertible modulo $2^w$. From $S_{t+1} \equiv S_t(2L_t+1)$, we isolate $2L_t+1 \equiv S_{t+1}S_t^{-1}$. The product over $\tau = 2^{m-1}$ terms telescopes:
-   $$P_{m-1} = \prod_{t=0}^{\tau-1}(2L_t+1) \equiv \prod_{t=0}^{\tau-1} S_{t+1}S_t^{-1} \equiv S_\tau S_0^{-1} \pmod{2^m}$$
-   Since $\tau$ is the period modulo $2^{m-1}$, $S_\tau \equiv S_0 \pmod{2^{m-1}}$, so $S_\tau = S_0 + c \cdot 2^{m-1}$ for $c \in \{0,1\}$. Using $S_0^{-1} \equiv 1 \pmod{2}$:
-   $$P_{m-1} \equiv 1 + c \cdot 2^{m-1} \pmod{2^m} \tag{$\star$}$$
-   Since $L_t \pmod{2^{m-1}}$ has period $\tau$ and $2L_t+1 \pmod{2^m}$ depends only on $L_t \pmod{2^{m-1}}$ (because $2(L_t + k \cdot 2^{m-1}) + 1 \equiv 2L_t + 1 \pmod{2^m}$), the product over any $\tau$ consecutive multipliers equals $P_{m-1} \pmod{2^m}$. Hence $S_{j+\tau} \equiv S_j(1 + c \cdot 2^{m-1}) \pmod{2^m}$ for all $j \ge 0$.
-
-2. **Induction on $m$:** We prove $c = 1$ for all $m \ge 2$ by induction.
-   - **Base case ($m=2$):** Here $\tau = 2$. Since $S_t$ is always odd, $L_{t+1} \equiv L_t + S_{t+1} \equiv L_t + 1 \pmod{2}$, so $L_0$ and $L_1$ have opposite parities. Thus $\{2L_0+1,\, 2L_1+1\} \equiv \{1,\, 3\} \pmod{4}$, giving:
-     $$P_1 \equiv 1 \cdot 3 = 3 \equiv 1 + 2^1 \pmod{4}$$
-   - **Inductive step ($m \to m+1$, for $m \ge 2$):** Assume $P_{m-1} \equiv 1 + 2^{m-1} \pmod{2^m}$ (so $c=1$). This gives $S_{t+\tau} \equiv S_t + 2^{m-1} \pmod{2^m}$ for all $t$ (since $S_t$ is odd). We must show $P_m \equiv 1 + 2^m \pmod{2^{m+1}}$. Split the full-period product: $P_m = P_{m-1} \cdot Q \pmod{2^{m+1}}$, where $Q = \prod_{t=0}^{\tau-1}(2L_{t+\tau}+1)$.
-   - **Relating $Q$ to $P_{m-1}$:** Write $L_{t+\tau} = L_t + y_t \cdot 2^{m-1}$ for $y_t \in \mathbb{Z}_4$ (modulo $2^{m+1}$). Since $(2L_t+1)^{-1}$ is odd, $y_t \cdot 2^m \cdot (2L_t+1)^{-1} \equiv y_t \cdot 2^m \pmod{2^{m+1}}$, giving:
-     $$\frac{2L_{t+\tau}+1}{2L_t+1} \equiv 1 + y_t \cdot 2^m \pmod{2^{m+1}}$$
-     Multiplying over $t = 0, \dots, \tau-1$ (cross terms $y_i y_j 2^{2m} \equiv 0 \pmod{2^{m+1}}$ since $2m \ge m+1$):
-     $$Q \equiv P_{m-1}\!\left(1 + 2^m \Sigma\right) \pmod{2^{m+1}}, \quad \Sigma = \sum_{t=0}^{\tau-1} y_t \pmod{2}$$
-   - **Parity of $\Sigma$:** Define $W_t = \sum_{j=1}^{\tau} S_{t+j} = L_{t+\tau} - L_t$, so $y_t \equiv W_t / 2^{m-1} \pmod{2}$. By the induction hypothesis applied at index $t+1$:
-     $$W_{t+1} - W_t = S_{t+\tau+1} - S_{t+1} \equiv 2^{m-1} \pmod{2^m}$$
-   - Dividing by $2^{m-1}$: $y_{t+1} \equiv y_t + 1 \pmod{2}$. Thus $y_t$ alternates parity, and since $\tau = 2^{m-1}$ is even:
-     $$\Sigma \equiv \sum_{t=0}^{\tau-1}(y_0 + t) \equiv \tau y_0 + \frac{\tau(\tau-1)}{2} \equiv \frac{\tau(\tau-1)}{2} \pmod{2}$$
-   - **Completion:** Combining $P_m \equiv P_{m-1}^2(1 + 2^m \Sigma) \pmod{2^{m+1}}$ with the expansion of $P_{m-1}^2$. Here $P_{m-1}$ denotes the integer product; the induction hypothesis constrains it modulo $2^m$, and $d$ captures the unknown bit at position $m$. Write $P_{m-1} = 1 + 2^{m-1} + d \cdot 2^m$ and discard terms $\ge 2^{m+1}$:
-     $$P_{m-1}^2 \equiv 1 + 2^m + 2^{2m-2} \pmod{2^{m+1}}$$
-     we obtain:
-     $$P_m \equiv (1 + 2^m + 2^{2m-2})(1 + 2^m \Sigma) \equiv 1 + 2^m + 2^{2m-2} + 2^m \Sigma \pmod{2^{m+1}}$$
-   - Factoring $2^{2m-2} = 2^m \cdot 2^{m-2}$:
-     $$P_m \equiv 1 + 2^m + 2^m\!\left(2^{m-2} + \Sigma\right) \pmod{2^{m+1}}$$
-   - The correction term satisfies:
-     $$2^{m-2} + \Sigma \equiv 2^{m-2} + \frac{\tau(\tau-1)}{2} = 2^{m-2} + 2^{m-2}(2^{m-1}-1) = 2^{m-2} \cdot 2^{m-1} = 2^{2m-3} \pmod{2}$$
-     For all $m \ge 2$, $2m-3 \ge 1$, so $2^{2m-3}$ is even. Therefore $2^m(2^{m-2} + \Sigma) \equiv 0 \pmod{2^{m+1}}$, yielding:
-     $$P_m \equiv 1 + 2^m \pmod{2^{m+1}}$$
-
-This completes the induction. $\blacksquare$
-
----
-
-### Lemma 3a (Period-Doubling Lifting)
-
-Let $(S'_t, L'_t)$ be a T-function system modulo $2^{m+1}$ with update $S'_{t+1} \equiv S'_t M_t$, $L'_{t+1} \equiv L'_t + S'_{t+1} \pmod{2^{m+1}}$, where all $M_t$ are odd. Suppose:
-
-1. The minimal period modulo $2^m$ is $p$ (a power of 2).
-2. $M_{t+p} \equiv M_t \pmod{2^{m+2}}$ for all $t$.
-3. $S'_p \equiv S'_0(1 + \alpha 2^m) \pmod{2^{m+1}}$ and $L'_p \equiv L'_0 + \beta 2^m \pmod{2^{m+1}}$.
-4. Either $m \ge 2$, or $\alpha$ is even when $m = 1$.
-
-Then:
-
-- $S'_{2p} \equiv S'_0(1 + \alpha 2^{m+1}) \pmod{2^{m+2}}$.
-- $L'_{2p} \equiv L'_0 + \beta 2^{m+1} \pmod{2^{m+2}}$.
-- If at least one of $\alpha, \beta$ is odd, the minimal period modulo $2^{m+1}$ is exactly $2p$.
-
-#### Proof
-
-From hypothesis (3), write $S'_p = S'_0(1 + \alpha 2^m + \gamma 2^{m+1})$ for some integer $\gamma$. By hypothesis (2), the multiplier sequence is periodic with period $p$ modulo $2^{m+2}$, so:
-$$\prod_{j=0}^{p-1} M_{p+j} \equiv \prod_{j=0}^{p-1} M_j \equiv \frac{S'_p}{S'_0} \equiv 1 + \alpha 2^m + \gamma 2^{m+1} \pmod{2^{m+2}}$$
-
-Then:
-$$S'_{2p} = S'_p \cdot \prod_{j=0}^{p-1} M_{p+j} \equiv S'_0(1 + \alpha 2^m + \gamma 2^{m+1})^2 \pmod{2^{m+2}}$$
-
-Expanding:
-$$(1 + \alpha 2^m + \gamma 2^{m+1})^2 = 1 + 2\alpha 2^m + 2\gamma 2^{m+1} + \alpha^2 2^{2m} + 2\alpha\gamma 2^{2m+1} + \gamma^2 2^{2m+2}$$
-
-By hypothesis (4), $\alpha^2 2^{2m} \equiv 0 \pmod{2^{m+2}}$ (since $2m \ge m+2$ for $m \ge 2$, and for $m=1$, $\alpha$ even implies $\alpha^2 2^2 \equiv 0 \pmod 8$). The cross terms $2\alpha\gamma 2^{2m+1}$ and $\gamma^2 2^{2m+2}$ vanish modulo $2^{m+2}$ for all $m \ge 1$. Thus:
-$$S'_{2p} \equiv S'_0(1 + \alpha 2^{m+1}) \pmod{2^{m+2}}$$
-
-For $L'$, let $\Sigma = L'_p - L'_0 \equiv \beta 2^m \pmod{2^{m+1}}$. Since $S'_{p+j} \equiv S'_j(1 + \alpha 2^m + \gamma 2^{m+1}) \pmod{2^{m+2}}$:
-$$L'_{2p} - L'_0 = \sum_{j=0}^{p-1} S'_{p+j} + \sum_{j=0}^{p-1} S'_j \equiv (1 + \alpha 2^m + \gamma 2^{m+1})\Sigma + \Sigma \pmod{2^{m+2}}$$
-$$= (2 + \alpha 2^m + \gamma 2^{m+1})\Sigma$$
-
-Since $\Sigma \equiv \beta 2^m \pmod{2^{m+1}}$, write $\Sigma = \beta 2^m + \delta 2^{m+1}$. Then:
-$$(2 + \alpha 2^m + \gamma 2^{m+1})(\beta 2^m + \delta 2^{m+1}) = 2\beta 2^m + 2\delta 2^{m+1} + \alpha\beta 2^{2m} + \text{higher terms}$$
-
-All terms with $2^{2m}$ or higher vanish modulo $2^{m+2}$ for $m \ge 1$ (since $2m \ge m+2$ for $m \ge 2$, and for $m=1$, $\alpha$ even ensures $\alpha\beta 2^2 \equiv 0 \pmod 8$). Therefore:
-$$L'_{2p} - L'_0 \equiv \beta 2^{m+1} \pmod{2^{m+2}}$$
-
-For the period claim: if at least one of $\alpha, \beta$ is odd, then $(S'_p, L'_p) \not\equiv (S'_0, L'_0) \pmod{2^{m+1}}$, so the minimal period is not $p$. By T-function monotonicity, the minimal period modulo $2^{m+1}$ must divide $2p$ and be a multiple of $p$; since $p$ is excluded, it is exactly $2p$. $\blacksquare$
-
----
-
-### Lemma 3 (Scaled System Period Growth)
-
-Let $S_0 = 2^k u$ with $u$ odd, $k \ge 1$, and let $L_t = L_0 + 2^k L'_t \pmod{2^w}$ define the integer quotient $L'_t \in \mathbb{Z}_{2^{w-k}}$. Let the scaled system modulo $2^m$ ($1 \le m \le w-k$) be defined by the state $(S'_t, L'_t)$ with initial state $(u, 0)$ and update rules:
-
-$$S'_{t+1} \equiv S'_t M_t \pmod{2^m}, \quad L'_{t+1} \equiv L'_t + S'_{t+1} \pmod{2^m}$$
-
-where $M_t = 2^{k+1} L'_t + 2L_0 + 1$. The exact period $\tau'_m$ of this scaled system modulo $2^m$ is governed by two behavioral regimes depending on the initial parameters:
-
-* If $L_0$ is even: $\tau'_m = 2^m$ for all $m \ge 1$.
-* If $L_0$ is odd: let $t_0 = \nu_2(L_0+1)$ and $h = \min(k, t_0)$. Then $\tau'_m = 2^{\max(1, m-h)}$.
-
-#### Proof
-
-**Preliminary: Lemma 3a (Period-Doubling Lifting).** *[Stated and proved above.]*
-
-**Base Case ($m=1$).** Since $S'_0 = u \equiv 1 \pmod{2}$, we have $S'_t \equiv 1 \pmod{2}$ for all $t$. The multiplier satisfies $M_t \equiv 1 \pmod{2}$, so $L'_{t+1} \equiv L'_t + 1 \pmod{2}$, which has period 2. Thus $\tau'_1 = 2$. This matches both stated formulas: $2^1 = 2$ when $L_0$ is even, and $2^{\max(1, 1-h)} = 2^1 = 2$ when $L_0$ is odd since $h \ge 1$.
-
-**Case 1: $L_0$ even.** We prove by induction on $m \ge 1$ that $\tau'_m = 2^m$ and $\Sigma_m(t) = \sum_{j=0}^{2^{m-1}-1} S'_{t+j} \equiv 2^{m-1} \pmod{2^m}$ for all $t \ge 0$.
-
-*Base ($m=1$):* $\Sigma_1(t) = S'_t \equiv 1 = 2^0 \pmod{2}$, and $\tau'_1 = 2$.
-
-*Inductive step ($m \to m+1$ for $m \ge 1$):* Assume $\tau'_m = 2^m$ and $\Sigma_m(t) \equiv 2^{m-1} \pmod{2^m}$. We invoke Lemma 3a with $p = 2^m$.
-
-- **(i) Multiplier periodicity:** From the hypothesis, $L'_{t+2^{m-1}} - L'_t = \Sigma_m(t) \equiv 2^{m-1} \pmod{2^m}$. Scaling by $2^{k+1}$:
-  $$2^{k+1}(L'_{t+2^{m-1}} - L'_t) \equiv 2^{k+m} \pmod{2^{k+m+1}}$$
-  Since $k \ge 1$, we have $k+m \ge m+1$, so $M_{t+2^{m-1}} \equiv M_t \pmod{2^{m+1}}$. By induction, the sequence $L'_t \pmod{2^m}$ has period $2^m$, so $L'_{t+2^m} \equiv L'_t \pmod{2^m}$. Therefore:
-  $$M_{t+2^m} - M_t = 2^{k+1}(L'_{t+2^m} - L'_t) \equiv 0 \pmod{2^{m+2}}$$
-  since $k+1 \ge 2$ and $L'_{t+2^m} - L'_t \equiv 0 \pmod{2^m}$. This verifies hypothesis (2) of Lemma 3a.
-
-- **(ii) Half-period displacement:** The $S'$ coordinate satisfies $S'_{t+2^m} \equiv S'_t \pmod{2^m}$ by the induction hypothesis. Thus $S'_{2^m} \equiv S'_0(1 + \alpha 2^m) \pmod{2^{m+1}}$ for some $\alpha \in \{0,1\}$. The $L'$ coordinate satisfies:
-  $$L'_{2^m} - L'_0 = \sum_{j=0}^{2^m-1} S'_j = \sum_{j=0}^{2^{m-1}-1} S'_j + \sum_{j=0}^{2^{m-1}-1} S'_{2^{m-1}+j}$$
-  
-  By the periodicity of $M_t$ modulo $2^{m+1}$ established in (i), $S'_{2^{m-1}+j} \equiv P_m \cdot S'_j \pmod{2^{m+1}}$ where $P_m = \prod_{i=0}^{2^{m-1}-1} M_{t+i}$. The full-period product telescopes to $S'_{2^m}/S'_0 \equiv 1 \pmod{2^m}$. Since $L_0$ is even and $k \ge 1$, every $M_t \equiv 2L_0+1 \equiv 1 \pmod{4}$, so $P_m \equiv 1 \pmod{4}$. The only square roots of $1$ modulo $2^{m+1}$ that are $\equiv 1 \pmod 4$ are $1$ and $1+2^m$ (for $m \ge 2$). Thus $P_m \equiv 1 + c \cdot 2^m \pmod{2^{m+1}}$ with $c \in \{0,1\}$.
-  
-  Therefore:
-  $$\Sigma_{m+1}(t) = \sum_{j=0}^{2^m-1} S'_j \equiv (1 + P_m)\Sigma_m(t) \equiv (2 + c \cdot 2^m)(2^{m-1} + d \cdot 2^m) \pmod{2^{m+1}}$$
-  for some integer $d$. Expanding and discarding terms of order $\ge 2^{m+1}$ (noting that $c \cdot 2^{2m-1} \equiv 0 \pmod{2^{m+1}}$ for $m \ge 2$, and for $m=1$, $c \equiv 0 \pmod{4}$ ensures vanishing):
-  $$\Sigma_{m+1}(t) \equiv 2^m \pmod{2^{m+1}}$$
-  
-  This gives $L'_{2^m} \equiv L'_0 + 2^m \pmod{2^{m+1}}$, so $\beta = 1$ (odd). We do not need to determine $\alpha$; the $L'$ coordinate alone drives the period doubling.
-
-- **(iii) Lemma 3a invocation:** Hypothesis (4) is satisfied because either $m \ge 2$, or for $m=1$, the product $P_1 = M_0 M_1 \equiv 1 \pmod{4}$ (since both multipliers are $\equiv 1 \pmod 4$), giving $S'_2 \equiv S'_0 \pmod{4}$, so $\alpha = 0$ (even). Since $\beta = 1$ is odd, Lemma 3a yields $\tau'_{m+1} = 2^{m+1}$.
-
-This completes the induction for Case 1.
-
-**Case 2: $L_0$ is odd.** Let $t_0 = \nu_2(L_0+1) \ge 1$ and $h = \min(k, t_0)$.
-
-*Regime 1 ($1 \le m \le h+1$):* Since $m \le k+1$, $2^{k+1} \equiv 0 \pmod{2^m}$. Simultaneously, $m \le t_0+1 \implies 2L_0+1 \equiv -1 \pmod{2^m}$. The multiplier collapses to $M_t \equiv -1 \pmod{2^m}$ for all $t$. The system simplifies to $S'_{t+1} \equiv -S'_t$, $L'_{t+1} \equiv L'_t - S'_t$. From $(u, 0)$, the orbit traces $(u, 0) \mapsto (-u, -u) \mapsto (u, 0)$. Since $u \not\equiv -u \pmod{2^m}$ for $m > 1$, and $L'_1 = -u \equiv 1 \not\equiv 0 = L'_0 \pmod{2}$ for $m=1$, the exact period is $\tau'_m = 2 = 2^{\max(1, m-h)}$.
-
-*Regime 2 ($m > h+1$):* We prove $\tau'_m = 2^{m-h}$ by induction on $m \ge h+2$, with hypothesis:
-1. The minimal period modulo $2^m$ is $p = 2^{m-h}$.
-2. $S'_p \equiv S'_0 + c_m 2^m$, $L'_p \equiv L'_0 + d_m 2^m \pmod{2^{m+1}}$, where $(c_m \bmod 2, d_m \bmod 2)$ is constant and has at least one odd entry.
-
-*Base ($m = h+2$, $p = 4$):* Let $A = 2L_0 + 1 = 2^{t_0+1}y - 1$ with $y$ odd.
-
-- **Multiplier computation:** $M_0 = A$ and $M_1 = 2^{k+1}uA + A = A(2^{k+1}u + 1)$. For $M_2$:
-  $$L'_2 = uA(1 + M_1) = uA(2^{t_0+1}y + 2^{k+1}uA)$$
-  Since both $2^{t_0+1}$ and $2^{k+1}$ are divisible by $2^{h+1}$, we have $L'_2 \equiv 0 \pmod{2^{h+1}}$. Then $2^{k+1}L'_2 \equiv 0 \pmod{2^{h+3}}$ (since $k+1+h+1 \ge h+3$), giving $M_2 \equiv A \pmod{2^{h+3}}$.
-  
-  For $M_3$: since $2^{k+1}L'_2 \equiv 0 \pmod{2^{h+3}}$:
-  $$2^{k+1}L'_3 = 2^{k+1}(L'_2 + S'_3) \equiv 2^{k+1}S'_2 A = 2^{k+1}uA^2 M_1 \pmod{2^{h+3}}$$
-  Using $A^2 \equiv 1 \pmod{2^{h+2}}$ (since $t_0 \ge h$) and discarding $2^{2k+2} \equiv 0 \pmod{2^{h+3}}$:
-  $$2^{k+1}L'_3 \equiv 2^{k+1}uA \pmod{2^{h+3}}$$
-  Thus $M_3 \equiv 2^{k+1}uA + A = M_1 \pmod{2^{h+3}}$.
-
-- **Computing $S'_4$:** $S'_4 = u \prod_{t=0}^3 M_t \equiv u A^2 M_1^2 \pmod{2^{h+3}}$. Since $t_0 \ge h$, $A^4 \equiv 1 \pmod{2^{h+3}}$ and $(2^{k+1}u+1)^2 \equiv 1 + 2^{k+2}u \pmod{2^{h+3}}$ (since $2^{2k+2} \equiv 0$). Thus:
-  $$S'_4 \equiv u + 2^{k+2}u^2 \pmod{2^{h+3}}$$
-  - **Sub-case 2a ($h = k \le t_0$):** $S'_4 \equiv u + 2^{h+2} \pmod{2^{h+3}}$, so $c_{h+2} \equiv 1 \pmod{2}$.
-  - **Sub-case 2b ($h = t_0 < k$):** $k+2 \ge h+3$, so $S'_4 \equiv u \pmod{2^{h+3}}$, giving $c_{h+2} \equiv 0 \pmod{2}$.
-
-- **Computing $L'_4$:** $L'_4 = S'_1 + S'_2 + S'_3 + S'_4 = uA(1 + M_1)(1 + AM_1)$. Evaluating modulo $2^{h+3}$:
-  $$1 + M_1 \equiv 2^{t_0+1}y - 2^{k+1}u \pmod{2^{h+3}}$$
-  $$1 + AM_1 \equiv 2 - 2^{t_0+2}y + 2^{k+1}u \pmod{2^{h+3}}$$
-  Since $1+M_1$ is a multiple of $2^{h+1}$, cross terms of order $\ge 2^{2h+2} \ge 2^{h+3}$ vanish:
-  $$(1+M_1)(1+AM_1) \equiv 2(2^{t_0+1}y - 2^{k+1}u) \equiv 2^{t_0+2}y - 2^{k+2}u \pmod{2^{h+3}}$$
-  Multiplying by $uA$ (odd):
-  $$L'_4 \equiv 2^{t_0+2}y - 2^{k+2} \pmod{2^{h+3}}$$
-  - **Sub-case 2b ($h = t_0 < k$):** $2^{k+2} \equiv 0 \pmod{2^{h+3}}$, so $L'_4 \equiv 2^{h+2}y \equiv 2^{h+2} \pmod{2^{h+3}}$ (since $y$ is odd), giving $d_{h+2} \equiv 1 \pmod{2}$.
-  
-  In Sub-case 2a, $c_{h+2} \equiv 1$, so the parity condition is satisfied regardless of $d_{h+2}$. In both sub-cases, at least one of $(c_{h+2}, d_{h+2})$ is odd. The base case is verified.
-
-*Inductive step ($m \to m+1$ for $m \ge h+2$):* Let $p = 2^{m-h}$ (a multiple of 4). We verify the hypotheses of Lemma 3a:
-
-- **(i) Multiplier periodicity:** $M_{t+p} - M_t = 2^{k+1}(L'_{t+p} - L'_t) = z \cdot 2^{k+m+1}$. Since $k \ge 1$, $k+m+1 \ge m+2$, so $M_{t+p} \equiv M_t \pmod{2^{m+2}}$.
-
-- **(ii) State displacement:** By the induction hypothesis, $S'_p \equiv S'_0 + c_m 2^m \pmod{2^{m+1}}$ and $L'_p \equiv L'_0 + d_m 2^m \pmod{2^{m+1}}$.
-
-- **(iii) Hypothesis (4):** Satisfied because $m \ge h+2 \ge 3$.
-
-- **(iv) Lemma 3a application:** The lemma preserves the parity pair: $c_{m+1} \equiv c_m \pmod{2}$ and $d_{m+1} \equiv d_m \pmod{2}$. Since at least one entry is odd (from the base case), the state $(S'_{2p}, L'_{2p}) \not\equiv (S'_0, L'_0) \pmod{2^{m+2}}$, preventing orbit closure at $p$ steps. Since $S'_{2p} \equiv S'_0 \pmod{2^{m+1}}$ and $L'_{2p} \equiv L'_0 \pmod{2^{m+1}}$, the orbit closes at $2p$ steps modulo $2^{m+1}$. The minimal period modulo $2^{m+1}$ is exactly $2p = 2^{m+1-h}$.
-
-This completes the induction for Case 2. $\blacksquare$
-
----
-
-### Theorem 3 (Cycle Bounds and Maximality Condition)
-
-Let $\mathcal{O}$ be an orbit of the generator under the full word width transition $f: \mathbb{Z}_{2^w} \times \mathbb{Z}_{2^w} \to \mathbb{Z}_{2^w} \times \mathbb{Z}_{2^w}$. The exact period $\tau_w$ satisfies:
-
-1. If $S_0 = 0$, then $\tau_w = 1$.
-2. If $S_0 \equiv 1 \pmod 2$, then $\tau_w = 2^w$ for all $w \ge 1$.
-3. If $S_0 \neq 0$ and $\nu_2(S_0) = k \ge 1$, let $S_0 = 2^k u$ with $u$ odd.
-   - If $L_0$ is even: $\tau_w = 2^{w-k}$.
-   - If $L_0$ is odd: let $t_0 = \nu_2(L_0+1)$ and $h = \min(k, t_0)$. Then $\tau_w = 2^{\max(1, w-k-h)}$.
-
-#### Proof
-
-1. If $S_0 = 0$, then $S_1 = 0(2L_0+1) = 0$ and $L_1 = L_0 + 0 = L_0$, making it a fixed point ($\tau_w = 1$).
-2. If $S_0$ is odd, for $w=1$, $\tau_1 = 2$ from Lemma 1. For $w \ge 2$, Lemma 2 proves that the product over the lower period $2^{m-1}$ satisfies $P_{m-1} \equiv 1 + 2^{m-1} \pmod{2^m}$. This translates the coordinate to $S_{2^{m-1}} \equiv S_0(1 + 2^{m-1}) \equiv S_0 + 2^{m-1} \pmod{2^m}$. The orbit cannot close at $2^{m-1}$ steps, forcing the period to double to $\tau_m = 2^m$ at every bit layer up to $m=w$.
-3. If $S_0 = 2^k u$, the lower $k$ bits satisfy $[S_t]_k = 0$, which implies $[S_{t+1}]_k = 0$ and $[L_{t+1}]_k \equiv [L_t]_k \pmod{2^k}$. The lower $k$ bits remain fixed, so no carry bits enter the system below index $k$. This maps the sequence directly to the scaled system of Lemma 3 with a maximum remaining width of $m = w-k$. Applying the exact period tracking from Lemma 3 gives $\tau_w = \tau'_{w-k}$, which yields $2^{w-k}$ for even $L_0$, and $2^{\max(1, w-k-h)}$ for odd $L_0$. If $w-k \le h+1$, the scaled system remains entirely within Regime 1, and the resulting period simplifies directly to $\tau_w = 2^1 = 2$. $\blacksquare$
-
----
-
-### State-Space Volume Consistency
-
-This calculation verifies that the case split by initial-state type in Theorem 3 partitions the full state space. For a fixed valuation $k = \nu_2(S_0) \ge 1$, there are $2^{w-k-1}$ possible values of $S_0$. We partition the $2^w$ values of $L_0$ based on their 2-adic properties:
-
-1. $L_0$ is even: $2^{w-1}$ values.
-2. $L_0$ is odd: for each $1 \le r \le w-k-1$, there are $2^{w-r-1}$ values of $L_0$ with $\nu_2(L_0+1) = r$.
-3. $L_0$ is odd with $\nu_2(L_0+1) \ge w-k$: there are $2^{k}$ such values.
-
-Summing the states for a fixed $k$:
-
-$$\text{States}(k) = 2^{w-k-1} \left[ 2^{w-1} + \left( \sum_{r=1}^{w-k-1} 2^{w-r-1} \right) + 2^k \right] = 2^{2w-k-1}$$
-
-Summing over all possible valuations $k$ from $1$ to $w-1$, plus the $2^w$ states where $S_0 = 0$ and the $2^{2w-1}$ states where $S_0$ is odd:
-
-$$\Sigma = 2^w + \left( \sum_{k=1}^{w-1} 2^{2w-k-1} \right) + 2^{2w-1} = 2^w + (2^{2w-1} - 2^w) + 2^{2w-1} = 2^{2w-1} + 2^{2w-1} = 2^{2w}$$
-
-The total count matches $|\mathbb{Z}_{2^w} \times \mathbb{Z}_{2^w}| = 2^{2w}$, confirming that the cycle classification partitions the state space.
-
----
-
-### Corollary 1 (LSB Orbit Partition)
-
-For $m=1$, the state space $\mathbb{Z}_2^2$ is partitioned into exactly three disjoint cycles: two fixed points where $\tau = 1$, and one cycle of length 2 where $\tau = 2$.
-
-#### Proof
-
-This follows as a direct application of Theorem 3. If $S_0 = 0$, then $\tau_1 = 1$, yielding two fixed points corresponding to $L_0 \in \{0, 1\}$. If $S_0 \equiv 1 \pmod 2$, then $\tau_1 = 2^1 = 2$, yielding a single 2-cycle containing the remaining two states $(1,0)$ and $(1,1)$. $\blacksquare$
-
----
-
-### Corollary 2 (Extension to $m=2$)
-
-For $m=2$, the state space $\mathbb{Z}_4^2$ consists of four cycles of length 1, two cycles of length 2, and two cycles of length 4.
-
-#### Proof
-
-This is a direct consequence of Theorem 3 for $w=2$:
-
-1. For $S_0 = 0$, we have $\tau_2 = 1$, which yields four fixed points corresponding to $L_0 \in \{0, 1, 2, 3\}$.
-2. For $S_0$ odd ($S_0 \in \{1, 3\}$), we have $\tau_2 = 2^2 = 4$. There are $2 \times 4 = 8$ such states, which partition into exactly two cycles of length 4.
-3. For $S_0 \neq 0$ with $\nu_2(S_0) = 1$ (so $S_0 = 2$, meaning $k=1$ and $u=1$):
-   - If $L_0$ is even ($L_0 \in \{0, 2\}$), then $\tau_2 = 2^{2-1} = 2$. There are $1 \times 2 = 2$ such states, forming one cycle of length 2.
-   - If $L_0$ is odd ($L_0 \in \{1, 3\}$), then $t_0 = \nu_2(L_0+1)$.
-     - For $L_0 = 1$, $L_0+1 = 2 \implies t_0 = 1$, so $h = \min(1, 1) = 1$. The period is $2^{\max(1, 2-1-1)} = 2^1 = 2$.
-     - For $L_0 = 3$, $L_0+1 = 4 \implies t_0 = 2$, so $h = \min(1, 2) = 1$. The period is $2^{\max(1, 2-1-1)} = 2^1 = 2$.
-     This gives another 2 states forming a second cycle of length 2.
-
-Summing these gives 4 cycles of length 1, 2 cycles of length 2, and 2 cycles of length 4, exhausting the 16 states. $\blacksquare$
-
----
-
-## 3. Low-Order Projection and Two-Sample Correlation Analysis
-
-Let $C_v$ be the period-2 component of the orbit projection modulo $2^{v+1}$ for an initial state with $S_0 \neq 0$ and $\nu_2(S_0) = v$ (ensuring $v < w$ is finite and the 2-cycle $C_v$ is well-defined). For a fixed lift of this lower orbit to modulo $2^{v+2}$, let $s_t = S_t^{[v+1]}$ and $\ell_t = L_t^{[v+1]}$ for $t=0,1$. The following quantities are two-sample averages over the two phases $t=0,1$ of the lower orbit, treating bits as elements of $\mathbb{F}_2$ using $\oplus$ for XOR:
-
-### Theorem 4
-
-1. The 1-step autocorrelation of the state bit $S_t^{[v+1]}$ over $C_v$ is:
-   $$\epsilon_S(v+1, 1) = \begin{cases} 0 & \text{if } v = 0 \\ 1 & \text{if } v \ge 1 \end{cases}$$
-2. The 1-step autocorrelation of the state bit $L_t^{[v+1]}$ over $C_v$ is:
-   $$\epsilon_L(v+1, 1) = \begin{cases} 1 \oplus L_0^{[0]} & \text{if } v = 0 \\ L_0^{[0]} & \text{if } v \ge 1 \end{cases}$$
-3. The Walsh transform coefficients $\left| \hat{F}(a, b) \right| = \left| \frac{1}{2} \sum_{t=0}^1 (-1)^{a s_t \oplus b \ell_t} \right|$ over $C_v$ for non-zero masks $(a, b) \in \mathbb{F}_2^2 \setminus \{(0, 0)\}$ satisfy:
-   $$\left| \hat{F}(1, 0) \right| = 1 \oplus L_0^{[0]}$$
-   $$\left| \hat{F}(0, 1) \right| = 1 \oplus S_0^{[v+1]} \oplus L_0^{[0]} \oplus L_0^{[v]}$$
-   $$\left| \hat{F}(1, 1) \right| = 1 \oplus S_0^{[v+1]} \oplus L_0^{[v]}$$
-
-#### Proof
-
-Since $\nu_2(S_0) = v$, the lower $v$ bits of $S_t$ are zero, and $S_t^{[v]} = 1$ for all $t$. Thus, $S_t \equiv 2^v(2s_t + 1) \pmod{2^{v+2}}$. Let $K = [L_t]_v = [L_0]_v$ be the constant lower segment of $L$.
-
-- **Case 1: $v = 0$**. Here $S_0$ is odd ($s_t = S_t^{[1]}$). Modulo 4, the update rule expands to $S_{t+1} \equiv S_t(2L_t + 1) \pmod 4$. Writing $S_t = 2s_t + 1$ and $L_t = 2\ell_t + y_t$ where $y_t = L_t^{[0]}$ gives $2s_{t+1} + 1 \equiv (2s_t + 1)(2y_t + 1) \equiv 2s_t + 2y_t + 1 \pmod 4$. This isolates the bit relation $s_{t+1} \equiv s_t \oplus y_t \pmod 2$. Since $y_t = L_0^{[0]} \oplus t$, we have $s_{t+1} \oplus s_t = L_0^{[0]} \oplus t$.
-  1. The 1-step autocorrelation of $S_t^{[1]}$ is $\epsilon_S(1, 1) = \left| \frac{1}{2} \left((-1)^{L_0^{[0]}} + (-1)^{L_0^{[0]} \oplus 1}\right) \right| = 0$.
-  2. For $L$, using $s_{t+1} = s_t \oplus y_t$, the update $\ell_{t+1} \equiv \ell_t \oplus s_{t+1} \oplus y_t \pmod 2$ reduces to $\ell_{t+1} \oplus \ell_t = s_t$. The 1-step autocorrelation is $\epsilon_L(1, 1) = \left| \frac{1}{2} \left((-1)^{s_0} + (-1)^{s_1}\right) \right| = 1 \oplus L_0^{[0]}$.
-
-- **Case 2: $v \ge 1$**. Since $\nu_2(S_0) = v$, $S_t \equiv 2^v(2s_t+1) \pmod{2^{v+2}}$. The coordinate segment $L_t \pmod 2$ remains constant, meaning $L_t^{[0]} = L_0^{[0]}$. The update equation $S_{t+1} \equiv S_t(2L_t+1) \pmod{2^{v+2}}$ yields, after division by $2^v$:
-  $$2s_{t+1}+1 \equiv (2s_t+1)(2L_t+1) \pmod{4}$$
-  Since $v \ge 1$, $L_t \equiv L_0 \pmod{2}$, so $2L_t+1 \equiv 2L_0^{[0]}+1 \pmod{4}$. Expanding gives the bit recurrence:
-  $$s_{t+1} = s_t \oplus L_0^{[0]}$$
-  Consequently, $s_0 = S_0^{[v+1]}$, $s_1 = s_0 \oplus L_0^{[0]}$, and $s_2 = s_1 \oplus L_0^{[0]} = s_0$.
-  1. The step difference $s_{t+1} \oplus s_t = L_0^{[0]}$ is constant across both steps, which yields $\epsilon_S(v+1, 1) = \left| \frac{1}{2} \left((-1)^{L_0^{[0]}} + (-1)^{L_0^{[0]}} \right) \right| = 1$.
-  2. For $L$, the addition $L_{t+1} \equiv L_t + S_{t+1} \pmod{2^{v+2}}$ has $S_{t+1} \equiv 2^v + 2^{v+1}s_{t+1} \pmod{2^{v+2}}$. The carry from bit $v$ into bit $v+1$ is exactly $L_t^{[v]}$ (since bit $v$ of $S_{t+1}$ is $1$). Therefore:
-     $$\ell_{t+1} = \ell_t \oplus s_{t+1} \oplus L_t^{[v]}$$
-     Because $S_{t+1}$ toggles bit $v$ of $L$ at every step, $L_t^{[v]} = L_0^{[v]} \oplus t$. Substituting gives:
-     $$\ell_{t+1} \oplus \ell_t = s_{t+1} \oplus L_0^{[v]} \oplus t$$
-     Define $E_t = \ell_{t+1} \oplus \ell_t$.
-     - For $t=0$: $E_0 = s_1 \oplus L_0^{[v]} = s_0 \oplus L_0^{[0]} \oplus L_0^{[v]} = S_0^{[v+1]} \oplus L_0^{[0]} \oplus L_0^{[v]}$
-     - For $t=1$: $E_1 = s_2 \oplus L_0^{[v]} \oplus 1 = s_0 \oplus L_0^{[v]} \oplus 1$
-     The general relation is $E_1 = E_0 \oplus (L_0^{[0]} \oplus 1)$.
-     The 1-step autocorrelation of $L_t^{[v+1]}$ is the magnitude of $\frac{1}{2}\left((-1)^{E_0} + (-1)^{E_1}\right)$.
-     - If $L_0^{[0]} = 0$: $E_1 = E_0 \oplus 1$, so $(-1)^{E_0} + (-1)^{E_1} = 0$, giving magnitude 0.
-     - If $L_0^{[0]} = 1$: $E_1 = E_0$, so $(-1)^{E_0} + (-1)^{E_1} = \pm 2$, giving magnitude 1.
-     Hence, $\epsilon_L(v+1, 1) = L_0^{[0]}$.
-
-The Walsh transform magnitude is evaluated by factoring out the initial phase state:
-$$\left| \hat{F}(a, b) \right| = \left| \frac{1}{2} \sum_{t=0}^1 (-1)^{a s_t \oplus b \ell_t} \right| = \left| \frac{1}{2} (-1)^{a s_0 \oplus b \ell_0} \left(1 + (-1)^{a(s_1 \oplus s_0) \oplus b(\ell_1 \oplus \ell_0)}\right) \right| = 1 \oplus \big(a(s_1 \oplus s_0) \oplus b(\ell_1 \oplus \ell_0)\big)$$
-
-- For **Case 1 ($v=0$)**, substituting $s_1 \oplus s_0 = L_0^{[0]}$ and $\ell_1 \oplus \ell_0 = S_0^{[1]}$ yields:
-  - $\left| \hat{F}(1, 0) \right| = 1 \oplus L_0^{[0]}$
-  - $\left| \hat{F}(0, 1) \right| = 1 \oplus S_0^{[1]} \equiv 1 \oplus S_0^{[1]} \oplus L_0^{[0]} \oplus L_0^{[0]}$ (Since $v=0$, $L_0^{[v]} = L_0^{[0]}$, so the two $L_0^{[0]}$ terms cancel, recovering $1 \oplus S_0^{[1]}$).
-  - $\left| \hat{F}(1, 1) \right| = 1 \oplus L_0^{[0]} \oplus S_0^{[1]}$
-- For **Case 2 ($v \ge 1$)**, substituting $s_1 \oplus s_0 = L_0^{[0]}$ and $\ell_1 \oplus \ell_0 = S_0^{[v+1]} \oplus L_0^{[0]} \oplus L_0^{[v]}$ yields:
-  - $\left| \hat{F}(1, 0) \right| = 1 \oplus L_0^{[0]}$
-  - $\left| \hat{F}(0, 1) \right| = 1 \oplus \left(S_0^{[v+1]} \oplus L_0^{[0]} \oplus L_0^{[v]}\right)$
-  - $\left| \hat{F}(1, 1) \right| = 1 \oplus L_0^{[0]} \oplus \left(S_0^{[v+1]} \oplus L_0^{[0]} \oplus L_0^{[v]}\right) = 1 \oplus S_0^{[v+1]} \oplus L_0^{[v]}$
-
-These match the stated formulas identically. $\blacksquare$
-
----
-
-## 4. Carry Propagation and Triangular Dynamics
-
-The update equations of the generator form a T-function system. The state mapping is strictly triangular: bit $i$ of the next state vector $(S_{t+1}, L_{t+1})$ depends exclusively on the lower input state bits at positions $0, \dots, i$ of $(S_t, L_t)$. Consequently, high-order bit components cannot influence lower-order bit positions within a single step.
-
-Conversely, low-to-high influence can propagate across intermediate bit positions within a single step through multiplication and addition carry chains. For example, when $L_t = 2^w - 1$, changing $S_t$ from $0$ to $1$ modifies the next state coordinate from $S_{t+1} = 0$ to $S_{t+1} = 1 \cdot (2(2^w - 1) + 1) \equiv -1 \pmod{2^w}$, flipping all higher bits in a single execution step. This indicates that while a change in $S_t$ can immediately propagate carries through the multiplication to all higher bits of $S_{t+1}$, the propagation of these carries to $L_{t+1}$ is mediated by the addition carry chain of $L_t$. The structural diffusion limitations of the generator are therefore defined by the linear correlations and subspace period bounds induced by its triangular T-function structure, rather than a sequential avalanche bit-delay bound.
-
----
-
-## 5. Cross-Correlations
-
-### Theorem 5 (Trajectory Bit-Layer Asymptotic Cross-Correlations)
-
-Let $X_t = (S_t, L_t)$ be the state at step $t$ over word bit-size $w \ge 2$. Define the asymptotic time-averaged cross-correlation at bit position $i \ge 1$ as:
-
-$$\rho_i = \lim_{T \to \infty} \frac{1}{T} \sum_{t=0}^{T-1} (-1)^{S_t^{[i]} \oplus L_t^{[i]}}$$
-
-For an arbitrary initial state $X_0 = (S_0, L_0)$, the exact value of $\rho_i$ is determined by the following disjoint regimes:
-
-1. Stationary Regime ($S_0 = 0$)
-
-  $$\rho_i = (-1)^{L_0^{[i]}} \quad \forall i \ge 1$$
-
-2. Odd-Seed Regime ($S_0 \equiv 1 \pmod 2$)
-
-**(a) Base layer ($i = 1$):**
-$$\rho_1 = \frac{1}{2}(-1)^{L_0^{[1]} \oplus L_0^{[0]} S_0^{[1]}}$$
-
-**(b) Higher layers ($i \ge 2$):** Let $H = 2^i$. By T-function monotonicity, the period modulo $2^{i+1}$ is exactly $2^{i+1}$ (Lemma 2), and $\rho_i$ equals the average over one projected period. Define the half-period sum bit:
-$$\delta_i = \left(\sum_{j=1}^{H} S_j\right)^{[i]}$$
-
-The full-period average reduces to a half-period average over $2^{i-1}$ terms:
-$$\rho_i = \frac{1}{2^i} \sum_{\substack{t=0 \\ t \equiv \delta_i \oplus 1 \;(\mathrm{mod}\; 2)}}^{H-1} (-1)^{S_t^{[i]} \oplus L_t^{[i]}}$$
-
-Consequently, $\rho_i \in \frac{1}{2^{i-1}}\mathbb{Z}$. It does **not** vanish identically for all initial states; its value depends on the specific carry-chain trajectory.
-
-#### 3. Dyadic Regime ($\nu_2(S_0) = v \ge 1$)
-
-For all bit layers $i \le v+1$, the exact value is:
-
-| Layer | Formula |
-|-------|---------|
-| **$i < v$** | $\rho_i = (-1)^{L_0^{[i]}}$ |
-| **$i = v$** | $\rho_v = 0$ |
-| **$i = v+1$, $L_0$ even** | $\rho_{v+1} = 0$ |
-| **$i = v+1$, $L_0$ odd** | $\rho_{v+1} = \begin{cases} (-1)^{S_0^{[v+1]} \oplus L_0^{[v+1]}} & \text{if } S_0^{[v+1]} = L_0^{[v]} \\ 0 & \text{if } S_0^{[v+1]} \neq L_0^{[v]} \end{cases}$ |
-
-For layers $i > v+1$, the correlation $\rho_i$ is governed by the scaled-system orbit at bit $i-v$ and does not admit a simple closed form without explicit enumeration.
-
----
-
-#### Proof
-
-Because the state space is finite, every trajectory enters a cycle. By T-function monotonicity (Section 2), the period $\tau_m$ modulo $2^m$ divides the full period $\tau_w$, and the projection $\pi_m$ commutes with the update. Since bit $i$ depends only on the lower $i+1$ bits, $\rho_i$ equals the average over one period of the orbit projected modulo $2^{i+1}$.
-
-1. Stationary Regime ($S_0 = 0$)
-
-By Theorem 3, $\tau_w = 1$. The update gives $S_t = 0$ and $L_t = L_0$ for all $t$. Thus $S_t^{[i]} = 0$ and $L_t^{[i]} = L_0^{[i]}$, yielding $\rho_i = (-1)^{L_0^{[i]}}$. $\blacksquare$
-
----
-
-2. Base Odd Layer ($i=1$, $S_0$ odd)
-
-Work modulo 4. Write $S_t = 2s_t + 1$ and $L_t = 2\ell_t + y_t$ with $y_t = L_t^{[0]}$. The update gives:
-$$s_{t+1} = s_t \oplus y_t, \qquad y_{t+1} = y_t \oplus 1, \qquad \ell_{t+1} = \ell_t \oplus s_{t+1} \oplus y_t$$
-
-Unrolling over the 4-step period:
-
-| $t$ | $s_t$ | $\ell_t$ | $y_t$ | $\Phi_t = s_t \oplus \ell_t$ |
-|-----|-------|----------|-------|------------------------------|
-| 0 | $s_0$ | $\ell_0$ | $y_0$ | $s_0 \oplus \ell_0$ |
-| 1 | $s_0 \oplus y_0$ | $\ell_0 \oplus s_0$ | $y_0 \oplus 1$ | $\ell_0 \oplus y_0$ |
-| 2 | $s_0 \oplus 1$ | $\ell_0 \oplus y_0$ | $y_0$ | $s_0 \oplus \ell_0 \oplus y_0 \oplus 1$ |
-| 3 | $s_0 \oplus y_0 \oplus 1$ | $\ell_0 \oplus s_0 \oplus y_0 \oplus 1$ | $y_0 \oplus 1$ | $\ell_0$ |
-
-Summing:
-- If $y_0 = 0$: $(-1)^{s_0 \oplus \ell_0} + (-1)^{\ell_0} - (-1)^{s_0 \oplus \ell_0} + (-1)^{\ell_0} = 2(-1)^{\ell_0}$
-- If $y_0 = 1$: $(-1)^{s_0 \oplus \ell_0} - (-1)^{\ell_0} + (-1)^{s_0 \oplus \ell_0} + (-1)^{\ell_0} = 2(-1)^{s_0 \oplus \ell_0}$
-
-With $\ell_0 = L_0^{[1]}$, $s_0 = S_0^{[1]}$, $y_0 = L_0^{[0]}$:
-$$\rho_1 = \frac{2(-1)^{L_0^{[1]} \oplus L_0^{[0]} S_0^{[1]}}}{4} = \frac{1}{2}(-1)^{L_0^{[1]} \oplus L_0^{[0]} S_0^{[1]}} \quad \blacksquare$$
-
----
-
-3. Higher Odd Layers ($i \ge 2$, $S_0$ odd)
-
-By Lemma 2, the period modulo $2^{i+1}$ is $2^{i+1}$ and the half-period shift satisfies:
-$$S_{t+H} \equiv S_t + 2^i \pmod{2^{i+1}} \implies S_{t+H}^{[i]} = S_t^{[i]} \oplus 1$$
-where $H = 2^i$.
-
-Let $\Sigma_i(t) = \sum_{j=1}^{H} S_{t+j}$. From $S_{t+j+H} \equiv S_{t+j} + 2^i$:
-$$\Sigma_i(t+H) \equiv \Sigma_i(t) + H \cdot 2^i = \Sigma_i(t) + 2^{2i} \equiv \Sigma_i(t) \pmod{2^{i+1}}$$
-Since $L_{t+2H} \equiv L_t \pmod{2^{i+1}}$, we have $\Sigma_i(t) + \Sigma_i(t+H) \equiv 0 \pmod{2^{i+1}}$, hence $2\Sigma_i(t) \equiv 0 \pmod{2^{i+1}}$. Therefore:
-$$\Sigma_i(t) \equiv 0 \pmod{2^i}$$
-
-**No carry into bit $i$.** Because $\Sigma_i(t) \equiv 0 \pmod{2^i}$, the lower $i$ bits of $\Sigma_i(t)$ are zero. Adding $L_t + \Sigma_i(t)$ generates no carry into bit $i$, so:
-$$L_{t+H}^{[i]} = L_t^{[i]} \oplus \delta_i(t), \quad \text{where } \delta_i(t) = \Sigma_i(t)^{[i]}$$
-
-**Alternation of $\delta_i(t)$.** From $S_{t+H+1} \equiv S_{t+1} + 2^i$:
-$$\Sigma_i(t+1) - \Sigma_i(t) = S_{t+H+1} - S_{t+1} \equiv 2^i \pmod{2^{i+1}}$$
-Thus $\delta_i(t+1) = \delta_i(t) \oplus 1$.
-
-Partition the $2H$ terms into $H$ pairs $(t, t+H)$:
-$$(-1)^{\Phi_t^{[i]}} + (-1)^{\Phi_t^{[i]} \oplus 1 \oplus \delta_i(t)}$$
-
-- If $\delta_i(t) = 1$: pair sums to $2(-1)^{\Phi_t^{[i]}}$.
-- If $\delta_i(t) = 0$: pair sums to $0$.
-
-Since $\delta_i(t) = \delta_i(0) \oplus t$, exactly half the pairs survive (those with $t \equiv \delta_i(0) \oplus 1 \pmod 2$), giving:
-$$\rho_i = \frac{2}{2^{i+1}} \sum_{\substack{t=0 \\ t \equiv \delta_i \oplus 1 \;(\mathrm{mod}\; 2)}}^{H-1} (-1)^{\Phi_t^{[i]}} = \frac{1}{2^i} \sum_{\substack{t=0 \\ t \equiv \delta_i \oplus 1 \;(\mathrm{mod}\; 2)}}^{H-1} (-1)^{\Phi_t^{[i]}} \quad \blacksquare$$
-
----
-
-4. Dyadic Regime ($\nu_2(S_0) = v \ge 1$)
-
-Write $S_0 = 2^v u$ with $u$ odd. Since $S_t$ is always an odd multiple of $2^v$, bits $0, \dots, v-1$ of $S_t$ are identically zero, and bit $v$ is identically 1.
-
-**Layer $i < v$.** Since $S_{t+1} \equiv 0 \pmod{2^v}$, adding $S_{t+1}$ to $L_t$ does not change bits $0, \dots, v-1$. Thus $L_t^{[i]} = L_0^{[i]}$ is constant, and with $S_t^{[i]} = 0$:
-$$\rho_i = (-1)^{L_0^{[i]}}$$
-
-**Layer $i = v$.** Modulo $2^{v+1}$, any odd multiple of $2^v$ is congruent to $2^v$. Therefore:
-$$S_{t+1} \equiv 2^v \pmod{2^{v+1}}$$
-and the update for $L$ becomes:
-$$L_{t+1} \equiv L_t + 2^v \pmod{2^{v+1}}$$
-Adding $2^v$ modulo $2^{v+1}$ flips exactly bit $v$ and leaves all lower bits unchanged. Hence:
-$$L_{t+1}^{[v]} = L_t^{[v]} \oplus 1$$
-so $L_t^{[v]}$ alternates with period 2. By Lemma 3, the full orbit period $\tau$ is a power of 2 and $\tau \ge 2$, hence even. Over $\tau$ steps, $L_t^{[v]}$ takes values 0 and 1 equally often, so:
-$$\rho_v = \frac{1}{\tau} \sum_{t=0}^{\tau-1} (-1)^{1 \oplus L_t^{[v]}} = -\frac{1}{\tau} \sum_{t=0}^{\tau-1} (-1)^{L_t^{[v]}} = 0$$
-
-**Layer $i = v+1$.** Map to the scaled system $(S'_t, L'_t)$ of Lemma 3 with $L_t = L_0 + 2^v L'_t$. The bit decomposes as:
-$$S_t^{[v+1]} = S'_t^{[1]}, \qquad L_t^{[v+1]} = L_0^{[v+1]} \oplus L'_t^{[1]} \oplus (L_0^{[v]} \cdot L'_t^{[0]})$$ where the last term is the carry from bit $v$ into bit $v+1$.
-
-*Sub-case (a): $L_0$ even.* By Lemma 3 (Case 1), the scaled system modulo 4 has $M_t \equiv 1 \pmod 4$, so $S'_t \equiv u$ and $L'_t \equiv t u \pmod 4$. The 4-step orbit gives parities:
-$$\Phi_0 = a, \quad \Phi_1 = b, \quad \Phi_2 = a \oplus 1, \quad \Phi_3 = b \oplus 1$$
-with $a = u^{[1]} \oplus L_0^{[v+1]}$ and $b = L_0^{[v+1]} \oplus L_0^{[v]}$. The sum $(-1)^a + (-1)^b + (-1)^{a \oplus 1} + (-1)^{b \oplus 1} = 0$. Hence $\rho_{v+1} = 0$.
-
-*Sub-case (b): $L_0$ odd.* By Lemma 3 (Regime 1, since $m=2 \le h+1$ with $h \ge 1$), the scaled system modulo 4 has $M_t \equiv -1 \pmod 4$ and period 2. The orbit is $(u, 0) \leftrightarrow (-u, -u)$, giving:
-$$\Phi_0 = u^{[1]} \oplus L_0^{[v+1]}, \qquad \Phi_1 = L_0^{[v+1]} \oplus L_0^{[v]}$$
-
-Their XOR is $\Phi_0 \oplus \Phi_1 = u^{[1]} \oplus L_0^{[v]} = S_0^{[v+1]} \oplus L_0^{[v]}$.
-
-- If $S_0^{[v+1]} \neq L_0^{[v]}$: then $\Phi_0 \neq \Phi_1$, so $(-1)^{\Phi_0} + (-1)^{\Phi_1} = 0$, giving $\rho_{v+1} = 0$.
-- If $S_0^{[v+1]} = L_0^{[v]}$: then $\Phi_0 = \Phi_1 = S_0^{[v+1]} \oplus L_0^{[v+1]}$, so the sum is $2(-1)^{S_0^{[v+1]} \oplus L_0^{[v+1]}}$, giving $\rho_{v+1} = (-1)^{S_0^{[v+1]} \oplus L_0^{[v+1]}}$. $\blacksquare$
+# Analysis and Verification of the Bi-Variable Shuffler GeneratorThis document presents the formalized state transformation analysis, distribution theorems, and architectural bounds for the "Bi-Variable Shuffler" pseudo-random number generator (PRNG). The generator is modeled as an algebraic state machine, deriving its structural properties directly from its underlying modular update equations.The state at step $t$ is denoted as a vector $X_t = (S_t, L_t) \in \mathbb{Z}_{2^w} \times \mathbb{Z}_{2^w}$, where $w \ge 1$ represents the word bit-size. Using zero-based indexing, the $i$-th bit of a value $x$ is denoted $x^{[i]}$, and the reduction of $x$ modulo $2^m$ is denoted $[x]_m$. The single-step update equations are defined by the system:$$S_{t+1} \equiv S_t (2L_t + 1) \pmod{2^w}$$$$L_{t+1} \equiv L_t + S_{t+1} \equiv L_t + S_t(2L_t + 1) \pmod{2^w}$$---## 1. Distribution and Input-Output CorrelationLet $\chi_{a,b}(X) = \langle a, S \rangle \oplus \langle b, L \rangle$ be a linear component of the state vector using the Walsh-Hadamard linear masks $(a, b) \in \mathbb{F}_2^w \times \mathbb{F}_2^w$. We distinguish between the marginal distribution at step $t$ and the input-output cross-correlation across multiple steps.### Theorem 1 (Marginal Uniformity)Let the initial state $X_0 = (S_0, L_0)$ be sampled from a uniform probability distribution $\mathcal{D}_0 = \mathcal{U}(\mathbb{Z}_{2^w} \times \mathbb{Z}_{2^w})$. For all discrete steps $t \ge 0$, the marginal distribution $\mathcal{D}_t$ remains exactly uniform: $\mathcal{D}_t \equiv \mathcal{U}(\mathbb{Z}_{2^w} \times \mathbb{Z}_{2^w})$. Consequently, the marginal bias vanishes identically:$$\epsilon_{\mathcal{D}_t}(\chi_{a,b}) = \left|2\mathbb{P}_{X_t \sim \mathcal{D}_t}(\chi_{a,b}(X_t) = 1) - 1\right| = 0 \quad \forall (a,b) \neq (0,0)$$#### ProofLet the state transition be $(S', L') = f(S, L)$. The update equations are:1. $S' \equiv S(2L + 1) \pmod{2^w}$2. $L' \equiv L + S' \pmod{2^w}$From equation (2), we uniquely recover $L \equiv L' - S' \pmod{2^w}$. Substituting this into equation (1) yields:$$S' \equiv S(2(L' - S') + 1) \pmod{2^w}$$Because $2(L' - S') + 1$ is strictly odd, $\gcd(2(L' - S') + 1, 2^w) = 1$, providing a unique multiplicative inverse modulo $2^w$. We recover $S$ explicitly:$$S \equiv S' \cdot (2(L' - S') + 1)^{-1} \pmod{2^w}$$Every image $(S', L')$ has a unique preimage $(S, L)$, making $f$ a bijection. A bijective mapping on a finite state space preserves the uniform distribution exactly. $\blacksquare$### Theorem 2 (Persistent Cross-Correlation)Let $X_0 \sim \mathcal{U}(\mathbb{Z}_{2^w} \times \mathbb{Z}_{2^w})$ and let $X_t = f^t(X_0)$ be the deterministic state at step $t$. Define the least significant state bits as $s_t = S_t^{[0]}$ and $\ell_t = L_t^{[0]}$. Let $e_0 = (1, 0, 0, \dots, 0) \in \mathbb{F}_2^w$ be the standard basis vector representing the least significant bit position. For a fixed target step $t \ge 0$, choosing the step-dependent initial mask pair $a_0 = (t \bmod 2) \cdot e_0$, $b_0 = e_0$ and the output mask pair $a_t = \vec{0}$, $b_t = e_0$ yields an input-output correlation bias of:$$\epsilon(t) = \left| \mathbb{E}_{X_0 \sim \mathcal{U}} \left[ (-1)^{\chi_{a_0,b_0}(X_0) \oplus \chi_{a_t,b_t}(X_t)} \right] \right| = 1$$Notably, because the input masks $a_0, b_0$ depend on the step count $t$, this formulation identifies a time-varying linear correlation rather than a static linear correlation weakness.#### ProofProjecting the update equations onto the least significant bit layer isolates the dynamics modulo 2:$$S_{j+1} \equiv S_j(2L_j + 1) \equiv S_j \pmod 2 \implies s_t = s_0$$$$L_{j+1} \equiv L_j + S_{j+1} \equiv L_j + s_0 \pmod 2 \implies \ell_t = \ell_0 \oplus (t \bmod 2)s_0$$Evaluating the inner products with the vector masks collapses them to the 0-th bit components:$$\langle a_0, S_0 \rangle = (t \bmod 2)s_0, \quad \langle b_0, L_0 \rangle = \ell_0, \quad \langle a_t, S_t \rangle = 0, \quad \langle b_t, L_t \rangle = \ell_t$$The joint linear component combination evaluates to:$$\chi_{a_0,b_0}(X_0) \oplus \chi_{a_t,b_t}(X_t) = (t \bmod 2)s_0 \oplus \ell_0 \oplus \ell_t$$Substituting the propagation identity for $\ell_t$ yields:$$(t \bmod 2)s_0 \oplus \ell_0 \oplus \ell_0 \oplus (t \bmod 2)s_0 \equiv 0 \pmod 2$$Because this joint XOR combination evaluates to $0$ deterministically for all initial states, the expectation simplifies to $\epsilon(t) = \left| \mathbb{E}_{X_0 \sim \mathcal{U}} \left[ (-1)^0 \right] \right| = 1$. $\blacksquare$---## 2. Cycle Structure and Period Bounds### Monotonicity of T-Function ProjectionsLet $\pi_m: \mathbb{Z}_{2^w} \times \mathbb{Z}_{2^w} \to \mathbb{Z}_{2^m} \times \mathbb{Z}_{2^m}$ be the canonical projection mapping a state to its lower $m$ bits. The state update equations are T-functions, meaning $\pi_m(f(X)) = f_m(\pi_m(X))$, where $f_m$ is the state update restricted to $\mathbb{Z}_{2^m} \times \mathbb{Z}_{2^m}$. This implies T-function monotonicity: if a state has period $\tau_w$ modulo $2^w$, its projection modulo $2^m$ has period $\tau_m$ dividing $\tau_w$. For any $1 \le m \le w$, the period of the $(m-1)$-bit projection $\tau_{m-1}$ must divide the $m$-bit period $\tau_m$.---### Lemma 1 (Maximum Sub-Space Period Bounds)Let $X_{t, m} = ([S_t]_m, [L_t]_m) \in \mathbb{Z}_{2^m} \times \mathbb{Z}_{2^m}$ represent the state vector restricted to its lower $m$ bits. For any initial state, the exact period $\tau_m$ satisfies $\tau_m = 2^j$ for some $j \le m$.#### ProofWe proceed by mathematical induction on the bit-slice depth $m$.1. **Base Case ($m=1$):** Modulo 2, the system updates via $S_{t+1} \equiv S_t$ and $L_{t+1} \equiv L_t + S_t$.   - If $S_0 = 0$, then $S_{t} = 0$ and $L_{t} = L_0$, yielding $\tau_1 = 1 = 2^0$.   - If $S_0 = 1$, then $S_{t} = 1$ and $L_{t+1} \equiv L_t + 1 \pmod 2$, yielding $\tau_1 = 2 = 2^1$.2. **Inductive Step:** Assume that for the lower $m-1$ bits, the period $\tau_{m-1} = 2^j$ where $j \le m-1$. We analyze the bit layer at index $i = m-1$, defining $X_t^{[i]} = (S_t^{[i]}, L_t^{[i]})$. The updates for bit layer $i$ form an affine system over $\mathbb{F}_2^2$:   $$X_{t+1}^{[i]} = B X_t^{[i]} \oplus \vec{C}(t) \quad \text{where } B = \begin{pmatrix} 1 & 0 \\ 1 & 1 \end{pmatrix}$$   Let $\gamma_S(t)$ and $\gamma_L(t)$ be the carry bits into index $i$ from the lower $i$ bits of the multiplication $S_t(2L_t+1) \pmod{2^m}$ and the addition $L_t + S_{t+1} \pmod{2^m}$, respectively. The forcing vector is:   $$\vec{C}(t) = \begin{pmatrix} \gamma_S(t) \\ \gamma_S(t) \oplus \gamma_L(t) \end{pmatrix}$$   Unrolling this recurrence over $\tau_{m-1}$ steps gives the affine map $X_{t+\tau_{m-1}}^{[i]} = B^{\tau_{m-1}} X_t^{[i]} \oplus \vec{\Delta}(t)$. We evaluate the system across two regimes of $\tau_{m-1}$:   - **Case 1: $\tau_{m-1} = 2^j$ is even ($j \ge 1$)**. The projection $\pi_{m-1}$ commutes with $f$, guaranteeing $\tau_{m-1}$ divides $\tau_m$. Since $B^2 \equiv I \pmod 2$, $B^{\tau_{m-1}} = (B^2)^{2^{j-1}} \equiv I \pmod 2$. The map simplifies to $X_{t+\tau_{m-1}}^{[i]} = X_t^{[i]} \oplus \vec{\Delta}(t)$. The lower-bit carries are periodic with period $\tau_{m-1}$, so $\vec{\Delta}(t+\tau_{m-1}) = \vec{\Delta}(t)$. Applying this map twice yields $X_{t+2\tau_{m-1}}^{[i]} = X_t^{[i]} \oplus \vec{\Delta}(t) \oplus \vec{\Delta}(t+\tau_{m-1}) = X_t^{[i]}$. By T-function monotonicity, the projection modulo $2^{m-1}$ has period $\tau_{m-1}$, so the period modulo $2^m$ must be a multiple of $\tau_{m-1}$. Since applying the map twice returns the state to $X_t^{[i]}$, the period modulo $2^m$ must also divide $2\tau_{m-1}$. Hence $\tau_m \in \{\tau_{m-1}, 2\tau_{m-1}\}$, both of which are powers of two bounded by $2^m$.   - **Case 2: $\tau_{m-1} = 1$ ($j = 0$)**. The state projection modulo $2^{m-1}$ is a fixed point, so $L_{t+1} \equiv L_t \pmod{2^{m-1}}$. This requires $S_{t+1} \equiv 0 \pmod{2^{m-1}}$, forcing $[S_t]_{m-1} \equiv 0 \pmod{2^{m-1}}$. Modulo $2^m$, $S_t \in \{0, 2^{m-1}\}$.     - If $S_t \equiv 0 \pmod{2^m}$, the multiplication produces no carry into bit $m-1$ ($\gamma_S(t) = 0$), and $S_{t+1} \equiv 0 \pmod{2^m}$ yields no addition carry ($\gamma_L(t) = 0$). Thus $\vec{C}(t) = \vec{0}$, reducing the recurrence to $X_{t+1}^{[i]} = B X_t^{[i]}$. Since $B^2 = I$, the period is at most 2.     - If $S_t \equiv 2^{m-1} \pmod{2^m}$, the multiplication $2^{m-1}(2L_t+1) \equiv 2^{m-1} \pmod{2^m}$ is carry-free ($\gamma_S(t) = 0$). Since $S_{t+1} \equiv 2^{m-1} \pmod{2^m}$ is constant with zero lower bits, the addition produces no carry ($\gamma_L(t) = 0$). Thus $\vec{C}(t) = \vec{0}$, reducing the system to $X_{t+1}^{[i]} = B X_t^{[i]}$. Because $S_{t+1} \equiv 2^{m-1} \pmod{2^m}$ forces $L_{t+1} \equiv L_t + 2^{m-1} \not\equiv L_t \pmod{2^m}$, the period is exactly 2.   Thus $\tau_m \in \{1, 2\}$, both powers of two bounded by $2^m$, completing the inductive step. $\blacksquare$---### Lemma 2 (Multiplicative Cycle Valuation and Period Doubling)Let $m \ge 2$, $S_0 \equiv 1 \pmod{2}$, and $\tau_{m-1} = 2^{m-1}$. Then $P_{m-1} = \prod_{t=0}^{2^{m-1}-1}(2L_t+1) \equiv 1 + 2^{m-1} \pmod{2^m}$, and $\tau_m = 2^m$.#### Proof1. **Telescoping Product and Shift Invariance:** Since $S_0$ is odd, all $S_t$ are invertible modulo $2^w$. From $S_{t+1} \equiv S_t(2L_t+1)$, we isolate $2L_t+1 \equiv S_{t+1}S_t^{-1}$. The product over $\tau = 2^{m-1}$ terms telescopes:   $$P_{m-1} = \prod_{t=0}^{\tau-1}(2L_t+1) \equiv \prod_{t=0}^{\tau-1} S_{t+1}S_t^{-1} \equiv S_\tau S_0^{-1} \pmod{2^m}$$   Since $\tau$ is the period modulo $2^{m-1}$, $S_\tau \equiv S_0 \pmod{2^{m-1}}$, so $S_\tau = S_0 + c \cdot 2^{m-1}$ for $c \in \{0,1\}$. Using $S_0^{-1} \equiv 1 \pmod{2}$:   $$P_{m-1} \equiv 1 + c \cdot 2^{m-1} \pmod{2^m} \tag{$\star$}$$   Since $L_t \pmod{2^{m-1}}$ has period $\tau$ and $2L_t+1 \pmod{2^m}$ depends only on $L_t \pmod{2^{m-1}}$, the product over any $\tau$ consecutive multipliers equals $P_{m-1} \pmod{2^m}$. Hence $S_{j+\tau} \equiv S_j(1 + c \cdot 2^{m-1}) \pmod{2^m}$ for all $j \ge 0$.2. **Induction on $m$:** We prove $c = 1$ for all $m \ge 2$ by induction.   - **Base case ($m=2$):** Here $\tau = 2$. Since $S_t$ is always odd, $L_{t+1} \equiv L_t + S_{t+1} \equiv L_t + 1 \pmod{2}$, so $L_0$ and $L_1$ have opposite parities. Thus $\{2L_0+1,\, 2L_1+1\} \equiv \{1,\, 3\} \pmod{4}$, giving:     $$P_1 \equiv 1 \cdot 3 = 3 \equiv 1 + 2^1 \pmod{4}$$   - **Inductive step ($m \to m+1$, for $m \ge 2$):** Assume $P_{m-1} \equiv 1 + 2^{m-1} \pmod{2^m}$ (so $c=1$). This gives $S_{t+\tau} \equiv S_t + 2^{m-1} \pmod{2^m}$ for all $t$. We must show $P_m \equiv 1 + 2^m \pmod{2^{m+1}}$. Split the full-period product: $P_m = P_{m-1} \cdot Q \pmod{2^{m+1}}$, where $Q = \prod_{t=0}^{\tau-1}(2L_{t+\tau}+1)$.   - **Relating $Q$ to $P_{m-1}$:** Write $L_{t+\tau} = L_t + y_t \cdot 2^{m-1}$ for $y_t \in \mathbb{Z}_4$ (modulo $2^{m+1}$). Since $(2L_t+1)^{-1}$ is odd, $y_t \cdot 2^m \cdot (2L_t+1)^{-1} \equiv y_t \cdot 2^m \pmod{2^{m+1}}$, giving:     $$\frac{2L_{t+\tau}+1}{2L_t+1} \equiv 1 + y_t \cdot 2^m \pmod{2^{m+1}}$$     Multiplying over $t = 0, \dots, \tau-1$ (cross terms $y_i y_j 2^{2m} \equiv 0 \pmod{2^{m+1}}$ since $2m \ge m+1$):     $$Q \equiv P_{m-1}\!\left(1 + 2^m \Sigma\right) \pmod{2^{m+1}}, \quad \Sigma = \sum_{t=0}^{\tau-1} y_t \pmod{2}$$   - **Parity of $\Sigma$:** Define $W_t = \sum_{j=1}^{\tau} S_{t+j} = L_{t+\tau} - L_t$, so $y_t \equiv W_t / 2^{m-1} \pmod{2}$. By the induction hypothesis applied at index $t+1$:     $$W_{t+1} - W_t = S_{t+\tau+1} - S_{t+1} \equiv 2^{m-1} \pmod{2^m}$$   - Dividing by $2^{m-1}$: $y_{t+1} \equiv y_t + 1 \pmod{2}$. Thus $y_t$ alternates parity, and since $\tau = 2^{m-1}$ is even:     $$\Sigma \equiv \sum_{t=0}^{\tau-1}(y_0 + t) \equiv \tau y_0 + \frac{\tau(\tau-1)}{2} \equiv \frac{\tau(\tau-1)}{2} \pmod{2}$$   - **Completion:** Combining $P_m \equiv P_{m-1}^2(1 + 2^m \Sigma) \pmod{2^{m+1}}$ with the expansion of $P_{m-1}^2$. Write $P_{m-1} = 1 + 2^{m-1} + d \cdot 2^m$ and discard terms $\ge 2^{m+1}$:     $$P_{m-1}^2 \equiv 1 + 2^m + 2^{2m-2} \pmod{2^{m+1}}$$     we obtain:     $$P_m \equiv (1 + 2^m + 2^{2m-2})(1 + 2^m \Sigma) \equiv 1 + 2^m + 2^{2m-2} + 2^m \Sigma \pmod{2^{m+1}}$$   - Factoring $2^{2m-2} = 2^m \cdot 2^{m-2}$:     $$P_m \equiv 1 + 2^m + 2^m\!\left(2^{m-2} + \Sigma\right) \pmod{2^{m+1}}$$   - The correction term satisfies:     $$2^{m-2} + \Sigma \equiv 2^{m-2} + \frac{\tau(\tau-1)}{2} = 2^{m-2} + 2^{m-2}(2^{m-1}-1) = 2^{m-2} \cdot 2^{m-1} = 2^{2m-3} \pmod{2}$$     For all $m \ge 2$, $2m-3 \ge 1$, so $2^{2m-3}$ is even. Therefore $2^m(2^{m-2} + \Sigma) \equiv 0 \pmod{2^{m+1}}$, yielding:     $$P_m \equiv 1 + 2^m \pmod{2^{m+1}}$$This completes the induction. $\blacksquare$---### Lemma 3a (Period-Doubling Lifting)Let $(S'_t, L'_t)$ be a T-function system modulo $2^{m+1}$ with update $S'_{t+1} \equiv S'_t M_t$, $L'_{t+1} \equiv L'_t + S'_{t+1} \pmod{2^{m+1}}$, where all $M_t$ are odd. Suppose:1. The minimal period modulo $2^m$ is $p$ (a power of 2).2. $M_{t+p} \equiv M_t \pmod{2^{m+2}}$ for all $t$.3. $S'_p \equiv S'_0(1 + \alpha 2^m) \pmod{2^{m+1}}$ and $L'_p \equiv L'_0 + \beta 2^m \pmod{2^{m+1}}$.4. Either $m \ge 2$, or $\alpha$ is even when $m = 1$.Then:- $S'_{2p} \equiv S'_0(1 + \alpha 2^{m+1}) \pmod{2^{m+2}}$.- $L'_{2p} \equiv L'_0 + \beta 2^{m+1} \pmod{2^{m+2}}$.- If at least one of $\alpha, \beta$ is odd, the minimal period modulo $2^{m+1}$ is exactly $2p$.#### ProofFrom hypothesis (3), write $S'_p = S'_0(1 + \alpha 2^m + \gamma 2^{m+1})$ for some integer $\gamma$. By hypothesis (2), the multiplier sequence is periodic with period $p$ modulo $2^{m+2}$, so:$$\prod_{j=0}^{p-1} M_{p+j} \equiv \prod_{j=0}^{p-1} M_j \equiv \frac{S'_p}{S'_0} \equiv 1 + \alpha 2^m + \gamma 2^{m+1} \pmod{2^{m+2}}$$Then:$$S'_{2p} = S'_p \cdot \prod_{j=0}^{p-1} M_{p+j} \equiv S'_0(1 + \alpha 2^m + \gamma 2^{m+1})^2 \pmod{2^{m+2}}$$Expanding:$$(1 + \alpha 2^m + \gamma 2^{m+1})^2 = 1 + 2\alpha 2^m + 2\gamma 2^{m+1} + \alpha^2 2^{2m} + 2\alpha\gamma 2^{2m+1} + \gamma^2 2^{2m+2}$$By hypothesis (4), $\alpha^2 2^{2m} \equiv 0 \pmod{2^{m+2}}$ (since $2m \ge m+2$ for $m \ge 2$, and for $m=1$, $\alpha$ even implies $\alpha^2 2^2 \equiv 0 \pmod 8$). The cross terms $2\alpha\gamma 2^{2m+1}$ and $\gamma^2 2^{2m+2}$ vanish modulo $2^{m+2}$ for all $m \ge 1$. Thus:$$S'_{2p} \equiv S'_0(1 + \alpha 2^{m+1}) \pmod{2^{m+2}}$$For $L'$, let $\Sigma = L'_p - L'_0 = \sum_{j=1}^{p} S'_j \equiv \beta 2^m \pmod{2^{m+1}}$. Since $S'_{p+j} \equiv S'_j(1 + \alpha 2^m + \gamma 2^{m+1}) \pmod{2^{m+2}}$:$$L'_{2p} - L'_0 = \sum_{j=1}^{p} S'_{p+j} + \sum_{j=1}^{p} S'_j \equiv (1 + \alpha 2^m + \gamma 2^{m+1})\Sigma + \Sigma \pmod{2^{m+2}}$$$$= (2 + \alpha 2^m + \gamma 2^{m+1})\Sigma$$Since $\Sigma \equiv \beta 2^m \pmod{2^{m+1}}$, write $\Sigma = \beta 2^m + \delta 2^{m+1}$. Then:$$(2 + \alpha 2^m + \gamma 2^{m+1})(\beta 2^m + \delta 2^{m+1}) = 2\beta 2^m + 2\delta 2^{m+1} + \alpha\beta 2^{2m} + \text{higher terms}$$All terms with $2^{2m}$ or higher vanish modulo $2^{m+2}$ for $m \ge 1$ (since $2m \ge m+2$ for $m \ge 2$, and for $m=1$, $\alpha$ even ensures $\alpha\beta 2^2 \equiv 0 \pmod 8$). Therefore:$$L'_{2p} - L'_0 \equiv \beta 2^{m+1} \pmod{2^{m+2}}$$For the period claim: if at least one of $\alpha, \beta$ is odd, then $(S'_p, L'_p) \not\equiv (S'_0, L'_0) \pmod{2^{m+1}}$, so the minimal period is not $p$. By T-function monotonicity, the projection modulo $2^m$ has period $p$, so the minimal period modulo $2^{m+1}$ must divide $2p$ and be a multiple of $p$. Since $p$ is excluded, the minimal period modulo $2^{m+1}$ is exactly $2p$. $\blacksquare$---### Lemma 3 (Scaled System Period Growth)Let $S_0 = 2^k u$ with $u$ odd, $k \ge 1$, and let $L_t = L_0 + 2^k L'_t \pmod{2^w}$ define the integer quotient $L'_t \in \mathbb{Z}_{2^{w-k}}$. Let the scaled system modulo $2^m$ ($1 \le m \le w-k$) be defined by the state $(S'_t, L'_t)$ with initial state $(u, 0)$ and update rules:$$S'_{t+1} \equiv S'_t M_t \pmod{2^m}, \quad L'_{t+1} \equiv L'_t + S'_{t+1} \pmod{2^m}$$where $M_t = 2^{k+1} L'_t + 2L_0 + 1$. The exact period $\tau'_m$ of this scaled system modulo $2^m$ is governed by two behavioral regimes depending on the initial parameters:* If $L_0$ is even: $\tau'_m = 2^m$ for all $m \ge 1$.* If $L_0$ is odd: let $t_0 = \nu_2(L_0+1)$ and $h = \min(k, t_0)$. Then $\tau'_m = 2^{\max(1, m-h)}$.#### Proof**Preliminary: Lemma 3a (Period-Doubling Lifting).** *[Stated and proved above.]***Base Case ($m=1$).** Since $S'_0 = u \equiv 1 \pmod{2}$, we have $S'_t \equiv 1 \pmod{2}$ for all $t$. The multiplier satisfies $M_t \equiv 1 \pmod{2}$, so $L'_{t+1} \equiv L'_t + 1 \pmod{2}$, which has period 2. Thus $\tau'_1 = 2$. This matches both stated formulas: $2^1 = 2$ when $L_0$ is even, and $2^{\max(1, 1-h)} = 2^1 = 2$ when $L_0$ is odd since $h \ge 1$.**Case 1: $L_0$ even.** We prove by induction on $m \ge 1$ that $\tau'_m = 2^m$ and $\Sigma_m(t) = \sum_{j=1}^{2^{m-1}} S'_{t+j} \equiv 2^{m-1} \pmod{2^m}$ for all $t \ge 0$.*Base ($m=1$):* $\Sigma_1(t) = S'_{t+1} \equiv 1 = 2^0 \pmod{2}$, and $\tau'_1 = 2$.*Inductive step ($m \to m+1$ for $m \ge 1$):* Assume $\tau'_m = 2^m$ and $\Sigma_m(t) \equiv 2^{m-1} \pmod{2^m}$. We invoke Lemma 3a with $p = 2^m$.- **(i) Multiplier periodicity:** From the hypothesis, $L'_{t+2^{m-1}} - L'_t = \Sigma_m(t) \equiv 2^{m-1} \pmod{2^m}$. Scaling by $2^{k+1}$:  $$2^{k+1}(L'_{t+2^{m-1}} - L'_t) \equiv 2^{k+m} \pmod{2^{k+m+1}}$$  Since $k \ge 1$, we have $k+m \ge m+1$, so $M_{t+2^{m-1}} \equiv M_t \pmod{2^{m+1}}$. By induction, the sequence $L'_t \pmod{2^m}$ has period $2^m$, so $L'_{t+2^m} \equiv L'_t \pmod{2^m}$. Therefore:  $$M_{t+2^m} - M_t = 2^{k+1}(L'_{t+2^m} - L'_t) \equiv 0 \pmod{2^{m+2}}$$  since $k \ge 1$ implies $k+m+1 \ge m+2$, and $L'_{t+2^m} - L'_t \equiv 0 \pmod{2^m}$. This verifies hypothesis (2) of Lemma 3a.- **(ii) Half-period displacement:** The $S'$ coordinate satisfies $S'_{t+2^m} \equiv S'_t \pmod{2^m}$ by the induction hypothesis. Thus $S'_{2^m} \equiv S'_0(1 + \alpha 2^m) \pmod{2^{m+1}}$ for some $\alpha \in \{0,1\}$. The $L'$ coordinate satisfies:  $$L'_{2^m} - L'_0 = \sum_{j=1}^{2^m} S'_j = \sum_{j=1}^{2^{m-1}} S'_j + \sum_{j=1}^{2^{m-1}} S'_{2^{m-1}+j}$$    By the periodicity of $M_t$ modulo $2^{m+1}$ established in (i), $S'_{2^{m-1}+j} \equiv P_m \cdot S'_j \pmod{2^{m+1}}$ where $P_m = \prod_{i=0}^{2^{m-1}-1} M_i$. The full-period product telescopes to $S'_{2^m}/S'_0 \equiv 1 \pmod{2^m}$. Since $L_0$ is even and $k \ge 1$, every $M_t \equiv 2L_0+1 \equiv 1 \pmod{4}$, so $P_m \equiv 1 \pmod{4}$, which guarantees $1+P_m \equiv 2 \pmod 4$. Writing $1+P_m = 2 + 4x$ for some integer $x$ and using the induction hypothesis $\Sigma_m(0) = 2^{m-1} + d \cdot 2^m$ for some integer $d$:  $$L'_{2^m} - L'_0 = \Sigma_m(0) + \sum_{j=1}^{2^{m-1}} S'_{2^{m-1}+j} \equiv (1 + P_m)\Sigma_m(0) \pmod{2^{m+1}}$$  $$\equiv (2 + 4x)(2^{m-1} + d \cdot 2^m) = 2^m + d \cdot 2^{m+1} + x \cdot 2^{m+1} + x \cdot d \cdot 2^{m+2} \equiv 2^m \pmod{2^{m+1}}$$    This gives $L'_{2^m} \equiv L'_0 + 2^m \pmod{2^{m+1}}$, so $\beta = 1$ (odd). Because the system is time-homogeneous and the orbit is periodic, this half-period displacement property at $t=0$ implies the identical displacement for all $t \ge 0$. We do not need to determine $\alpha$; the $L'$ coordinate alone drives the period doubling.- **(iii) Lemma 3a invocation:** Hypothesis (4) is satisfied because either $m \ge 2$, or for $m=1$, the product $P_1 = M_0 M_1 \equiv 1 \pmod{4}$ (since both multipliers are $\equiv 1 \pmod 4$), giving $S'_2 \equiv S'_0 \pmod{4}$, so $\alpha = 0$ (even). Since $\beta = 1$ is odd, Lemma 3a yields $\tau'_{m+1} = 2^{m+1}$.This completes the induction for Case 1.**Case 2: $L_0$ is odd.** Let $t_0 = \nu_2(L_0+1) \ge 1$ and $h = \min(k, t_0)$.*Regime 1 ($1 \le m \le h+1$):* Since $m \le k+1$, $2^{k+1} \equiv 0 \pmod{2^m}$. Simultaneously, $m \le t_0+1 \implies 2L_0+1 \equiv -1 \pmod{2^m}$. The multiplier collapses to $M_t \equiv -1 \pmod{2^m}$ for all $t$. The system simplifies to $S'_{t+1} \equiv -S'_t$, $L'_{t+1} \equiv L'_t - S'_t$. From $(u, 0)$, the orbit traces $(u, 0) \mapsto (-u, -u) \mapsto (u, 0)$. Since $u \not\equiv -u \pmod{2^m}$ for $m > 1$, and $L'_1 = -u \equiv 1 \not\equiv 0 = L'_0 \pmod{2}$ for $m=1$, the exact period is $\tau'_m = 2 = 2^{\max(1, m-h)}$.*Regime 2 ($m > h+1$):* We prove $\tau'_m = 2^{m-h}$ by induction on $m \ge h+2$, with hypothesis:1. The minimal period modulo $2^m$ is $p = 2^{m-h}$.2. $S'_p \equiv S'_0 + c_m 2^m$, $L'_p \equiv L'_0 + d_m 2^m \pmod{2^{m+1}}$, where $(c_m \bmod 2, d_m \bmod 2)$ is constant and has at least one odd entry.*Base ($m = h+2$, $p = 4$):* Let $A = 2L_0 + 1 = 2^{t_0+1}y - 1$ with $y$ odd.- **Multiplier computation:** $M_0 = A$ and $M_1 = 2^{k+1}uA + A = A(2^{k+1}u + 1)$. For $M_2$:  $$L'_2 = uA(1 + M_1) = uA(2^{t_0+1}y + 2^{k+1}uA)$$  Since both $2^{t_0+1}$ and $2^{k+1}$ are divisible by $2^{h+1}$, we have $L'_2 \equiv 0 \pmod{2^{h+1}}$. Then $2^{k+1}L'_2 \equiv 0 \pmod{2^{h+3}}$ (since $k+1+h+1 \ge h+3$), giving $M_2 \equiv A \pmod{2^{h+3}}$.    For $M_3$: since $2^{k+1}L'_2 \equiv 0 \pmod{2^{h+3}}$:  $$2^{k+1}L'_3 = 2^{k+1}(L'_2 + S'_3) \equiv 2^{k+1}S'_3 \equiv 2^{k+1}S'_2 M_2 \pmod{2^{h+3}}$$  Since $M_2 \equiv A \pmod{2^{h+3}}$ and $S'_2 = u A M_1 = u A^2(2^{k+1}u+1)$, we have:  $$2^{k+1}L'_3 \equiv 2^{k+1}u A^3(2^{k+1}u+1) \pmod{2^{h+3}}$$  Because $t_0 \ge h$, $A \equiv -1 \pmod{2^{h+1}}$, which implies $A^2 \equiv 1 \pmod{2^{h+2}}$ and thus $A^3 \equiv A \pmod{2^{h+2}}$. Since $k \ge 1$, $2^{k+1} \ge 2^{h+1}$, we have $2^{2k+2} \equiv 0 \pmod{2^{h+3}}$. Thus:  $$2^{k+1}L'_3 \equiv 2^{k+1}uA \pmod{2^{h+3}}$$  Thus $M_3 \equiv 2^{k+1}uA + A = M_1 \pmod{2^{h+3}}$.- **Computing $S'_4$:** $S'_4 = u \prod_{t=0}^3 M_t \equiv u A^2 M_1^2 \pmod{2^{h+3}}$. Since $t_0 \ge h$, $A^4 \equiv 1 \pmod{2^{h+3}}$ and $(2^{k+1}u+1)^2 \equiv 1 + 2^{k+2}u \pmod{2^{h+3}}$ (since $2^{2k+2} \equiv 0$). Thus:  $$S'_4 \equiv u + 2^{k+2}u^2 \pmod{2^{h+3}}$$  - **Sub-case 2a ($h = k \le t_0$):** $S'_4 \equiv u + 2^{h+2} \pmod{2^{h+3}}$, so $c_{h+2} \equiv 1 \pmod{2}$.  - **Sub-case 2b ($h = t_0 < k$):** $k+2 \ge h+3$, so $S'_4 \equiv u \pmod{2^{h+3}}$, giving $c_{h+2} \equiv 0 \pmod{2}$.- **Computing $L'_4$:** $L'_4 = S'_1 + S'_2 + S'_3 + S'_4 = uA(1 + M_1)(1 + AM_1)$. Evaluating modulo $2^{h+3}$:  $$1 + M_1 \equiv 2^{t_0+1}y - 2^{k+1}u \pmod{2^{h+3}}$$  $$1 + AM_1 \equiv 2 - 2^{t_0+2}y + 2^{k+1}u \pmod{2^{h+3}}$$  Since $1+M_1$ is a multiple of $2^{h+1}$, cross terms of order $\ge 2^{2h+2} \ge 2^{h+3}$ vanish (where the bound is tight since for $h=1$, $2^{2h+2} = 16 = 2^{h+3}$):  $$(1+M_1)(1+AM_1) \equiv 2(2^{t_0+1}y - 2^{k+1}u) \equiv 2^{t_0+2}y - 2^{k+2}u \pmod{2^{h+3}}$$  Multiplying by $uA$ (where $A \equiv -1 \pmod{2^{h+1}}$ and $u$ is odd):  $$L'_4 \equiv uA(2^{t_0+2}y - 2^{k+2}u) \equiv 2^{t_0+2}yuA - 2^{k+2}u^2 A \pmod{2^{h+3}}$$  Since $A \equiv -1 \pmod{2^{h+1}}$, we have $yuA \equiv -yu \pmod{2^{h+1}}$. Thus $yuA = -yu + 2^{h+1}z$ for some integer $z$. The first term evaluates to $-2^{t_0+2}yu + 2^{t_0+h+3}z$. Because $t_0 \ge h$, the correction term $2^{t_0+h+3}z$ vanishes modulo $2^{h+3}$. Since $yu$ is odd, the first term reduces to $-2^{t_0+2} \pmod{2^{h+3}}$ when $t_0 = h$, and $0$ when $t_0 > h$. For the second term, since $u^2 \equiv 1 \pmod 8$ and $A \equiv -1 \pmod 4$, writing $u^2 A = -1 + 4w$ shows it evaluates to $-2^{k+2}(-1 + 4w) = 2^{k+2} - 2^{k+4}w$. Because $k \ge h$, the remainder $2^{k+4}w$ vanishes modulo $2^{h+3}$, reducing the second term to $2^{k+2} \pmod{2^{h+3}}$. Summing these gives:  $$L'_4 \equiv -2^{t_0+2} + 2^{k+2} \pmod{2^{h+3}}$$  - **Sub-case 2b ($h = t_0 < k$):** $2^{k+2} \equiv 0 \pmod{2^{h+3}}$, so $L'_4 \equiv -2^{h+2} \equiv 2^{h+2} \pmod{2^{h+3}}$, giving $d_{h+2} \equiv 1 \pmod{2}$.    In Sub-case 2a, $c_{h+2} \equiv 1$, so the parity condition is satisfied regardless of $d_{h+2}$. In both sub-cases, at least one of $(c_{h+2}, d_{h+2})$ is odd. To rule out a minimal period of 2, evaluate the state displacement after 2 steps modulo $2^{h+2}$. The coordinate $S'_2 = uA^2(1 + 2^{k+1}u)$ evaluates to $u + 2^{h+1} \pmod{2^{h+2}}$ when $k = h$ (since $A^2 \equiv 1 \pmod{2^{h+2}}$ and $1 + 2^{k+1}u \equiv 1 + 2^{h+1} \pmod{2^{h+2}}$). Thus $S'_2 \not\equiv S'_0 \pmod{2^{h+2}}$ whenever $h = k$. When $t_0 = h < k$, $S'_2 \equiv u \pmod{2^{h+2}}$, but $L'_2 = uA(2^{h+1}y + 2^{k+1}uA) \equiv 2^{h+1}yuA \equiv 2^{h+1} \pmod{2^{h+2}}$ (since $k \ge h+1$ and $yuA$ is odd). Thus $L'_2 \not\equiv L'_0 \pmod{2^{h+2}}$. In all configurations, the state does not return to the initial condition $(u, 0)$ modulo $2^{h+2}$ in 2 steps, ensuring the exact period is 4. Furthermore, $S'_4 \equiv u \pmod{2^{h+2}}$ and $L'_4 \equiv 0 \pmod{2^{h+2}}$ in both sub-cases, explicitly verifying that the state returns to the initial state $(u, 0)$ modulo $2^{h+2}$. The base case is verified.*Inductive step ($m \to m+1$ for $m \ge h+2$):* Let $p = 2^{m-h}$ (a multiple of 4). We verify the hypotheses of Lemma 3a:- **(i) Multiplier periodicity:** $M_{t+p} - M_t = 2^{k+1}(L'_{t+p} - L'_t) = z \cdot 2^{k+m+1}$. Since $k \ge 1$, $k+m+1 \ge m+2$, so $M_{t+p} \equiv M_t \pmod{2^{m+2}}$.- **(ii) State displacement:** By the induction hypothesis, $S'_p \equiv S'_0 + c_m 2^m \pmod{2^{m+1}}$ and $L'_p \equiv L'_0 + d_m 2^m \pmod{2^{m+1}}$.- **(iii) Hypothesis (4):** Satisfied because $m \ge h+2 \ge 3$.- **(iv) Lemma 3a application:** The lemma preserves the parity pair: $c_{m+1} \equiv c_m \pmod{2}$ and $d_{m+1} \equiv d_m \pmod{2}$. Since at least one entry is odd (from the base case), the state $(S'_{2p}, L'_{2p}) \not\equiv (S'_0, L'_0) \pmod{2^{m+2}}$, preventing orbit closure at $p$ steps. Since $S'_{2p} \equiv S'_0 \pmod{2^{m+1}}$ and $L'_{2p} \equiv L'_0 \pmod{2^{m+1}}$, the orbit closes at $2p$ steps modulo $2^{m+1}$. The minimal period modulo $2^{m+1}$ is exactly $2p = 2^{m+1-h}$.This completes the induction for Case 2. $\blacksquare$---### Theorem 3 (Cycle Bounds and Maximality Condition)Let $\mathcal{O}$ be an orbit of the generator under the full word width transition $f: \mathbb{Z}_{2^w} \times \mathbb{Z}_{2^w} \to \mathbb{Z}_{2^w} \times \mathbb{Z}_{2^w}$. The exact period $\tau_w$ satisfies:1. If $S_0 = 0$, then $\tau_w = 1$.2. If $S_0 \equiv 1 \pmod 2$, then $\tau_w = 2^w$ for all $w \ge 1$.3. If $S_0 \neq 0$ and $\nu_2(S_0) = k \ge 1$, let $S_0 = 2^k u$ with $u$ odd.   - If $L_0$ is even: $\tau_w = 2^{w-k}$.   - If $L_0$ is odd: let $t_0 = \nu_2(L_0+1)$ and $h = \min(k, t_0)$. Then $\tau_w = 2^{\max(1, w-k-h)}$.#### Proof1. If $S_0 = 0$, then $S_1 = 0(2L_0+1) = 0$ and $L_1 = L_0 + 0 = L_0$, making it a fixed point ($\tau_w = 1$).2. If $S_0$ is odd, for $w=1$, $\tau_1 = 2$ from Lemma 1. For $w \ge 2$, Lemma 2 proves that the product over the lower period $2^{m-1}$ satisfies $P_{m-1} \equiv 1 + 2^{m-1} \pmod{2^m}$. This translates the coordinate to $S_{2^{m-1}} \equiv S_0(1 + 2^{m-1}) \equiv S_0 + 2^{m-1} \pmod{2^m}$. The orbit cannot close at $2^{m-1}$ steps, forcing the period to double to $\tau_m = 2^m$ at every bit layer up to $m=w$.3. If $S_0 = 2^k u$, the lower $k$ bits satisfy $[S_t]_k = 0$, which implies $[S_{t+1}]_k = 0$ and $[L_{t+1}]_k \equiv [L_t]_k \pmod{2^k}$. The lower $k$ bits remain fixed, so no carry bits enter the system below index $k$. This maps the sequence directly to the scaled system of Lemma 3 with a maximum remaining width of $m = w-k$. Applying the exact period tracking from Lemma 3 gives $\tau_w = \tau'_{w-k}$, which yields $2^{w-k}$ for even $L_0$, and $2^{\max(1, w-k-h)}$ for odd $L_0$. If $w-k \le h+1$, the scaled system remains entirely within Regime 1, and the resulting period simplifies directly to $\tau_w = 2^1 = 2$. $\blacksquare$---### State-Space Volume ConsistencyThis calculation verifies that the case split by initial-state type in Theorem 3 partitions the full state space. For a fixed valuation $k = \nu_2(S_0) \ge 1$, there are $2^{w-k-1}$ possible values of $S_0$. We partition the $2^w$ values of $L_0$ based on their 2-adic properties:1. $L_0$ is even: $2^{w-1}$ values.2. $L_0$ is odd: for each $1 \le r \le w-k-1$, there are $2^{w-r-1}$ values of $L_0$ with $\nu_2(L_0+1) = r$.3. $L_0$ is odd with $\nu_2(L_0+1) \ge w-k$: there are $2^{k}$ such values.Summing the states for a fixed $k$:$$\text{States}(k) = 2^{w-k-1} \left[ 2^{w-1} + \left( \sum_{r=1}^{w-k-1} 2^{w-r-1} \right) + 2^k \right] = 2^{2w-k-1}$$Summing over all possible valuations $k$ from $1$ to $w-1$, plus the $2^w$ states where $S_0 = 0$ and the $2^{2w-1}$ states where $S_0$ is odd:$$\Sigma = 2^w + \left( \sum_{k=1}^{w-1} 2^{2w-k-1} \right) + 2^{2w-1} = 2^w + (2^{2w-1} - 2^w) + 2^{2w-1} = 2^{2w-1} + 2^{2w-1} = 2^{2w}$$The total count matches $|\mathbb{Z}_{2^w} \times \mathbb{Z}_{2^w}| = 2^{2w}$, confirming that the cycle classification partitions the state space.---### Corollary 1 (LSB Orbit Partition)For $m=1$, the state space $\mathbb{Z}_2^2$ is partitioned into exactly three disjoint cycles: two fixed points where $\tau = 1$, and one cycle of length 2 where $\tau = 2$.#### ProofThis follows as a direct application of Theorem 3. If $S_0 = 0$, then $\tau_1 = 1$, yielding two fixed points corresponding to $L_0 \in \{0, 1\}$. If $S_0 \equiv 1 \pmod 2$, then $\tau_1 = 2^1 = 2$, yielding a single 2-cycle containing the remaining two states $(1,0)$ and $(1,1)$. $\blacksquare$---### Corollary 2 (Extension to $m=2$)For $m=2$, the state space $\mathbb{Z}_4^2$ consists of four cycles of length 1, two cycles of length 2, and two cycles of length 4.#### ProofThis is a direct consequence of Theorem 3 for $w=2$:1. For $S_0 = 0$, we have $\tau_2 = 1$, which yields four fixed points corresponding to $L_0 \in \{0, 1, 2, 3\}$.2. For $S_0$ odd ($S_0 \in \{1, 3\}$), we have $\tau_2 = 2^2 = 4$. There are $2 \times 4 = 8$ such states, which partition into exactly two cycles of length 4.3. For $S_0 \neq 0$ with $\nu_2(S_0) = 1$ (so $S_0 = 2$, meaning $k=1$ and $u=1$):   - If $L_0$ is even ($L_0 \in \{0, 2\}$), then $\tau_2 = 2^{2-1} = 2$. There are $1 \times 2 = 2$ such states, forming one cycle of length 2.   - If $L_0$ is odd ($L_0 \in \{1, 3\}$), then $t_0 = \nu_2(L_0+1)$.     - For $L_0 = 1$, $L_0+1 = 2 \implies t_0 = 1$, so $h = \min(1, 1) = 1$. The period is $2^{\max(1, 2-1-1)} = 2^1 = 2$.     - For $L_0 = 3$, $L_0+1 = 4 \implies t_0 = 2$, so $h = \min(1, 2) = 1$. The period is $2^{\max(1, 2-1-1)} = 2^1 = 2$.     This gives another 2 states forming a second cycle of length 2.Summing these gives 4 cycles of length 1, 2 cycles of length 2, and 2 cycles of length 4, exhausting the 16 states. $\blacksquare$---## 3. Low-Order Projection and Two-Sample Correlation AnalysisLet $C_v$ be the period-2 component of the orbit projection modulo $2^{v+1}$ for an initial state with $S_0 \neq 0$ and $\nu_2(S_0) = v$ (ensuring $v < w$ is finite and the 2-cycle $C_v$ is well-defined). For a fixed lift of this lower orbit to modulo $2^{v+2}$, let $s_t = S_t^{[v+1]}$ and $\ell_t = L_t^{[v+1]}$ for $t=0,1$. The following quantities are two-sample averages over the two phases $t=0,1$ of the lower orbit, treating bits as elements of $\mathbb{F}_2$ using $\oplus$ for XOR:### Theorem 41. The 1-step autocorrelation of the state bit $S_t^{[v+1]}$ over $C_v$ is:   $$\epsilon_S(v+1, 1) = \begin{cases} 0 & \text{if } v = 0 \\ 1 & \text{if } v \ge 1 \end{cases}$$2. The 1-step autocorrelation of the state bit $L_t^{[v+1]}$ over $C_v$ is:   $$\epsilon_L(v+1, 1) = \begin{cases} 1 \oplus L_0^{[0]} & \text{if } v = 0 \\ L_0^{[0]} & \text{if } v \ge 1 \end{cases}$$3. The Walsh transform coefficients $\left| \hat{F}(a, b) \right| = \left| \frac{1}{2} \sum_{t=0}^1 (-1)^{a s_t \oplus b \ell_t} \right|$ over $C_v$ for non-zero masks $(a, b) \in \mathbb{F}_2^2 \setminus \{(0, 0)\}$ satisfy:   $$\left| \hat{F}(1, 0) \right| = 1 \oplus L_0^{[0]}$$   $$\left| \hat{F}(0, 1) \right| = 1 \oplus S_0^{[v+1]} \oplus L_0^{[0]} \oplus L_0^{[v]}$$   $$\left| \hat{F}(1, 1) \right| = 1 \oplus S_0^{[v+1]} \oplus L_0^{[v]}$$#### ProofSince $\nu_2(S_0) = v$, the lower $v$ bits of $S_t$ are zero, and $S_t^{[v]} = 1$ for all $t$. Thus, $S_t \equiv 2^v(2s_t + 1) \pmod{2^{v+2}}$. Let $K = [L_t]_v = [L_0]_v$ be the constant lower segment of $L$.- **Case 1: $v = 0$**. Here $S_0$ is odd ($s_t = S_t^{[1]}$). Modulo 4, the update rule expands to $S_{t+1} \equiv S_t(2L_t + 1) \pmod 4$. Writing $S_t = 2s_t + 1$ and $L_t = 2\ell_t + y_t$ where $y_t = L_t^{[0]}$ gives $2s_{t+1} + 1 \equiv (2s_t + 1)(2y_t + 1) \equiv 2s_t + 2y_t + 1 \pmod 4$. This isolates the bit relation $s_{t+1} \equiv s_t \oplus y_t \pmod 2$. Since $y_t = L_0^{[0]} \oplus t$, we have $s_{t+1} \oplus s_t = L_0^{[0]} \oplus t$.  1. The 1-step autocorrelation of $S_t^{[1]}$ is $\epsilon_S(1, 1) = \left| \frac{1}{2} \left((-1)^{L_0^{[0]}} + (-1)^{L_0^{[0]} \oplus 1}\right) \right| = 0$.  2. For $L$, using $s_{t+1} = s_t \oplus y_t$, the update $\ell_{t+1} \equiv \ell_t \oplus s_{t+1} \oplus y_t \pmod 2$ reduces to $\ell_{t+1} \oplus \ell_t = s_t$. The 1-step autocorrelation is $\epsilon_L(1, 1) = \left| \frac{1}{2} \left((-1)^{s_0} + (-1)^{s_1}\right) \right| = 1 \oplus L_0^{[0]}$.- **Case 2: $v \ge 1$**. Since $\nu_2(S_0) = v$, $S_t \equiv 2^v(2s_t+1) \pmod{2^{v+2}}$. The coordinate segment $L_t \pmod 2$ remains constant, meaning $L_t^{[0]} = L_0^{[0]}$. The update equation $S_{t+1} \equiv S_t(2L_t+1) \pmod{2^{v+2}}$ yields, after division by $2^v$:  $$2s_{t+1}+1 \equiv (2s_t+1)(2L_t+1) \pmod{4}$$  Since $v \ge 1$, $L_t \equiv L_0 \pmod{2}$, so $2L_t+1 \equiv 2L_0^{[0]}+1 \pmod{4}$. Expanding gives the bit recurrence:  $$s_{t+1} = s_t \oplus L_0^{[0]}$$  Consequently, $s_0 = S_0^{[v+1]}$, $s_1 = s_0 \oplus L_0^{[0]}$, and $s_2 = s_1 \oplus L_0^{[0]} = s_0$.  1. The step difference $s_{t+1} \oplus s_t = L_0^{[0]}$ is constant across both steps, which yields $\epsilon_S(v+1, 1) = \left| \frac{1}{2} \left((-1)^{L_0^{[0]}} + (-1)^{L_0^{[0]}} \right) \right| = 1$.  2. For $L$, the addition $L_{t+1} \equiv L_t + S_{t+1} \pmod{2^{v+2}}$ has $S_{t+1} \equiv 2^v + 2^{v+1}s_{t+1} \pmod{2^{v+2}}$. The carry from bit $v$ into bit $v+1$ is exactly $L_t^{[v]}$ (since bit $v$ of $S_{t+1}$ is $1$). Therefore:     $$\ell_{t+1} = \ell_t \oplus s_{t+1} \oplus L_t^{[v]}$$     Because $S_{t+1}$ toggles bit $v$ of $L$ at every step, $L_t^{[v]} = L_0^{[v]} \oplus t$. Substituting gives:     $$\ell_{t+1} \oplus \ell_t = s_{t+1} \oplus L_0^{[v]} \oplus t$$     Define $E_t = \ell_{t+1} \oplus \ell_t$.     - For $t=0$: $E_0 = s_1 \oplus L_0^{[v]} = s_0 \oplus L_0^{[0]} \oplus L_0^{[v]} = S_0^{[v+1]} \oplus L_0^{[0]} \oplus L_0^{[v]}$     - For $t=1$: $E_1 = s_2 \oplus L_0^{[v]} \oplus 1 = s_0 \oplus L_0^{[v]} \oplus 1$     The general relation is $E_1 = E_0 \oplus (L_0^{[0]} \oplus 1)$.     The 1-step autocorrelation of $L_t^{[v+1]}$ is the magnitude of $\frac{1}{2}\left((-1)^{E_0} + (-1)^{E_1}\right)$.     - If $L_0^{[0]} = 0$: $E_1 = E_0 \oplus 1$, so $(-1)^{E_0} + (-1)^{E_1} = 0$, giving magnitude 0.     - If $L_0^{[0]} = 1$: $E_1 = E_0$, so $(-1)^{E_0} + (-1)^{E_1} = \pm 2$, giving magnitude 1.     Hence, $\epsilon_L(v+1, 1) = L_0^{[0]}$.The Walsh transform magnitude is evaluated by factoring out the initial phase state:$$\left| \hat{F}(a, b) \right| = \left| \frac{1}{2} \sum_{t=0}^1 (-1)^{a s_t \oplus b \ell_t} \right| = \left| \frac{1}{2} (-1)^{a s_0 \oplus b \ell_0} \left(1 + (-1)^{a(s_1 \oplus s_0) \oplus b(\ell_1 \oplus \ell_0)}\right) \right| = 1 \oplus \big(a(s_1 \oplus s_0) \oplus b(\ell_1 \oplus \ell_0)\big)$$For both $v=0$ and $v \ge 1$, the derived step differences satisfy $s_1 \oplus s_0 = L_0^{[0]}$ and $\ell_1 \oplus \ell_0 = S_0^{[v+1]} \oplus L_0^{[0]} \oplus L_0^{[v]}$ (where for $v=0$, $L_0^{[v]} = L_0^{[0]}$). Substituting these into the Walsh expression yields:- $\left| \hat{F}(1, 0) \right| = 1 \oplus L_0^{[0]}$- $\left| \hat{F}(0, 1) \right| = 1 \oplus \left(S_0^{[v+1]} \oplus L_0^{[0]} \oplus L_0^{[v]}\right)$- $\left| \hat{F}(1, 1) \right| = 1 \oplus L_0^{[0]} \oplus \left(S_0^{[v+1]} \oplus L_0^{[0]} \oplus L_0^{[v]}\right) = 1 \oplus S_0^{[v+1]} \oplus L_0^{[v]}$These match the stated formulas identically. $\blacksquare$---## 4. Carry Propagation and Triangular DynamicsThe update equations of the generator form a T-function system. The state mapping is strictly triangular: bit $i$ of the next state vector $(S_{t+1}, L_{t+1})$ depends exclusively on the lower input state bits at positions $0, \dots, i$ of $(S_t, L_t)$. Consequently, high-order bit components cannot influence lower-order bit positions within a single step.Conversely, low-to-high influence can propagate across intermediate bit positions within a single step through multiplication and addition carry chains. For example, when $L_t = 2^w - 1$, changing $S_t$ from $0$ to $1$ modifies the next state coordinate from $S_{t+1} = 0$ to $S_{t+1} = 1 \cdot (2(2^w - 1) + 1) \equiv -1 \pmod{2^w}$, flipping all higher bits in a single execution step. This indicates that while a change in $S_t$ can immediately propagate carries through the multiplication to all higher bits of $S_{t+1}$, the propagation of these carries to $L_{t+1}$ is mediated by the addition carry chain of $L_t$. The structural diffusion limitations of the generator are therefore defined by the linear correlations and subspace period bounds induced by its triangular T-function structure, rather than a sequential avalanche bit-delay bound.---## 5. Cross-Correlations### Theorem 5 (Trajectory Bit-Layer Asymptotic Cross-Correlations)Let $X_t = (S_t, L_t)$ be the state at step $t$ over word bit-size $w \ge 2$. Define the asymptotic time-averaged cross-correlation at bit position $i \ge 1$ as:$$\rho_i = \lim_{T \to \infty} \frac{1}{T} \sum_{t=0}^{T-1} (-1)^{S_t^{[i]} \oplus L_t^{[i]}}$$For an arbitrary initial state $X_0 = (S_0, L_0)$, the exact value of $\rho_i$ is determined by the following disjoint regimes:1. Stationary Regime ($S_0 = 0$)  $$\rho_i = (-1)^{L_0^{[i]}} \quad \forall i \ge 1$$2. Odd-Seed Regime ($S_0 \equiv 1 \pmod 2$)**(a) Base layer ($i = 1$):**$$\rho_1 = \frac{1}{2}(-1)^{L_0^{[1]} \oplus L_0^{[0]} S_0^{[1]}}$$**(b) Higher layers ($i \ge 2$):** Let $H = 2^i$. By T-function monotonicity, the period modulo $2^{i+1}$ is exactly $2^{i+1}$ (Lemma 2), and $\rho_i$ equals the average over one projected period. Define the half-period sum bit:$$\delta_i = \left(\sum_{j=1}^{H} S_j\right)^{[i]}$$The full-period average reduces to a half-period average over $2^{i-1}$ terms:$$\rho_i = \frac{1}{2^i} \sum_{\substack{t=0 \\ t \equiv \delta_i \oplus 1 \;(\mathrm{mod}\; 2)}}^{H-1} (-1)^{S_t^{[i]} \oplus L_t^{[i]}}$$Consequently, $\rho_i \in \frac{1}{2^{i-1}}\mathbb{Z}$. It does **not** vanish identically for all initial states; its value depends on the specific carry-chain trajectory.---#### 3. Dyadic Regime ($\nu_2(S_0) = v \ge 1$)For all bit layers $i \le v+1$, the exact value is:| Layer | Formula ||-------|---------|| **$i < v$** | $\rho_i = (-1)^{L_0^{[i]}}$ || **$i = v$** | $\rho_v = 0$ || **$i = v+1$, $L_0$ even** | $\rho_{v+1} = 0$ || **$i = v+1$, $L_0$ odd** | $\rho_{v+1} = \begin{cases} (-1)^{S_0^{[v+1]} \oplus L_0^{[v+1]}} & \text{if } S_0^{[v+1]} = L_0^{[v]} \\ 0 & \text{if } S_0^{[v+1]} \neq L_0^{[v]} \end{cases}$ |For layers $i > v+1$, the correlation $\rho_i$ is governed by the scaled-system orbit at bit $i-v$ and does not admit a simple closed form without explicit enumeration.---#### ProofBecause the state space is finite, every trajectory enters a cycle. By T-function monotonicity (Section 2), the period $\tau_m$ modulo $2^m$ divides the full period $\tau_w$, and the projection $\pi_m$ commutes with the update. Since bit $i$ depends only on the lower $i+1$ bits, $\rho_i$ equals the average over one period of the orbit projected modulo $2^{i+1}$.1. Stationary Regime ($S_0 = 0$)By Theorem 3, $\tau_w = 1$. The update gives $S_t = 0$ and $L_t = L_0$ for all $t$. Thus $S_t^{[i]} = 0$ and $L_t^{[i]} = L_0^{[i]}$, yielding $\rho_i = (-1)^{L_0^{[i]}}$. $\blacksquare$---2. Base Odd Layer ($i=1$, $S_0$ odd)Work modulo 4. Write $S_t = 2s_t + 1$ and $L_t = 2\ell_t + y_t$ with $y_t = L_t^{[0]}$. The update gives:$$s_{t+1} = s_t \oplus y_t, \qquad y_{t+1} = y_t \oplus 1, \qquad \ell_{t+1} = \ell_t \oplus s_{t+1} \oplus y_t$$Unrolling over the 4-step period:| $t$ | $s_t$ | $\ell_t$ | $y_t$ | $\Phi_t = s_t \oplus \ell_t$ ||-----|-------|----------|-------|------------------------------|| 0 | $s_0$ | $\ell_0$ | $y_0$ | $s_0 \oplus \ell_0$ || 1 | $s_0 \oplus y_0$ | $\ell_0 \oplus s_0$ | $y_0 \oplus 1$ | $\ell_0 \oplus y_0$ || 2 | $s_0 \oplus 1$ | $\ell_0 \oplus y_0$ | $y_0$ | $s_0 \oplus \ell_0 \oplus y_0 \oplus 1$ || 3 | $s_0 \oplus y_0 \oplus 1$ | $\ell_0 \oplus s_0 \oplus y_0 \oplus 1$ | $y_0 \oplus 1$ | $\ell_0$ |Summing:- If $y_0 = 0$: $(-1)^{s_0 \oplus \ell_0} + (-1)^{\ell_0} - (-1)^{s_0 \oplus \ell_0} + (-1)^{\ell_0} = 2(-1)^{\ell_0}$- If $y_0 = 1$: $(-1)^{s_0 \oplus \ell_0} - (-1)^{\ell_0} + (-1)^{s_0 \oplus \ell_0} + (-1)^{\ell_0} = 2(-1)^{s_0 \oplus \ell_0}$With $\ell_0 = L_0^{[1]}$, $s_0 = S_0^{[1]}$, $y_0 = L_0^{[0]}$:$$\rho_1 = \frac{2(-1)^{L_0^{[1]} \oplus L_0^{[0]} S_0^{[1]}}}{4} = \frac{1}{2}(-1)^{L_0^{[1]} \oplus L_0^{[0]} S_0^{[1]}} \quad \blacksquare$$---3. Higher Odd Layers ($i \ge 2$, $S_0$ odd)By Lemma 2, the period modulo $2^{i+1}$ is $2^{i+1}$ and the half-period shift satisfies:$$S_{t+H} \equiv S_t + 2^i \pmod{2^{i+1}} \implies S_{t+H}^{[i]} = S_t^{[i]} \oplus 1$$where $H = 2^i$.Let $\Sigma_i(t) = \sum_{j=1}^{H} S_{t+j}$. From $S_{t+j+H} \equiv S_{t+j} + 2^i$:$$\Sigma_i(t+H) \equiv \Sigma_i(t) + H \cdot 2^i = \Sigma_i(t) + 2^{2i} \equiv \Sigma_i(t) \pmod{2^{i+1}}$$Since $L_{t+2H} \equiv L_t \pmod{2^{i+1}}$, we have $\Sigma_i(t) + \Sigma_i(t+H) \equiv 0 \pmod{2^{i+1}}$, hence $2\Sigma_i(t) \equiv 0 \pmod{2^{i+1}}$. Therefore:$$\Sigma_i(t) \equiv 0 \pmod{2^i}$$**No carry into bit $i$.** Because $\Sigma_i(t) \equiv 0 \pmod{2^i}$, the lower $i$ bits of $\Sigma_i(t)$ are zero. Adding $L_t + \Sigma_i(t)$ generates no carry into bit $i$, so:$$L_{t+H}^{[i]} = L_t^{[i]} \oplus \delta_i(t), \quad \text{where } \delta_i(t) = \Sigma_i(t)^{[i]}$$**Alternation of $\delta_i(t)$.** From $S_{t+H+1} \equiv S_{t+1} + 2^i$:$$\Sigma_i(t+1) - \Sigma_i(t) = S_{t+H+1} - S_{t+1} \equiv 2^i \pmod{2^{i+1}}$$Thus $\delta_i(t+1) = \delta_i(t) \oplus 1$.Partition the $2H$ terms into $H$ pairs $(t, t+H)$:$$(-1)^{\Phi_t^{[i]}} + (-1)^{\Phi_t^{[i]} \oplus 1 \oplus \delta_i(t)}$$- If $\delta_i(t) = 1$: pair sums to $2(-1)^{\Phi_t^{[i]}}$.- If $\delta_i(t) = 0$: pair sums to $0$.Since $\delta_i(t) = \delta_i(0) \oplus t$, exactly half the pairs survive (those with $t \equiv \delta_i(0) \oplus 1 \pmod 2$), giving:$$\rho_i = \frac{2}{2^{i+1}} \sum_{\substack{t=0 \\ t \equiv \delta_i \oplus 1 \;(\mathrm{mod}\; 2)}}^{H-1} (-1)^{\Phi_t^{[i]}} = \frac{1}{2^i} \sum_{\substack{t=0 \\ t \equiv \delta_i \oplus 1 \;(\mathrm{mod}\; 2)}}^{H-1} (-1)^{\Phi_t^{[i]}}$$This sum evaluates over exactly $2^{i-1}$ terms of $\pm 1$. Since $2^{i-1}$ is even for $i \ge 2$, the sum is strictly even, yielding $\rho_i \in \frac{1}{2^{i-1}}\mathbb{Z}$. It does not vanish identically for all initial states; its value depends on the specific carry-chain trajectory. For instance, at $i=2$ with initial state $(S_0, L_0) = (1, 2)$, the sum evaluates to $2$, yielding $\rho_2 = 1/2$. $\blacksquare$---4. Dyadic Regime ($\nu_2(S_0) = v \ge 1$)Write $S_0 = 2^v u$ with $u$ odd. Since $S_t$ is always an odd multiple of $2^v$, bits $0, \dots, v-1$ of $S_t$ are identically zero, and bit $v$ is identically 1.**Layer $i < v$.** Since $S_{t+1} \equiv 0 \pmod{2^v}$, adding $S_{t+1}$ to $L_t$ does not change bits $0, \dots, v-1$. Thus $L_t^{[i]} = L_0^{[i]}$ is constant, and with $S_t^{[i]} = 0$:$$\rho_i = (-1)^{L_0^{[i]}}$$**Layer $i = v$.** Modulo $2^{v+1}$, any odd multiple of $2^v$ is congruent to $2^v$. Therefore:$$S_{t+1} \equiv 2^v \pmod{2^{v+1}}$$and the update for $L$ becomes:$$L_{t+1} \equiv L_t + 2^v \pmod{2^{v+1}}$$Adding $2^v$ modulo $2^{v+1}$ flips exactly bit $v$ and leaves all lower bits unchanged. Hence:$$L_{t+1}^{[v]} = L_t^{[v]} \oplus 1$$so $L_t^{[v]}$ alternates with period 2. By Lemma 3, the full orbit period $\tau$ is a power of 2 and $\tau \ge 2$, hence even. Over $\tau$ steps, $L_t^{[v]}$ takes values 0 and 1 equally often, so:$$\rho_v = \frac{1}{\tau} \sum_{t=0}^{\tau-1} (-1)^{1 \oplus L_t^{[v]}} = -\frac{1}{\tau} \sum_{t=0}^{\tau-1} (-1)^{L_t^{[v]}} = 0$$**Layer $i = v+1$.** Map to the scaled system $(S'_t, L'_t)$ of Lemma 3 with $L_t = L_0 + 2^v L'_t$. The bit decomposes as:$$S_t^{[v+1]} = S'_t^{[1]}, \qquad L_t^{[v+1]} = L_0^{[v+1]} \oplus L'_t^{[1]} \oplus (L_0^{[v]} \cdot L'_t^{[0]})$$ where the last term is the carry from bit $v$ into bit $v+1$.*Sub-case (a): $L_0$ even.* By Lemma 3 (Case 1), the scaled system modulo 4 has $M_t \equiv 1 \pmod 4$, so $S'_t \equiv u$ and $L'_t \equiv t u \pmod 4$. The 4-step orbit gives parities:$$\Phi_0 = a, \quad \Phi_1 = b, \quad \Phi_2 = a \oplus 1, \quad \Phi_3 = b \oplus 1$$with $a = u^{[1]} \oplus L_0^{[v+1]}$ and $b = L_0^{[v+1]} \oplus L_0^{[v]}$. Here, $\Phi_2 = a \oplus 1$ follows from $L'_2 \equiv 2u \pmod 4$ giving $L'_2^{[1]} = 1$, and $\Phi_3 = b \oplus 1$ follows from $L'_3 \equiv 3u \pmod 4$ giving $u^{[1]} \oplus L'_3^{[1]} = 1$ for all odd $u$. The sum $(-1)^a + (-1)^b + (-1)^{a \oplus 1} + (-1)^{b \oplus 1} = 0$. Hence $\rho_{v+1} = 0$.*Sub-case (b): $L_0$ odd.* By Lemma 3 (Regime 1, since $m=2 \le h+1$ with $h \ge 1$), the scaled system modulo 4 has $M_t \equiv -1 \pmod 4$ and period 2. The orbit is $(u, 0) \leftrightarrow (-u, -u)$, giving:$$\Phi_0 = u^{[1]} \oplus L_0^{[v+1]}, \qquad \Phi_1 = L_0^{[v+1]} \oplus L_0^{[v]}$$Their XOR is $\Phi_0 \oplus \Phi_1 = u^{[1]} \oplus L_0^{[v]} = S_0^{[v+1]} \oplus L_0^{[v]}$.- If $S_0^{[v+1]} \neq L_0^{[v]}$: then $\Phi_0 \neq \Phi_1$, so $(-1)^{\Phi_0} + (-1)^{\Phi_1} = 0$, giving $\rho_{v+1} = 0$.- If $S_0^{[v+1]} = L_0^{[v]}$: then $\Phi_0 = \Phi_1 = S_0^{[v+1]} \oplus L_0^{[v+1]}$, so the sum is $2(-1)^{S_0^{[v+1]} \oplus L_0^{[v+1]}}$, giving $\rho_{v+1} = (-1)^{S_0^{[v+1]} \oplus L_0^{[v+1]}}$. $\blacksquare$
